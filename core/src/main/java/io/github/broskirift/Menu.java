@@ -16,6 +16,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Menu {
     public static Music menuMusic;
+    private static float menuVolume = 0.5f; // Default volume
+    public static long clickSoundId;
     private Table table;
     private final Stage stage;  // The Stage to hold UI components
     private TextButton playButton;  // Start button
@@ -40,7 +42,7 @@ public class Menu {
         // Load the menu music
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("menuMusic.mp3"));
         menuMusic.setLooping(true);
-        menuMusic.setVolume(0.1f);
+        menuMusic.setVolume(0.5f);
         menuMusic.play();
 
         // Set the table to fill the stage
@@ -67,17 +69,18 @@ public class Menu {
 
         stage.addActor(table);
 
-        // Create the settings menu
-        SettingsMenu settingsMenu = new SettingsMenu(skin);
-        settingsMenu.setVisible(false);
-
-        stage.addActor(settingsMenu);
+//        // Create the settings menu
+//        SettingsMenu settingsMenu = new SettingsMenu(skin);
+//        settingsMenu.setVisible(false);
+//
+//        stage.addActor(settingsMenu);
 
         // Add listener for the play button
         playButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                clickSound.play();
+                clickSoundId = clickSound.play();
+                clickSound.setVolume(clickSoundId, menuVolume);
                 gameStarted = true;  // Set gameStarted to true when the start button is clicked
             }
         });
@@ -86,7 +89,8 @@ public class Menu {
         friendsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                clickSound.play();
+                clickSoundId = clickSound.play();
+                clickSound.setVolume(clickSoundId, menuVolume);
                 // Add code to show friends menu
             }
         });
@@ -95,8 +99,12 @@ public class Menu {
         settingsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                clickSound.play();
+                clickSoundId = clickSound.play();
+                SettingsMenu settingsMenu = new SettingsMenu(skin);
+                stage.addActor(settingsMenu);
+                settingsMenu.setSlidersVolume(menuMusic.getVolume(), menuVolume); // Set the sliders to the current volume
                 settingsMenu.setVisible(true);  // Show the settings menu when the settings button is clicked
+                clickSound.setVolume(clickSoundId, menuVolume);
             }
         });
 
@@ -104,13 +112,14 @@ public class Menu {
         exitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                clickSound.play();
+                clickSoundId = clickSound.play();
+                clickSound.setVolume(clickSoundId, menuVolume);
                 Gdx.app.exit();  // Exit the application when the exit button is clicked
             }
         });
 
 
-  }
+    }
 
     // Method to check if the game has started
     public boolean isGameStarted() {
@@ -123,6 +132,14 @@ public class Menu {
     }
 
     public TextButton[] getButtons() {
-        return new TextButton[] {playButton, settingsButton, friendsButton, exitButton};
+        return new TextButton[]{playButton, settingsButton, friendsButton, exitButton};
+    }
+
+    public static float getMenuVolume() {
+        return menuVolume;
+    }
+
+    public static void setMenuVolume(float menuVolume) {
+        Menu.menuVolume = menuVolume;
     }
 }

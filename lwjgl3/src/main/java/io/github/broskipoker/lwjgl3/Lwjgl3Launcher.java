@@ -36,7 +36,7 @@ public class Lwjgl3Launcher {
         configuration.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
         // Set window icon
-        configuration.setWindowIcon("gameIcon.png");
+        configuration.setWindowIcon("gameIcon2.png");
 
 
         return configuration;

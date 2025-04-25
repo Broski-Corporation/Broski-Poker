@@ -58,7 +58,7 @@ configure(subprojects) {
 
 subprojects {
   version = "$projectVersion"
-  ext.appName = 'BroskiRift'
+  ext.appName = 'BroskiPoker'
   repositories {
     mavenCentral()
     maven { url 'https://s01.oss.sonatype.org' }
@@ -70,4 +70,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'BroskiRift' + '-parent'
+eclipse.project.name = 'BroskiPoker' + '-parent'

@@ -1,4 +1,4 @@
-package io.github.broskirift;
+package io.github.broskipoker;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;

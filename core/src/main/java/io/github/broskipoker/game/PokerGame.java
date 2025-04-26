@@ -106,8 +106,8 @@ public class PokerGame {
         gameState = GameState.BETTING_RIVER;
     }
 
-    public Player determineWinner() {
-        Player winner = null;
+    public List<Player> determineWinners() {
+        List<Player> winners = new ArrayList<>();
         PokerHand bestHand = null;
 
         for (Player player : players) {
@@ -115,11 +115,14 @@ public class PokerGame {
                 PokerHand currentHand = new PokerHand(player.getHoleCards(), communityCards);
                 if (bestHand == null || currentHand.compareTo(bestHand) > 0) {
                     bestHand = currentHand;
-                    winner = player;
+                    winners = new ArrayList<>(); // clear the winners list
+                    winners.add(player);
+                } else if (currentHand.compareTo(bestHand) == 0) {
+                    winners.add(player);
                 }
             }
         }
-        return winner;
+        return winners;
     }
 
     // TODO: betting logic, showdown

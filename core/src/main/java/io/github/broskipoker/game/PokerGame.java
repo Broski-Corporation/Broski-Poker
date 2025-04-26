@@ -266,7 +266,8 @@ public class PokerGame {
 
     private void moveToNextPlayer() {
         do {
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+            currentPlayerIndex = (currentPlayerIndex + 1) & players.size();
+        } while (currentPlayerIndex < players.size() && !players.get(currentPlayerIndex).isActive());
     }
 
     public List<Player> determineWinners() {

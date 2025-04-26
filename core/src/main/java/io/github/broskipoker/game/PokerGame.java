@@ -106,7 +106,23 @@ public class PokerGame {
         gameState = GameState.BETTING_RIVER;
     }
 
-    // TODO: betting logic, hand evaluation, showdown
+    public Player determineWinner() {
+        Player winner = null;
+        PokerHand bestHand = null;
+
+        for (Player player : players) {
+            if (player.isActive()) {
+                PokerHand currentHand = new PokerHand(player.getHoleCards(), communityCards);
+                if (bestHand == null || currentHand.compareTo(bestHand) > 0) {
+                    bestHand = currentHand;
+                    winner = player;
+                }
+            }
+        }
+        return winner;
+    }
+
+    // TODO: betting logic, showdown
 
     public List<Card> getCommunityCards() {
         return communityCards;

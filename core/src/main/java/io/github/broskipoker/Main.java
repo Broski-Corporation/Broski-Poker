@@ -124,7 +124,7 @@ public class Main extends ApplicationAdapter {
             // Draw the dealer's card stack
             float stackX = Gdx.graphics.getWidth() / 5f; // X position for the stack
             float stackY = Gdx.graphics.getHeight() / 2.1f; // Y position for the stack
-            cardRenderer.renderCardStack(stackX, stackY, 5); // Render a stack of 10 cards
+            cardRenderer.renderCardStack(stackX, stackY, 5, enhancersSheet); // Render a stack of 10 cards
 
             batch.end();
 

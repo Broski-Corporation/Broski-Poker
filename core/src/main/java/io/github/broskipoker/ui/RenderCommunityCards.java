@@ -71,8 +71,7 @@ public class RenderCommunityCards {
      * @param y - y coordinate of the stack
      * @param stackSize - number of cards in the stack
      */
-    public void renderCardStack(float x, float y, int stackSize) {
-        Texture enhancersSheet = new Texture(Gdx.files.internal("NeedsReview/textures/2x/Enhancers.png"));
+    public void renderCardStack(float x, float y, int stackSize, Texture enhancersSheet) {
         // Extract the card stack background
         TextureRegion cardStackBackground = new TextureRegion(enhancersSheet, 0, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
         for (int i = 0; i < stackSize; i++) {
@@ -97,4 +96,5 @@ public class RenderCommunityCards {
         Card[] cards = {flop1, flop2, flop3, turn, null};
         renderCommunityCards(cards, x, y);
     }
+
 }

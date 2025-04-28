@@ -121,11 +121,15 @@ public class Main extends ApplicationAdapter {
             font.draw(batch, "YOU", Gdx.graphics.getWidth() / 2.4f, 80);
 
             // Draw the community cards
-            float centerX = Gdx.graphics.getWidth() / (float) 3.7; // X position
-            float centerY = Gdx.graphics.getHeight() / (float) 2.1; // Y position
-
+            float centerX = Gdx.graphics.getWidth() / 3.7f; // X position
+            float centerY = Gdx.graphics.getHeight() / 2.1f; // Y position
             // Render the community cards
             cardRenderer.renderCommunityCards(communityCards, centerX, centerY);
+
+            // Draw the dealer's card stack
+            float stackX = Gdx.graphics.getWidth() / 5f; // X position for the stack
+            float stackY = Gdx.graphics.getHeight() / 2.1f; // Y position for the stack
+            cardRenderer.renderCardStack(stackX, stackY, 5); // Render a stack of 10 cards
 
             batch.end();
 

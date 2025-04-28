@@ -26,7 +26,7 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create() {
         // Create background texture
-        backgroundTexture = new Texture("gameBackground.jpeg");
+        backgroundTexture = new Texture("pokerTable.png");
 
         // Create a new SpriteBatch
         batch = new SpriteBatch();

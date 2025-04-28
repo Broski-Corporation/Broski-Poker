@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import io.github.broskipoker.game.Card;
+import io.github.broskipoker.game.PokerGame;
 
 public class RenderCommunityCards {
     private SpriteBatch batch;

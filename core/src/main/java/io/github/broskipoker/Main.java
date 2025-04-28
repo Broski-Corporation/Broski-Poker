@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import io.github.broskipoker.game.Card;
+import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.ui.RenderCommunityCards;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -21,8 +22,9 @@ public class Main extends ApplicationAdapter {
     private Stage stage;
     private Menu menu;
     private Texture backgroundTexture;
+    private PokerGame pokerGame;
 
-    // Texturi și regiuni pentru cărți
+    // Textures for cards and enhancers
     private Texture cardSheet;
     private Texture enhancersSheet;
     private TextureRegion[][] cardRegions;
@@ -30,7 +32,7 @@ public class Main extends ApplicationAdapter {
     private RenderCommunityCards cardRenderer;
     private BitmapFont font;
 
-    // Constante pentru sprite sheet
+    // Constants for card dimensions
     private static final int CARDS_PER_ROW = 13;
     private static final int SUITS = 4;
     private static final int CARD_WIDTH = 142;
@@ -38,7 +40,7 @@ public class Main extends ApplicationAdapter {
     private static final int ENHANCER_WIDTH = 142;
     private static final int ENHANCER_HEIGHT = 190;
 
-    // Cărțile comunitare pentru joc
+    // Cards to be displayed
     private Card[] communityCards;
 
     @Override
@@ -49,7 +51,7 @@ public class Main extends ApplicationAdapter {
         Gdx.input.setInputProcessor(stage);
         menu = new Menu(stage);
 
-        // Inițializează fontul
+        // Initialize the font
         font = new BitmapFont();
         font.getData().setScale(3);
         font.setColor(1, 1, 1, 1);
@@ -105,6 +107,7 @@ public class Main extends ApplicationAdapter {
                 Gdx.graphics.getHeight()
             );
             batch.end();
+
 
             for (TextButton button : menu.getButtons()) {
                 button.setVisible(false);

@@ -6,18 +6,15 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-<<<<<<< Updated upstream
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.ui.RenderCommunityCards;
-=======
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
->>>>>>> Stashed changes
 
 public class Main extends ApplicationAdapter {
     private SpriteBatch batch;
@@ -51,7 +48,6 @@ public class Main extends ApplicationAdapter {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         menu = new Menu(stage);
-<<<<<<< Updated upstream
 
         // Inițializează fontul
         font = new BitmapFont();
@@ -92,8 +88,7 @@ public class Main extends ApplicationAdapter {
         communityCards[2] = new Card(Card.Suit.DIAMONDS, Card.Rank.TEN); // 10 de caro
         communityCards[3] = new Card(Card.Suit.CLUBS, Card.Rank.JACK);   // J de treflă
         communityCards[4] = new Card(Card.Suit.HEARTS, Card.Rank.QUEEN); // Q de inimă
-=======
->>>>>>> Stashed changes
+
     }
 
     @Override
@@ -137,27 +132,22 @@ public class Main extends ApplicationAdapter {
             stage.act(Gdx.graphics.getDeltaTime());
             stage.draw();
         }
-<<<<<<< Updated upstream
-=======
+
     }
 
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
->>>>>>> Stashed changes
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         stage.dispose();
-<<<<<<< Updated upstream
         font.dispose();
         cardSheet.dispose();
         enhancersSheet.dispose();
-=======
         backgroundTexture.dispose();
         menu.dispose();
->>>>>>> Stashed changes
     }
 }

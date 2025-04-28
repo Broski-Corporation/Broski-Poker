@@ -45,7 +45,7 @@ public class PokerGame {
         this(50, 100); // Testing values
 
         // Initialize players for tests
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             addPlayer("Player " + (i + 1), 10000);
         }
     }

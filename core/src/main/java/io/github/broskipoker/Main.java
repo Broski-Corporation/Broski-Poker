@@ -11,24 +11,28 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import io.github.broskipoker.game.Card;
+import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.ui.RenderCommunityCards;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import java.util.*;
 
 public class Main extends ApplicationAdapter {
+    private PokerGame pokerGame;
+
     private SpriteBatch batch;
     private Stage stage;
     private Menu menu;
     private Texture backgroundTexture;
-    private PokerGame pokerGame;
 
     // Textures for cards and enhancers
     private Texture cardSheet;
     private Texture enhancersSheet;
     private TextureRegion[][] cardRegions;
     private TextureRegion cardBackground;
+    private TextureRegion cardBack;
     private RenderCommunityCards cardRenderer;
     private BitmapFont font;
 
@@ -64,6 +68,9 @@ public class Main extends ApplicationAdapter {
         cardBackground = new TextureRegion(enhancersSheet,
             ENHANCER_WIDTH * 1, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
 
+        cardBack = new TextureRegion(enhancersSheet,
+            0, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
+
         // Crează regiunile pentru cărți
         cardRegions = new TextureRegion[SUITS][CARDS_PER_ROW];
         for (int suit = 0; suit < SUITS; suit++) {
@@ -75,68 +82,134 @@ public class Main extends ApplicationAdapter {
         }
 
         // Inițializează renderer-ul pentru cărți comunitare
-        cardRenderer = new RenderCommunityCards(batch, cardRegions, cardBackground);
-
-        // Inițializează cărțile comunitare (exemplu)
-        initializeExampleCommunityCards();
+        cardRenderer = new RenderCommunityCards(batch, cardRegions, cardBackground, cardBack);
     }
 
-    // Metodă pentru inițializarea cărților comunitare (exemplu)
-    private void initializeExampleCommunityCards() {
-        // Poți schimba aceste valori sau adăuga logică de generare aleatorie
-        communityCards = new Card[5];
-        communityCards[0] = new Card(Card.Suit.HEARTS, Card.Rank.ACE);   // As de inimă
-        communityCards[1] = new Card(Card.Suit.SPADES, Card.Rank.KING);  // Rege de pică
-        communityCards[2] = new Card(Card.Suit.DIAMONDS, Card.Rank.TEN); // 10 de caro
-        communityCards[3] = new Card(Card.Suit.CLUBS, Card.Rank.JACK);   // J de treflă
-        communityCards[4] = new Card(Card.Suit.HEARTS, Card.Rank.QUEEN); // Q de inimă
+@Override
+public void render() {
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-    }
-
-    @Override
-    public void render() {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        if (menu.isGameStarted()) {
-            batch.begin();
-            batch.draw(
-                backgroundTexture,
-                0,
-                0,
-                Gdx.graphics.getWidth(),
-                Gdx.graphics.getHeight()
-            );
-            batch.end();
-
-
-            for (TextButton button : menu.getButtons()) {
-                button.setVisible(false);
-            }
-
-            // Draw the game elements here
-            batch.begin();
-            // Draw "YOU" text
-            font.draw(batch, "YOU", Gdx.graphics.getWidth() / 2.4f, 80);
-
-            // Draw the community cards
-            float centerX = Gdx.graphics.getWidth() / 3.7f; // X position
-            float centerY = Gdx.graphics.getHeight() / 2.1f; // Y position
-            // Render the community cards
-            cardRenderer.renderCommunityCards(communityCards, centerX, centerY);
-
-            // Draw the dealer's card stack
-            float stackX = Gdx.graphics.getWidth() / 5f; // X position for the stack
-            float stackY = Gdx.graphics.getHeight() / 2.1f; // Y position for the stack
-            cardRenderer.renderCardStack(stackX, stackY, 5, enhancersSheet); // Render a stack of 10 cards
-
-            batch.end();
-
-        } else {
-            stage.act(Gdx.graphics.getDeltaTime());
-            stage.draw();
+    if (menu.isGameStarted()) {
+        // Initialize the game when player first clicks start
+        if (pokerGame == null) {
+            pokerGame = new PokerGame();
+            pokerGame.startNewHand(); // Start the first hand
         }
 
+        // Update game state
+        pokerGame.update(Gdx.graphics.getDeltaTime());
+
+        // Render background
+        batch.begin();
+        batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.end();
+
+        // Hide menu buttons
+        for (TextButton button : menu.getButtons()) {
+            button.setVisible(false);
+        }
+
+        batch.begin();
+
+        // Render community cards based on game state
+        float centerX = Gdx.graphics.getWidth() / 4.15f;
+        float centerY = Gdx.graphics.getHeight() / 2.1f;
+
+        PokerGame.GameState state = pokerGame.getGameState();
+        List<Card> communityCards = pokerGame.getCommunityCards();
+
+        // DEBUG: Display deck position and game controls
+        cardRenderer.renderCardStack(Gdx.graphics.getWidth() / 7f, centerY, 5, enhancersSheet);
+
+        float[][] chairPositions = {
+                {Gdx.graphics.getWidth() * 0.2f, Gdx.graphics.getHeight() * 0.6f}, // chair 1
+                {Gdx.graphics.getWidth() * 0.4f, Gdx.graphics.getHeight() * 0.6f}, // chair 2
+                {Gdx.graphics.getWidth() * 0.5f, Gdx.graphics.getHeight() * 0.5f}, // chair 3
+                {Gdx.graphics.getWidth() * 0.4f, Gdx.graphics.getHeight() * 0.3f}, // chair 4
+                {Gdx.graphics.getWidth() * 0.2f, Gdx.graphics.getHeight() * 0.3f}  // chair 5
+            };
+
+            // Render two cards for each player
+            List<Player> players = pokerGame.getPlayers();
+            for (int i = 0; i < players.size(); i++) {
+                if (i >= chairPositions.length) break; // Ensure we don't exceed chair positions
+
+                float x = chairPositions[i][0];
+                float y = chairPositions[i][1];
+
+                Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
+                if (playerCards.length >= 2) {
+                    // Chair 3 (index 2) gets cards rotated 90 degrees to the left
+                    if (i == 2) {
+                        cardRenderer.renderRotatedCards(new Card[]{playerCards[0], playerCards[1]}, x, y, 90);
+                    } else {
+                        // Regular rendering for other chairs
+                        if (i == 3) { // Chair 4 (index 3) gets face-up cards
+                            cardRenderer.renderCommunityCards(new Card[]{playerCards[0], playerCards[1]}, x, y, true);
+                        }
+                        else { // All other chairs get face-down cards
+                            cardRenderer.renderCommunityCards(new Card[]{playerCards[0], playerCards[1]}, x, y, false);
+                        }
+                    }
+
+                }
+            }
+
+        // Show cards based on game state
+        if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
+//            // In pre-flop phase, show card backs where community cards will appear
+//            TextureRegion cardBackRegion = new TextureRegion(enhancersSheet, 0, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
+//            for (int i = 0; i < 5; i++) {
+//                batch.draw(cardBackRegion,
+//                    centerX + i * (60 + 15), // 60 = card width, 15 = spacing
+//                    centerY, 60, 90);
+//            }
+//            // In real gameplay these should be invisible, we're just showing back faces for debugging
+            // Chair positions (x, y) for 5 players
+        } else if (state == PokerGame.GameState.BETTING_FLOP || state == PokerGame.GameState.FLOP) {
+            if (communityCards.size() >= 3) {
+                Card[] flopCards = {communityCards.get(0), communityCards.get(1), communityCards.get(2), null, null};
+                cardRenderer.renderCommunityCards(flopCards, centerX, centerY, true);
+            }
+        } else if (state == PokerGame.GameState.BETTING_TURN || state == PokerGame.GameState.TURN) {
+            if (communityCards.size() >= 4) {
+                Card[] turnCards = {communityCards.get(0), communityCards.get(1), communityCards.get(2),
+                                   communityCards.get(3), null};
+                cardRenderer.renderCommunityCards(turnCards, centerX, centerY, true);
+            }
+        } else {
+            Card[] displayCards = communityCards.toArray(new Card[0]);
+            cardRenderer.renderCommunityCards(displayCards, centerX, centerY, true);
+        }
+
+        // Debug info
+        font.draw(batch, "Game State: " + state.toString(), 50, 100);
+        font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
+
+        // DEBUG: Add buttons to force next state (for testing)
+        if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {
+            // This is a simple way to advance game state for testing
+            // In real gameplay, you should use player actions
+            if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
+                pokerGame.dealFlop();
+            } else if (state == PokerGame.GameState.BETTING_FLOP) {
+                pokerGame.dealTurn();
+            } else if (state == PokerGame.GameState.BETTING_TURN) {
+                pokerGame.dealRiver();
+            } else if (state == PokerGame.GameState.BETTING_RIVER) {
+                pokerGame.goToShowdown();
+            } else if (state == PokerGame.GameState.SHOWDOWN) {
+                // Start new hand
+                pokerGame.startNewHand();
+            }
+        }
+
+        batch.end();
+    } else {
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
     }
+}
 
     @Override
     public void resize(int width, int height) {
@@ -152,5 +225,7 @@ public class Main extends ApplicationAdapter {
         enhancersSheet.dispose();
         backgroundTexture.dispose();
         menu.dispose();
+        pokerGame = null;
     }
 }
+

@@ -11,6 +11,7 @@ public class RenderCommunityCards {
     private SpriteBatch batch;
     private TextureRegion[][] cardRegions;
     private TextureRegion cardBackground;
+    private TextureRegion cardBack;
 
     // Card dimensions
     private static final int CARD_WIDTH = 142;
@@ -21,10 +22,11 @@ public class RenderCommunityCards {
     private static final int ENHANCER_WIDTH = 142;
     private static final int ENHANCER_HEIGHT = 190;
 
-    public RenderCommunityCards(SpriteBatch batch, TextureRegion[][] cardRegions, TextureRegion cardBackground) {
+    public RenderCommunityCards(SpriteBatch batch, TextureRegion[][] cardRegions, TextureRegion cardBackground, TextureRegion cardBack) {
         this.batch = batch;
         this.cardRegions = cardRegions;
         this.cardBackground = cardBackground;
+        this.cardBack = cardBack;
     }
 
     /**
@@ -33,37 +35,27 @@ public class RenderCommunityCards {
      * @param x - starting x coordinate for the first card
      * @param y - y coordinate for the cards
      */
-    public void renderCommunityCards(Card[] communityCards, float x, float y) {
+    public void renderCommunityCards(Card[] communityCards, float x, float y, boolean isPlayerCards) {
         if (communityCards == null) return;
 
         for (int i = 0; i < communityCards.length; i++) {
             if (communityCards[i] != null) {
                 float cardX = x + i * (DISPLAY_CARD_WIDTH + CARD_SPACING);
 
-                // Draw card background
-                batch.draw(cardBackground, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+                if (isPlayerCards) {
+                    // Draw card background
+                    batch.draw(cardBackground, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
 
-                // Draw card face
-                Card card = communityCards[i];
-                batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()], cardX, y,
-                    DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+                    // Draw card face
+                    Card card = communityCards[i];
+                    batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()], cardX, y,
+                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+                } else {
+                    // Draw card back
+                    batch.draw(cardBack, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+                }
             }
         }
-    }
-
-    /**
-     * Renders a full set of 5 community cards on the table
-     * @param flop1 - first card of the flop
-     * @param flop2 - second card of the flop
-     * @param flop3 - third card of the flop
-     * @param turn - turn card
-     * @param river - river card
-     * @param x - starting x coordinate
-     * @param y - y coordinate
-     */
-    public void renderFullCommunityCards(Card flop1, Card flop2, Card flop3, Card turn, Card river, float x, float y) {
-        Card[] cards = {flop1, flop2, flop3, turn, river};
-        renderCommunityCards(cards, x, y);
     }
 
     /**
@@ -83,19 +75,30 @@ public class RenderCommunityCards {
     }
 
     /**
-     * Renders only the flop cards (first 3)
+     * Renders cards with the specified rotation
+     * @param communityCards - array with cards to be displayed
+     * @param x - starting x coordinate
+     * @param y - y coordinate
+     * @param rotation - rotation angle in degrees
      */
-    public void renderFlop(Card flop1, Card flop2, Card flop3, float x, float y) {
-        Card[] flop = {flop1, flop2, flop3, null, null};
-        renderCommunityCards(flop, x, y);
-    }
+    public void renderRotatedCards(Card[] communityCards, float x, float y, float rotation) {
+        if (communityCards == null) return;
 
-    /**
-     * Renders the flop + turn (first 4 cards)
-     */
-    public void renderFlopAndTurn(Card flop1, Card flop2, Card flop3, Card turn, float x, float y) {
-        Card[] cards = {flop1, flop2, flop3, turn, null};
-        renderCommunityCards(cards, x, y);
-    }
+        float originX = DISPLAY_CARD_WIDTH / 2;
+        float originY = DISPLAY_CARD_HEIGHT / 2;
 
+        for (int i = 0; i < communityCards.length; i++) {
+            if (communityCards[i] != null) {
+                float cardX = x + (DISPLAY_CARD_WIDTH + CARD_SPACING);
+
+                // Draw card background (rotated)
+                batch.draw(cardBack,
+                           cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
+                           originX, originY, // origin for rotation
+                           DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
+                           1, 1, // scale
+                           rotation); // rotation
+            }
+        }
+    }
 }

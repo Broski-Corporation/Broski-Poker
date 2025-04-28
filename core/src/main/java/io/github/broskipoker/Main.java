@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -59,6 +60,17 @@ public class Main extends ApplicationAdapter {
             for(TextButton button: menu.getButtons()) {
                 button.setVisible(false);
             }
+
+            // Draw the game elements here
+            // Desenează textul "YOU" în partea de jos a imaginii, unde este scaunul din mijloc
+            BitmapFont font = new BitmapFont();
+            font.getData().setScale(2); // Setează dimensiunea textului
+            font.setColor(1, 1, 1, 1); // Setează culoarea textului (alb)
+            batch.begin();
+            font.draw(batch, "YOU", Gdx.graphics.getWidth() / 2f - 20, 50); // Poziționează textul
+            batch.end();
+            font.dispose(); // Eliberează resursele fontului
+
         } else {
             // If the game has not started, draw the menu
             stage.act(Gdx.graphics.getDeltaTime());

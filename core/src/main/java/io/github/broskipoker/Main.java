@@ -6,19 +6,24 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+<<<<<<< Updated upstream
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.ui.RenderCommunityCards;
+=======
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+>>>>>>> Stashed changes
 
 public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;    // The SpriteBatch to draw the background
-    private Stage stage;          // The Stage to handle UI elements
-    private Menu menu;            // The Menu class instance to manage the menu UI
-    private Texture backgroundTexture;  // The background texture for the game
-    private boolean gameStarted = false;  // Flag to check if the game has started
+    private SpriteBatch batch;
+    private Stage stage;
+    private Menu menu;
+    private Texture backgroundTexture;
 
     // Texturi și regiuni pentru cărți
     private Texture cardSheet;
@@ -41,20 +46,12 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
-        // Create background texture
         backgroundTexture = new Texture("pokerTable.png");
-
-        // Create a new SpriteBatch
         batch = new SpriteBatch();
-
-        // Create a new Stage for managing UI components
         stage = new Stage(new ScreenViewport());
-
-        // Set the Stage as the input processor
         Gdx.input.setInputProcessor(stage);
-
-        // Create the menu instance
         menu = new Menu(stage);
+<<<<<<< Updated upstream
 
         // Inițializează fontul
         font = new BitmapFont();
@@ -95,23 +92,26 @@ public class Main extends ApplicationAdapter {
         communityCards[2] = new Card(Card.Suit.DIAMONDS, Card.Rank.TEN); // 10 de caro
         communityCards[3] = new Card(Card.Suit.CLUBS, Card.Rank.JACK);   // J de treflă
         communityCards[4] = new Card(Card.Suit.HEARTS, Card.Rank.QUEEN); // Q de inimă
+=======
+>>>>>>> Stashed changes
     }
 
     @Override
     public void render() {
-        // Clear the screen
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Check if the game has started
         if (menu.isGameStarted()) {
-            // If the game has started, draw the background
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             batch.begin();
-            batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.draw(
+                backgroundTexture,
+                0,
+                0,
+                Gdx.graphics.getWidth(),
+                Gdx.graphics.getHeight()
+            );
             batch.end();
 
-            // Hide the menu buttons
-            for(TextButton button: menu.getButtons()) {
+            for (TextButton button : menu.getButtons()) {
                 button.setVisible(false);
             }
 
@@ -134,19 +134,30 @@ public class Main extends ApplicationAdapter {
             batch.end();
 
         } else {
-            // If the game has not started, draw the menu
             stage.act(Gdx.graphics.getDeltaTime());
             stage.draw();
         }
+<<<<<<< Updated upstream
+=======
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+>>>>>>> Stashed changes
     }
 
     @Override
     public void dispose() {
-        // Dispose of resources when done
         batch.dispose();
         stage.dispose();
+<<<<<<< Updated upstream
         font.dispose();
         cardSheet.dispose();
         enhancersSheet.dispose();
+=======
+        backgroundTexture.dispose();
+        menu.dispose();
+>>>>>>> Stashed changes
     }
 }

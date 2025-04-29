@@ -37,3 +37,7 @@ For example, `core:clean` removes `build` folder only from the `core` project.
 - Added splitting cards with 0.3s delay
 - Round reset logic
 - Window mode resizing
+
+## Bugs
+
+- For animation, the first card dealt is for the small blind, not for chair 1

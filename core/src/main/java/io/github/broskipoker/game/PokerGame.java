@@ -1,3 +1,19 @@
+/**
+ * PokerGame.java
+ * <p>
+ * Game logic and state management for the poker game.
+ * Acts as the Model in the MVC pattern.
+ * <p>
+ * Responsibilities:
+ * - Manages core game state (pre-flop, flop, turn, river, showdown)
+ * - Handles poker rules and gameplay logic
+ * - Tracks players, cards, bets, and pot
+ * - Controls game progression through betting rounds
+ * - Evaluates hands and determines winners
+ * - Manages chip distribution
+ * - Maintains dealer position and blind structure
+ */
+
 package io.github.broskipoker.game;
 
 import java.util.ArrayList;

@@ -262,7 +262,8 @@ public class Main extends ApplicationAdapter {
                     pokerGame.goToShowdown();
                 } else if (state == PokerGame.GameState.SHOWDOWN) {
                     // Start new hand
-                    pokerGame = null;
+                    pokerGame.startNewHand();
+                    startNewHand();
                 }
             }
 

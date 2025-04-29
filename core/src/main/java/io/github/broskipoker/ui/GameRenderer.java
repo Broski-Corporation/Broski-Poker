@@ -88,9 +88,9 @@ public class GameRenderer {
         camera.update();
 
         // Load textures
-        backgroundTexture = new Texture("pokerTable.png");
-        cardSheet = new Texture(Gdx.files.internal("NeedsReview/textures/2x/8BitDeck.png"));
-        enhancersSheet = new Texture(Gdx.files.internal("NeedsReview/textures/2x/Enhancers.png"));
+        backgroundTexture = new Texture("textures/2x/pokerTable.png");
+        cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
+        enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
 
         // Set up card regions
         cardBackground = new TextureRegion(enhancersSheet, ENHANCER_WIDTH, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);

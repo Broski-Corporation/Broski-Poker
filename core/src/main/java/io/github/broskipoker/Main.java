@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -16,9 +15,7 @@ import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.ui.RenderCommunityCards;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+
 import java.util.*;
 
 public class Main extends ApplicationAdapter {
@@ -38,12 +35,14 @@ public class Main extends ApplicationAdapter {
     private RenderCommunityCards cardRenderer;
     private BitmapFont font;
 
+    // Rendering variables
     private float elapsedTime = 0f;
-    private int currentPlayerIndex = 0;
+    private int currentPlayerIndexForRendering = 0;
     private boolean dealingComplete = false;
     private boolean[][] dealtCards;
     private int dealingRound = 0;
 
+    // Camera and zoom settings
     private OrthographicCamera camera;
     private float defaultZoom = 1.0f;
     private float focusedZoom = 0.5f; // Value < 1 gives zoom in effect
@@ -105,9 +104,9 @@ public class Main extends ApplicationAdapter {
 
     }
 
-    public void startNewHand() {
+    public void resetDealingAnimation() {
         // Reset dealing animation state
-        currentPlayerIndex = 0;
+        currentPlayerIndexForRendering = 0;
         dealingRound = 0;
         dealingComplete = false;
         dealtCards = new boolean[5][2]; // For 5 players, 2 cards each (adjust if needed)
@@ -148,7 +147,7 @@ public class Main extends ApplicationAdapter {
             if (pokerGame == null) {
                 pokerGame = new PokerGame();
                 pokerGame.startNewHand(); // Start the first hand
-                startNewHand();
+                resetDealingAnimation();
             }
 
             // Update game state
@@ -182,26 +181,8 @@ public class Main extends ApplicationAdapter {
                     {Gdx.graphics.getWidth() * 0.2f, Gdx.graphics.getHeight() * 0.3f}  // chair 5
                 };
 
-            // Render all players' cards
+            // Mark which cards need to be rendered
             List<Player> players = pokerGame.getPlayers();
-            for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
-                float x = chairPositions[i][0];
-                float y = chairPositions[i][1];
-                Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
-                for (int j = 0; j < playerCards.length && j < dealtCards[i].length; j++) {
-                    if (dealtCards[i][j]) {
-                        if (i == 2) {
-                            cardRenderer.renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90);
-                        } else if (i == 3) {
-                            cardRenderer.renderCommunityCards(new Card[]{playerCards[j]}, x + j * 70, y, true);
-                        } else {
-                            cardRenderer.renderCommunityCards(new Card[]{playerCards[j]}, x + j * 70, y, false);
-                        }
-                    }
-                }
-            }
-
-            // Show cards based on game state
             if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
                 // Animate card distribution one at a time
                 if (!dealingComplete) {
@@ -209,15 +190,16 @@ public class Main extends ApplicationAdapter {
                     elapsedTime += Gdx.graphics.getDeltaTime();
                     if (elapsedTime > 0.3f) { // Deal one card every 0.3 seconds
                         players = pokerGame.getPlayers();
-                        if (currentPlayerIndex < players.size() && currentPlayerIndex < chairPositions.length) {
-                            Card[] playerCards = players.get(currentPlayerIndex).getHoleCards().toArray(new Card[0]);
+                        if (currentPlayerIndexForRendering < players.size() && currentPlayerIndexForRendering < chairPositions.length) {
+                            Card[] playerCards = players.get(currentPlayerIndexForRendering).getHoleCards().toArray(new Card[0]);
                             if (dealingRound < 2 && playerCards.length >= 2) {
-                                dealtCards[currentPlayerIndex][dealingRound] = true; // Mark this card as dealt
-                                currentPlayerIndex++; // Move to next player
-                                if (currentPlayerIndex >= players.size() || currentPlayerIndex >= chairPositions.length) { // If we've dealt to all players in this round, move to next round
+                                dealtCards[currentPlayerIndexForRendering][dealingRound] = true; // Mark this card as dealt
+                                currentPlayerIndexForRendering++; // Move to next player
+                                // If we've dealt to all players in this round, move to next round
+                                if (currentPlayerIndexForRendering >= players.size() || currentPlayerIndexForRendering >= chairPositions.length) {
                                     if (dealingRound < 1) {
                                         dealingRound++; // Start second round
-                                        currentPlayerIndex = 0; // Back to first player
+                                        currentPlayerIndexForRendering = 0; // Back to first player
                                     } else {
                                         dealingComplete = true; // Both rounds completed
                                     }
@@ -227,21 +209,38 @@ public class Main extends ApplicationAdapter {
                         elapsedTime = 0f;
                     }
                 }
-
             } else if (state == PokerGame.GameState.BETTING_FLOP || state == PokerGame.GameState.FLOP) {
                 if (communityCards.size() >= 3) {
                     Card[] flopCards = {communityCards.get(0), communityCards.get(1), communityCards.get(2), null, null};
-                    cardRenderer.renderCommunityCards(flopCards, centerX, centerY, true);
+                    cardRenderer.renderCards(flopCards, centerX, centerY, true);
                 }
             } else if (state == PokerGame.GameState.BETTING_TURN || state == PokerGame.GameState.TURN) {
                 if (communityCards.size() >= 4) {
                     Card[] turnCards = {communityCards.get(0), communityCards.get(1), communityCards.get(2),
                                        communityCards.get(3), null};
-                    cardRenderer.renderCommunityCards(turnCards, centerX, centerY, true);
+                    cardRenderer.renderCards(turnCards, centerX, centerY, true);
                 }
             } else {
                 Card[] displayCards = communityCards.toArray(new Card[0]);
-                cardRenderer.renderCommunityCards(displayCards, centerX, centerY, true);
+                cardRenderer.renderCards(displayCards, centerX, centerY, true);
+            }
+
+            // Render each player's cards
+            for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
+                float x = chairPositions[i][0];
+                float y = chairPositions[i][1];
+                Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
+                for (int j = 0; j < playerCards.length && j < dealtCards[i].length; j++) {
+                    if (dealtCards[i][j]) {
+                        if (i == 2) {
+                            cardRenderer.renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90);
+                        } else if (i == 3) {
+                            cardRenderer.renderCards(new Card[]{playerCards[j]}, x + j * 70, y, true);
+                        } else {
+                            cardRenderer.renderCards(new Card[]{playerCards[j]}, x + j * 70, y, false);
+                        }
+                    }
+                }
             }
 
             // Debug info
@@ -263,7 +262,7 @@ public class Main extends ApplicationAdapter {
                 } else if (state == PokerGame.GameState.SHOWDOWN) {
                     // Start new hand
                     pokerGame.startNewHand();
-                    startNewHand();
+                    resetDealingAnimation();
                 }
             }
 

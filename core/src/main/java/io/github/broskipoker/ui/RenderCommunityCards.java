@@ -1,11 +1,9 @@
 package io.github.broskipoker.ui;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import io.github.broskipoker.game.Card;
-import io.github.broskipoker.game.PokerGame;
 
 public class RenderCommunityCards {
     private SpriteBatch batch;
@@ -34,15 +32,16 @@ public class RenderCommunityCards {
      * @param communityCards - array with 0-5 cards to be displayed
      * @param x - starting x coordinate for the first card
      * @param y - y coordinate for the cards
+     * @param isFaceUp - true if the cards should be displayed face up, false for face down
      */
-    public void renderCommunityCards(Card[] communityCards, float x, float y, boolean isPlayerCards) {
+    public void renderCards(Card[] communityCards, float x, float y, boolean isFaceUp) {
         if (communityCards == null) return;
 
         for (int i = 0; i < communityCards.length; i++) {
             if (communityCards[i] != null) {
                 float cardX = x + i * (DISPLAY_CARD_WIDTH + CARD_SPACING);
 
-                if (isPlayerCards) {
+                if (isFaceUp) {
                     // Draw card background
                     batch.draw(cardBackground, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
 

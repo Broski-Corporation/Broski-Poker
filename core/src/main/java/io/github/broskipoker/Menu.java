@@ -35,7 +35,7 @@ public class Menu {
     }
 
     private void createMenu() {
-        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("menuMusic.mp3"));
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("kevin-macleod-investigations.mp3"));
         menuMusic.setLooping(true);
         menuMusic.setVolume(menuVolume);
         menuMusic.play();

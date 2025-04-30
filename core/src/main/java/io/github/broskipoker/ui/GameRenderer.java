@@ -102,8 +102,8 @@ public class GameRenderer {
         cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
         enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
 
-        final int CHIP_WIDTH = 1418 / 3;
-        final int CHIP_HEIGHT = 477;
+        final int CHIP_WIDTH = 1465 / 3;
+        final int CHIP_HEIGHT = 465;
         // Load buttons sheet
         buttonsSheet = new Texture(Gdx.files.internal("textures/2x/SmallBigDealer.png"));
         smallBlindRegion = new TextureRegion(buttonsSheet, 0, 0, CHIP_WIDTH, CHIP_HEIGHT);

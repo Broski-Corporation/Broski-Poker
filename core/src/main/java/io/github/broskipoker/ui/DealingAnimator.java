@@ -25,10 +25,12 @@ public class DealingAnimator {
     private float elapsedTime;
     private final float dealingInterval = 0.3f;
     private int maxPlayers;
+    private int dealerPosition;
 
-    public DealingAnimator(int playerCount) {
+    public DealingAnimator(int playerCount, int dealerPosition) {
         this.maxPlayers = playerCount;
         dealtCards = new boolean[playerCount][2];
+        this.dealerPosition = dealerPosition;
         reset();
     }
 
@@ -42,13 +44,13 @@ public class DealingAnimator {
                 Card[] playerCards = players.get(currentPlayerIndex).getHoleCards().toArray(new Card[0]);
                 if (dealingRound < 2 && playerCards.length >= 2) {
                     dealtCards[currentPlayerIndex][dealingRound] = true; // Mark this card as dealt
-                    currentPlayerIndex++; // Move to next player
+                    currentPlayerIndex = (currentPlayerIndex + 1) % 5; // Move to next player
 
                     // If we've dealt to all players in this round, move to next round
                     if (currentPlayerIndex >= players.size() || currentPlayerIndex >= maxPlayerPositions) {
                         if (dealingRound < 1) {
                             dealingRound++; // Start second round
-                            currentPlayerIndex = 0; // Back to first player
+                            currentPlayerIndex = dealerPosition;
                         } else {
                             dealingComplete = true; // Both rounds completed
                         }
@@ -60,7 +62,7 @@ public class DealingAnimator {
     }
 
     public void reset() {
-        currentPlayerIndex = 0;
+        currentPlayerIndex = (currentPlayerIndex + 1) % maxPlayers; // Start from the next player
         dealingRound = 0;
         dealingComplete = false;
         elapsedTime = 0f;

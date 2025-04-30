@@ -115,7 +115,7 @@ public class GameRenderer {
         };
 
         // Initialize dealing animator
-        dealingAnimator = new DealingAnimator(5, pokerGame.getDealerPosition()); // Max 5 players
+        dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition()); // Max 5 players
     }
 
     public void render(float delta) {

@@ -29,7 +29,7 @@ public class PokerGame {
     private int currentBet;
     private int currentPlayerIndex;
     private int lastRaisePlayerIndex;
-    private int dealerPosition;
+    private static int dealerPosition;
     private boolean needsPlayerAction;
     private GameState gameState;
 
@@ -52,7 +52,7 @@ public class PokerGame {
         currentBet = 0;
         currentPlayerIndex = 0;
         lastRaisePlayerIndex = 0;
-        dealerPosition = 0;
+        dealerPosition = -1;
         needsPlayerAction = false;
         gameState = GameState.WAITING_FOR_PLAYERS;
     }
@@ -378,7 +378,7 @@ public class PokerGame {
         return currentBet;
     }
 
-    public int getDealerPosition() {
+    public static int getDealerPosition() {
         return dealerPosition;
     }
 }

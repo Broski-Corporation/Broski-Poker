@@ -15,6 +15,9 @@ package io.github.broskipoker.ui;
 
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
+import io.github.broskipoker.game.PokerGame;
+
+import java.util.Arrays;
 import java.util.List;
 
 public class DealingAnimator {
@@ -27,6 +30,7 @@ public class DealingAnimator {
     private int maxPlayers;
     private int dealerPosition;
 
+
     public DealingAnimator(int playerCount, int dealerPosition) {
         this.maxPlayers = playerCount;
         dealtCards = new boolean[playerCount][2];
@@ -35,7 +39,9 @@ public class DealingAnimator {
     }
 
     public void update(float delta, List<Player> players, int maxPlayerPositions) {
-        if (dealingComplete) return;
+        if (dealingComplete){
+            return;
+        }
 
         // Animate card distribution one at a time
         elapsedTime += delta;
@@ -44,13 +50,12 @@ public class DealingAnimator {
                 Card[] playerCards = players.get(currentPlayerIndex).getHoleCards().toArray(new Card[0]);
                 if (dealingRound < 2 && playerCards.length >= 2) {
                     dealtCards[currentPlayerIndex][dealingRound] = true; // Mark this card as dealt
-                    currentPlayerIndex = (currentPlayerIndex + 1) % 5; // Move to next player
-
+                    currentPlayerIndex = (currentPlayerIndex + 1) % maxPlayers; // Move to next player
                     // If we've dealt to all players in this round, move to next round
-                    if (currentPlayerIndex >= players.size() || currentPlayerIndex >= maxPlayerPositions) {
+                    if (currentPlayerIndex == PokerGame.getDealerPosition() || currentPlayerIndex >= maxPlayerPositions) {
                         if (dealingRound < 1) {
                             dealingRound++; // Start second round
-                            currentPlayerIndex = dealerPosition;
+                            currentPlayerIndex = PokerGame.getDealerPosition();
                         } else {
                             dealingComplete = true; // Both rounds completed
                         }
@@ -59,18 +64,17 @@ public class DealingAnimator {
             }
             elapsedTime = 0f;
         }
+
     }
 
     public void reset() {
-        currentPlayerIndex = (currentPlayerIndex + 1) % maxPlayers; // Start from the next player
+        currentPlayerIndex = PokerGame.getDealerPosition() % maxPlayers; // Start from the next player
         dealingRound = 0;
         dealingComplete = false;
         elapsedTime = 0f;
 
-        for (int i = 0; i < dealtCards.length; i++) {
-            for (int j = 0; j < dealtCards[i].length; j++) {
-                dealtCards[i][j] = false;
-            }
+        for (boolean[] dealtCard : dealtCards) {
+            Arrays.fill(dealtCard, false);
         }
     }
 

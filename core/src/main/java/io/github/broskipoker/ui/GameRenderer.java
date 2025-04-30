@@ -165,8 +165,8 @@ public class GameRenderer {
         int dealerPosition = PokerGame.getDealerPosition();
 
         // Button size
-        int buttonWidth = 120;
-        int buttonHeight = 120;
+        int buttonWidth = 80;
+        int buttonHeight = 80;
 
         // Calculate small blind and big blind positions
         int smallBlindPosition = (dealerPosition) % chairPositions.length;

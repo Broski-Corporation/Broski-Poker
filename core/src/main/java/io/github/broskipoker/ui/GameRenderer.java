@@ -37,6 +37,7 @@ public class GameRenderer {
     private final Stage stage;
     private final Menu menu;
     private final BitmapFont font;
+    private final BitmapFont blindsFont;
 
     // Camera settings
     private final OrthographicCamera camera;
@@ -51,6 +52,10 @@ public class GameRenderer {
     private final TextureRegion[][] cardRegions;
     private final TextureRegion cardBackground;
     private final TextureRegion cardBack;
+    private final Texture buttonsSheet;
+    private final TextureRegion dealerRegion;
+    private final TextureRegion smallBlindRegion;
+    private final TextureRegion bigBlindRegion;
 
     // Card dimensions
     private static final int CARDS_PER_ROW = 13;
@@ -82,6 +87,11 @@ public class GameRenderer {
         font.getData().setScale(3);
         font.setColor(1, 1, 1, 1);
 
+        blindsFont = new BitmapFont();
+        blindsFont.getData().setScale(1.5f);
+        blindsFont.setColor(1, 0.84f, 0, 1); // Gold color
+
+
         // Initialize camera
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -91,6 +101,14 @@ public class GameRenderer {
         backgroundTexture = new Texture("textures/2x/pokerTable.png");
         cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
         enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
+
+        final int CHIP_WIDTH = 1418 / 3;
+        final int CHIP_HEIGHT = 477;
+        // Load buttons sheet
+        buttonsSheet = new Texture(Gdx.files.internal("textures/2x/SmallBigDealer.png"));
+        smallBlindRegion = new TextureRegion(buttonsSheet, 0, 0, CHIP_WIDTH, CHIP_HEIGHT);
+        dealerRegion = new TextureRegion(buttonsSheet, CHIP_WIDTH + 1, 0, CHIP_WIDTH, CHIP_HEIGHT);
+        bigBlindRegion = new TextureRegion(buttonsSheet, 2 * CHIP_WIDTH + 1, 0,  CHIP_WIDTH, CHIP_HEIGHT);
 
         // Set up card regions
         cardBackground = new TextureRegion(enhancersSheet, ENHANCER_WIDTH, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
@@ -139,6 +157,35 @@ public class GameRenderer {
             stage.act(delta);
             stage.draw();
         }
+    }
+
+    // Modify renderBlindPositions()
+    private void renderBlindPositions() {
+        // Get dealer position
+        int dealerPosition = PokerGame.getDealerPosition();
+
+        // Button size
+        int buttonWidth = 120;
+        int buttonHeight = 120;
+
+        // Calculate small blind and big blind positions
+        int smallBlindPosition = (dealerPosition) % chairPositions.length;
+        int bigBlindPosition = (dealerPosition + 1) % chairPositions.length;
+
+        // Render Dealer Texture
+        float dpX = 100;
+        float dpY = 520;
+        batch.draw(dealerRegion, dpX, dpY, buttonWidth, buttonHeight);
+
+        // Render Small Blind Texture
+        float sbX = chairPositions[smallBlindPosition][0];
+        float sbY = chairPositions[smallBlindPosition][1] + DISPLAY_CARD_HEIGHT + 10;
+        batch.draw(smallBlindRegion, sbX, sbY, buttonWidth, buttonHeight);
+
+        // Render Big Blind Texture
+        float bbX = chairPositions[bigBlindPosition][0];
+        float bbY = chairPositions[bigBlindPosition][1] + DISPLAY_CARD_HEIGHT + 10;
+        batch.draw(bigBlindRegion, bbX, bbY, buttonWidth, buttonHeight);
     }
 
     /**
@@ -249,6 +296,8 @@ public class GameRenderer {
 
         // Render dealer position (deck)
         renderCardStack(Gdx.graphics.getWidth() / 7f, centerY, 5, enhancersSheet);
+
+        renderBlindPositions();
 
         // Render community cards based on game state
         if (state == PokerGame.GameState.BETTING_FLOP || state == PokerGame.GameState.FLOP) {

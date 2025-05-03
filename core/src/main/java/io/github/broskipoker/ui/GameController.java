@@ -10,6 +10,7 @@
  * - Handle zoom controls and view adjustments
  * - Manage debug features for testing
  * - Coordinate between user input and game logic
+ * - Handle AI decision making for bot players
  */
 
 package io.github.broskipoker.ui;
@@ -18,6 +19,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
+import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 
 public class GameController extends InputAdapter {
@@ -25,6 +27,12 @@ public class GameController extends InputAdapter {
     private final GameRenderer renderer;
     private final InputMultiplexer inputMultiplexer;
     private static final int HUMAN_PLAYER_INDEX = 3; // the human player is at index 3
+
+    // Bot thinking variables (moved from BettingUI)
+    private float botDecisionTimer = 0;
+    private boolean isBotThinking = false;
+    private int thinkingBotIndex = -1;
+    private static final float BOT_THINKING_TIME = 3.0f;
 
     public GameController(PokerGame pokerGame, GameRenderer renderer) {
         this.pokerGame = pokerGame;
@@ -45,6 +53,9 @@ public class GameController extends InputAdapter {
             // Update game state
             pokerGame.update(delta);
 
+            // Handle bot thinking and decisions
+            updateBotThinking(delta);
+
             // Debug state advancement
             handleDebugControls();
 
@@ -59,6 +70,76 @@ public class GameController extends InputAdapter {
                 Gdx.input.setInputProcessor(renderer.getStage());
             }
         }
+    }
+
+    // Method to update bot thinking status and execute decisions
+    private void updateBotThinking(float delta) {
+        // Check if game needs player action
+        if (pokerGame.needsPlayerAction()) {
+            int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
+
+            // If it's not the human player's turn and a player action is needed
+            if (currentPlayerIndex != HUMAN_PLAYER_INDEX) {
+                // Start thinking if not already or if the bot changed
+                if (!isBotThinking || thinkingBotIndex != currentPlayerIndex) {
+                    startBotThinking(currentPlayerIndex);
+                }
+
+                // Update thinking timer
+                if (isBotThinking && thinkingBotIndex == currentPlayerIndex) {
+                    botDecisionTimer -= delta;
+                    if (botDecisionTimer <= 0) {
+                        executeBotDecision(thinkingBotIndex);
+                    }
+                }
+            } else {
+                // It's human's turn, stop any bot thinking
+                isBotThinking = false;
+                thinkingBotIndex = -1;
+            }
+        } else {
+            // No player action needed, reset bot thinking state
+            isBotThinking = false;
+            thinkingBotIndex = -1;
+        }
+    }
+
+    // Start the bot thinking process
+    public void startBotThinking(int playerIndex) {
+        // Check if it's actually a bot's turn
+        if (playerIndex != HUMAN_PLAYER_INDEX && pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
+            isBotThinking = true;
+            thinkingBotIndex = playerIndex;
+            botDecisionTimer = BOT_THINKING_TIME; // Reset timer
+        }
+    }
+
+    // Execute bot decision after thinking time
+    private void executeBotDecision(int playerIndex) {
+        // Ensure it's still this bot's turn before acting
+        if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
+            // Simple bot logic: always check if possible, otherwise call
+            Player botPlayer = pokerGame.getCurrentPlayer();
+
+            // Basic decision logic (can be expanded)
+            if (botPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
+                pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
+            } else {
+                pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+            }
+        }
+        // Reset thinking state after action attempt
+        isBotThinking = false;
+        thinkingBotIndex = -1;
+    }
+
+    // Getter methods for BettingUI to access bot thinking status
+    public boolean isBotThinking() {
+        return isBotThinking;
+    }
+
+    public int getThinkingBotIndex() {
+        return thinkingBotIndex;
     }
 
     private void handleDebugControls() {

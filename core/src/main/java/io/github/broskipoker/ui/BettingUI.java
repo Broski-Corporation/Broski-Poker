@@ -37,6 +37,7 @@ public class BettingUI {
     private final SpriteBatch batch;
     private final Skin skin;
     private final FontManager fontManager;
+    private final GameController gameController;
 
     // Different fonts for different UI elements
     private final BitmapFont defaultFont;
@@ -76,22 +77,21 @@ public class BettingUI {
     // Player index for the human player
     private static final int HUMAN_PLAYER_INDEX = 3;
 
-    // Bot delay
-    private float botDecisionTimer = 0;
-    private boolean isBotThinking = false;
-    private int thinkingBotIndex = -1;
-    private static final float BOT_THINKING_TIME = 3.0f;
-
     // Constants for UI layout
     private static final int BUTTON_WIDTH = 120;
     private static final int BUTTON_HEIGHT = 40;
     private static final int PADDING = 10;
 
     public BettingUI(PokerGame pokerGame, Stage stage) {
+        this(pokerGame, stage, null);
+    }
+
+    public BettingUI(PokerGame pokerGame, Stage stage, GameController gameController) {
         this.pokerGame = pokerGame;
         this.stage = stage;
         this.batch = new SpriteBatch();
         this.currentBetAmount = 0;
+        this.gameController = gameController;
 
         // Initialize FontManager and create specific fonts for different UI elements
         this.fontManager = FontManager.getInstance();
@@ -337,31 +337,28 @@ public class BettingUI {
         Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
         playerChipsLabel.setText("Your Chips: $" + humanPlayer.getChips());
 
-        // Update turn info label and button states
+        // Update turn info label and button states based on whose turn it is
         if (pokerGame.needsPlayerAction()) {
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
+
             if (currentPlayerIndex == HUMAN_PLAYER_INDEX) {
+                // It's human player's turn
                 turnInfoLabel.setText("It's your turn!");
                 setButtonsEnabled(true);
-                isBotThinking = false; // Stop any bot thinking if it's human's turn
-                thinkingBotIndex = -1;
             } else {
-                // It's a bot's turn
-                if (!isBotThinking || thinkingBotIndex != currentPlayerIndex) {
-                    // Start thinking if not already or if the bot changed
-                    handleBotDecision(currentPlayerIndex);
+                // It's a bot's turn - use GameController to check bot thinking status
+                if (gameController != null && gameController.isBotThinking()) {
+                    String botName = pokerGame.getPlayers().get(currentPlayerIndex).getName();
+                    turnInfoLabel.setText(botName + " is thinking...");
+                } else {
+                    turnInfoLabel.setText("Waiting for " + pokerGame.getCurrentPlayer().getName());
                 }
-                // Update label while bot is thinking
-                String botName = pokerGame.getCurrentPlayer().getName();
-                turnInfoLabel.setText(botName + " is thinking...");
                 setButtonsEnabled(false);
             }
         } else {
             // No player action needed (e.g., dealing, showdown)
             turnInfoLabel.setText(getGameStateDescription());
             setButtonsEnabled(false);
-            isBotThinking = false; // Stop thinking if action is no longer needed
-            thinkingBotIndex = -1;
         }
 
         // Update check/call button text based on current bet for human player
@@ -387,16 +384,6 @@ public class BettingUI {
         // Set minimum bet amount by default for raise slider/input (if implemented)
         if (currentBetAmount == 0) {
             setBetAmount(pokerGame.getCurrentBet()); // Default to current bet level
-        }
-
-        // Handle bot thinking timer
-        if (isBotThinking && thinkingBotIndex == pokerGame.getCurrentPlayerIndex() && pokerGame.needsPlayerAction()) {
-            botDecisionTimer -= Gdx.graphics.getDeltaTime();
-            if (botDecisionTimer <= 0) {
-                executeBotDecision(thinkingBotIndex);
-                isBotThinking = false;
-                thinkingBotIndex = -1;
-            }
         }
     }
 
@@ -468,38 +455,5 @@ public class BettingUI {
         buttonTexture.dispose();
         buttonDownTexture.dispose();
         // FontManager handles font disposal
-    }
-
-    // Method to handle bot decisions automatically
-    public void handleBotDecision(int playerIndex) {
-        // Check if it's the correct bot's turn and action is needed
-        if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction() && !isBotThinking) {
-            // Start the timer for bot thinking
-            isBotThinking = true;
-            thinkingBotIndex = playerIndex;
-            botDecisionTimer = BOT_THINKING_TIME; // Reset timer
-
-            String botName = pokerGame.getPlayers().get(playerIndex).getName();
-            turnInfoLabel.setText(botName + " is thinking..."); // Update label
-            setButtonsEnabled(false); // Ensure human controls are disabled
-        }
-    }
-
-    private void executeBotDecision(int playerIndex) {
-        // Ensure it's still this bot's turn before acting
-        if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
-            // Simple bot logic: always check if possible, otherwise call
-            Player botPlayer = pokerGame.getCurrentPlayer();
-
-            // Basic decision logic (can be expanded)
-            if (botPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
-                pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
-            } else {
-                pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
-            }
-        }
-        // Reset thinking state after action attempt
-        isBotThinking = false;
-        thinkingBotIndex = -1;
     }
 }

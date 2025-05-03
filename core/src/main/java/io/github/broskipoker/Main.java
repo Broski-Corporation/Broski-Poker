@@ -31,8 +31,15 @@ public class Main extends ApplicationAdapter {
         // Initialize core components
         pokerGame = new PokerGame();
         pokerGame.startNewHand();
+
+        // Initialize renderer first
         renderer = new GameRenderer(pokerGame);
+
+        // Initialize controller
         controller = new GameController(pokerGame, renderer);
+
+        // Set controller in renderer after both are initialized to avoid circular dependency
+        renderer.setGameController(controller);
 
         // Set input processor to handle menu first
         Gdx.input.setInputProcessor(renderer.getStage());

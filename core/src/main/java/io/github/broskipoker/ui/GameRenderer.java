@@ -78,11 +78,14 @@ public class GameRenderer {
     private final DealingAnimator dealingAnimator;
 
     // Betting UI
-    private final BettingUI bettingUI;
+    private BettingUI bettingUI;
     private final TextureRegion turnIndicatorRegion;
 
     // Define human player index
     private static final int HUMAN_PLAYER_INDEX = 3;
+
+    // Reference to GameController for passing to BettingUI
+    private GameController gameController;
 
     public GameRenderer(PokerGame pokerGame) {
         this.pokerGame = pokerGame;
@@ -142,8 +145,9 @@ public class GameRenderer {
         // Initialize dealing animator
         dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition()); // Max 5 players
 
-        // Initialize betting UI
-        bettingUI = new BettingUI(pokerGame, stage);
+        // Note: BettingUI will be initialized with the GameController in setGameController()
+        // This allows us to avoid circular dependencies
+        bettingUI = null;
 
         // FIX: Use smallBlindRegion as turn indicator instead of loading missing texture
         turnIndicatorRegion = smallBlindRegion;
@@ -157,6 +161,12 @@ public class GameRenderer {
         //     // Fallback to small blind texture region
         //     turnIndicatorRegion = smallBlindRegion;
         // }
+    }
+
+    public void setGameController(GameController controller) {
+        this.gameController = controller;
+        // Now initialize the BettingUI with the GameController
+        this.bettingUI = new BettingUI(pokerGame, stage, gameController);
     }
 
     public void render(float delta) {
@@ -476,15 +486,11 @@ public class GameRenderer {
     }
 
     // Handle player turns and betting UI
-    // Updated handlePlayerTurns method for GameRenderer.java
     private void handlePlayerTurns() {
-        // Always update the betting UI status.
-        // The BettingUI.update() method now handles checking if it's a bot's turn
-        // and initiating the thinking process internally.
-        bettingUI.update();
-
-        // No need to explicitly call handleBotDecision here anymore,
-        // as the logic is integrated into bettingUI.update().
+        // Simply update the betting UI which now uses GameController for bot thinking status
+        if (bettingUI != null) {
+            bettingUI.update();
+        }
     }
 
     public void resize(int width, int height) {
@@ -514,4 +520,3 @@ public class GameRenderer {
         bettingUI.dispose();
     }
 }
-

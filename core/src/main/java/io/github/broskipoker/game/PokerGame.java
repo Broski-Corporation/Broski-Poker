@@ -71,6 +71,10 @@ public class PokerGame {
     }
 
     public void startNewHand() {
+        if (dealerPosition == -1) {
+            dealerPosition = players.size() - 1;
+        }
+
         // Reset game state
         deck.reset(); // Also includes shuffle
         pot = 0;
@@ -88,8 +92,8 @@ public class PokerGame {
         dealerPosition = (dealerPosition + 1) % players.size();
 
         // Set blinds
-        int smallBlindPos = (dealerPosition + 1) % players.size();
-        int bigBlindPos = (dealerPosition + 2) % players.size();
+        int smallBlindPos = (dealerPosition) % players.size();
+        int bigBlindPos = (dealerPosition + 1) % players.size();
 
         // Players post blinds
         Player smallBlindPlayer = players.get(smallBlindPos);

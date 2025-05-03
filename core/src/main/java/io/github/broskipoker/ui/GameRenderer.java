@@ -74,6 +74,13 @@ public class GameRenderer {
     // Card dealing animation helper instance
     private final DealingAnimator dealingAnimator;
 
+    // Betting UI
+    private final BettingUI bettingUI;
+    private final TextureRegion turnIndicatorRegion;
+
+    // Define human player index
+    private static final int HUMAN_PLAYER_INDEX = 3;
+
     public GameRenderer(PokerGame pokerGame) {
         this.pokerGame = pokerGame;
 
@@ -134,6 +141,22 @@ public class GameRenderer {
 
         // Initialize dealing animator
         dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition()); // Max 5 players
+
+        // Initialize betting UI
+        bettingUI = new BettingUI(pokerGame, stage);
+
+        // FIX: Use smallBlindRegion as turn indicator instead of loading missing texture
+        turnIndicatorRegion = smallBlindRegion;
+
+        // Alternative fix would be to create the file:
+        // try {
+        //     Texture turnIndicatorTexture = new Texture(Gdx.files.internal("textures/2x/turnIndicator.png"));
+        //     turnIndicatorRegion = new TextureRegion(turnIndicatorTexture, 0, 0, 100, 100);
+        // } catch (Exception e) {
+        //     System.out.println("Could not load turn indicator texture: " + e.getMessage());
+        //     // Fallback to small blind texture region
+        //     turnIndicatorRegion = smallBlindRegion;
+        // }
     }
 
     public void render(float delta) {
@@ -142,6 +165,9 @@ public class GameRenderer {
             for (TextButton button : menu.getButtons()) {
                 button.setVisible(false);
             }
+
+            // Show betting UI when game is started
+            bettingUI.setVisible(true);
 
             batch.setProjectionMatrix(camera.combined);
 
@@ -152,7 +178,18 @@ public class GameRenderer {
 
             // Draw game elements
             renderGameElements(delta);
+
+            // Handle player turns
+            handlePlayerTurns();
+
+            // Update stage
+            stage.act(delta);
+            stage.draw();
+
         } else {
+            // Hide betting UI when in menu
+            bettingUI.setVisible(false);
+
             // Draw menu
             stage.act(delta);
             stage.draw();
@@ -253,11 +290,11 @@ public class GameRenderer {
 
                 // Draw card background (rotated)
                 batch.draw(cardBack,
-                           cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
-                           originX, originY, // origin for rotation
-                           DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
-                           1, 1, // scale
-                           rotation); // rotation
+                    cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
+                    originX, originY, // origin for rotation
+                    DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
+                    1, 1, // scale
+                    rotation); // rotation
             }
         }
     }
@@ -282,6 +319,7 @@ public class GameRenderer {
         }
     }
 
+    // Needs to be modified to show current player turn
     private void renderGameElements(float delta) {
         // Get game data
         List<Player> players = pokerGame.getPlayers();
@@ -308,14 +346,19 @@ public class GameRenderer {
         } else if (state == PokerGame.GameState.BETTING_TURN || state == PokerGame.GameState.TURN) {
             if (communityCards.size() >= 4) {
                 Card[] turnCards = {communityCards.get(0), communityCards.get(1),
-                                   communityCards.get(2), communityCards.get(3), null};
+                    communityCards.get(2), communityCards.get(3), null};
                 renderCards(turnCards, centerX, centerY, true);
             }
         } else if (state == PokerGame.GameState.BETTING_RIVER || state == PokerGame.GameState.RIVER
-                   || state == PokerGame.GameState.SHOWDOWN) {
+            || state == PokerGame.GameState.SHOWDOWN) {
             Card[] displayCards = communityCards.toArray(new Card[0]);
             renderCards(displayCards, centerX, centerY, true);
         }
+
+        // Show pot amount
+        String potText = "Pot: $" + pokerGame.getPot();
+        font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Alb
+        font.draw(batch, potText,centerX+ 100, centerY);
 
         // Handle card dealing animation
         if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
@@ -324,6 +367,13 @@ public class GameRenderer {
 
         // Render each player's cards
         renderPlayerCards(players);
+
+        // Render player info with current player indicator
+        if (pokerGame.needsPlayerAction()) {
+            renderPlayerInfo(players, pokerGame.getCurrentPlayerIndex());
+        } else {
+            renderPlayerInfo(players, -1); // No current player
+        }
 
         // Debug info
         font.draw(batch, "Game State: " + state.toString(), 50, 100);
@@ -368,6 +418,70 @@ public class GameRenderer {
         camera.update();
     }
 
+    // Player info rendering
+    private void renderPlayerInfo(List<Player> players, int currentPlayerIndex) {
+        // Define individual text offsets for each player
+        float[][] textOffsets = {
+            {-50, 300}, // player 1
+            {-50, 300}, // player 2
+            {250, 100}, // player 3
+            {-50, -50},  // player 4
+            {-50, -50}  // player 5
+        };
+
+        for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
+            float x = chairPositions[i][0];
+            float y = chairPositions[i][1] - 40; // Ajustează această valoare dacă este necesar
+
+            // Aplica offset-ul individual pentru fiecare jucător
+            float textOffsetX = textOffsets[i][0];
+            float textOffsetY = textOffsets[i][1];
+
+            // Desenează informațiile despre jucător
+            String playerInfo = players.get(i).getName() + ": $" + players.get(i).getChips();
+
+            if (i == HUMAN_PLAYER_INDEX) {
+                font.setColor(0.2f, 0.6f, 1.0f, 1.0f); // Albastru pentru jucătorul uman
+                playerInfo += " (You)";
+            } else {
+                font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Alb pentru ceilalți jucători
+            }
+
+            font.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
+
+            // Afișează pariul curent, dacă există
+            if (players.get(i).getCurrentBet() > 0) {
+                font.setColor(1.0f, 0.84f, 0.0f, 1.0f); // Auriu pentru sumele pariate
+                font.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+            }
+
+            // Indicator pentru jucătorul curent
+            if (i == currentPlayerIndex && pokerGame.needsPlayerAction()) {
+                batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25);
+            }
+
+            // Resetează culoarea fontului
+            font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
+
+    // Handle player turns and betting UI
+    // Updated handlePlayerTurns method for GameRenderer.java
+    private void handlePlayerTurns() {
+        // Always update the betting UI status
+        bettingUI.update();
+
+        // Check if it's a betting round that needs player action
+        if (pokerGame.needsPlayerAction()) {
+            int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
+
+            // If it's not the human player's turn, handle bot decisions
+            if (currentPlayerIndex != HUMAN_PLAYER_INDEX) {
+                bettingUI.handleBotDecision(currentPlayerIndex);
+            }
+        }
+    }
+
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
         camera.setToOrtho(false, width, height);
@@ -390,5 +504,6 @@ public class GameRenderer {
         enhancersSheet.dispose();
         backgroundTexture.dispose();
         menu.dispose();
+        bettingUI.dispose();
     }
 }

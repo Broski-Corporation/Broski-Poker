@@ -477,18 +477,13 @@ public class GameRenderer {
     // Handle player turns and betting UI
     // Updated handlePlayerTurns method for GameRenderer.java
     private void handlePlayerTurns() {
-        // Always update the betting UI status
+        // Always update the betting UI status.
+        // The BettingUI.update() method now handles checking if it's a bot's turn
+        // and initiating the thinking process internally.
         bettingUI.update();
 
-        // Check if it's a betting round that needs player action
-        if (pokerGame.needsPlayerAction()) {
-            int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
-
-            // If it's not the human player's turn, handle bot decisions
-            if (currentPlayerIndex != HUMAN_PLAYER_INDEX) {
-                bettingUI.handleBotDecision(currentPlayerIndex);
-            }
-        }
+        // No need to explicitly call handleBotDecision here anymore,
+        // as the logic is integrated into bettingUI.update().
     }
 
     public void resize(int width, int height) {
@@ -518,3 +513,4 @@ public class GameRenderer {
         bettingUI.dispose();
     }
 }
+

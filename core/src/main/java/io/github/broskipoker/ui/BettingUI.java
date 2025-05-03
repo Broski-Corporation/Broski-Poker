@@ -76,6 +76,12 @@ public class BettingUI {
     // Player index for the human player
     private static final int HUMAN_PLAYER_INDEX = 3;
 
+    // Bot delay
+    private float botDecisionTimer = 0;
+    private boolean isBotThinking = false;
+    private int thinkingBotIndex = -1;
+    private static final float BOT_THINKING_TIME = 3.0f;
+
     // Constants for UI layout
     private static final int BUTTON_WIDTH = 120;
     private static final int BUTTON_HEIGHT = 40;
@@ -330,35 +336,66 @@ public class BettingUI {
         Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
         playerChipsLabel.setText("Your Chips: $" + humanPlayer.getChips());
 
-        // Update turn info label
-        if (pokerGame.getCurrentPlayerIndex() == HUMAN_PLAYER_INDEX && pokerGame.needsPlayerAction()) {
-            turnInfoLabel.setText("It's your turn!");
-            setButtonsEnabled(true);
-        } else if (pokerGame.needsPlayerAction()) {
-            String currentPlayerName = pokerGame.getCurrentPlayer().getName();
-            turnInfoLabel.setText("Waiting for " + currentPlayerName + "...");
-            setButtonsEnabled(false);
+        // Update turn info label and button states
+        if (pokerGame.needsPlayerAction()) {
+            int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
+            if (currentPlayerIndex == HUMAN_PLAYER_INDEX) {
+                turnInfoLabel.setText("It's your turn!");
+                setButtonsEnabled(true);
+                isBotThinking = false; // Stop any bot thinking if it's human's turn
+                thinkingBotIndex = -1;
+            } else {
+                // It's a bot's turn
+                if (!isBotThinking || thinkingBotIndex != currentPlayerIndex) {
+                    // Start thinking if not already or if the bot changed
+                    handleBotDecision(currentPlayerIndex);
+                }
+                // Update label while bot is thinking
+                String botName = pokerGame.getCurrentPlayer().getName();
+                turnInfoLabel.setText(botName + " is thinking...");
+                setButtonsEnabled(false);
+            }
         } else {
+            // No player action needed (e.g., dealing, showdown)
             turnInfoLabel.setText(getGameStateDescription());
             setButtonsEnabled(false);
+            isBotThinking = false; // Stop thinking if action is no longer needed
+            thinkingBotIndex = -1;
         }
 
-        // Update check/call button text based on current bet
+        // Update check/call button text based on current bet for human player
         if (humanPlayer.getChips() <= pokerGame.getCurrentBet()) {
             checkCallButton.setText("All-In $" + humanPlayer.getChips());
-            raiseButton.setDisabled(true);
+            raiseButton.setDisabled(true); // Also disable raise if going all-in via call
         } else if (humanPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
             checkCallButton.setText("Call $" + (pokerGame.getCurrentBet() - humanPlayer.getCurrentBet()));
         } else {
             checkCallButton.setText("Check");
         }
 
-        // If player doesn't have enough chips to raise, disable raise button
-        raiseButton.setDisabled(humanPlayer.getChips() <= pokerGame.getCurrentBet());
+        // If player doesn't have enough chips to make a minimum raise, disable raise button
+        // A minimum raise is doubling the current bet level, or going all-in if less
+        int minRaiseAmount = pokerGame.getCurrentBet() * 2;
+        if (humanPlayer.getChips() + humanPlayer.getCurrentBet() <= pokerGame.getCurrentBet() || humanPlayer.getChips() <= 0) {
+             raiseButton.setDisabled(true);
+        } else if (raiseButton.isDisabled() && pokerGame.getCurrentPlayerIndex() == HUMAN_PLAYER_INDEX && pokerGame.needsPlayerAction()) {
+             // Re-enable if conditions allow (and it's human's turn)
+             raiseButton.setDisabled(false);
+        }
 
-        // Set minimum bet amount by default
+        // Set minimum bet amount by default for raise slider/input (if implemented)
         if (currentBetAmount == 0) {
-            setBetAmount(pokerGame.getCurrentBet());
+            setBetAmount(pokerGame.getCurrentBet()); // Default to current bet level
+        }
+
+        // Handle bot thinking timer
+        if (isBotThinking && thinkingBotIndex == pokerGame.getCurrentPlayerIndex() && pokerGame.needsPlayerAction()) {
+            botDecisionTimer -= Gdx.graphics.getDeltaTime();
+            if (botDecisionTimer <= 0) {
+                executeBotDecision(thinkingBotIndex);
+                isBotThinking = false;
+                thinkingBotIndex = -1;
+            }
         }
     }
 
@@ -434,14 +471,34 @@ public class BettingUI {
 
     // Method to handle bot decisions automatically
     public void handleBotDecision(int playerIndex) {
-        // Simple bot logic: always check if possible, otherwise call
-        if (pokerGame.getCurrentPlayerIndex() == playerIndex) {
+        // Check if it's the correct bot's turn and action is needed
+        if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction() && !isBotThinking) {
+            // Start the timer for bot thinking
+            isBotThinking = true;
+            thinkingBotIndex = playerIndex;
+            botDecisionTimer = BOT_THINKING_TIME; // Reset timer
+
+            String botName = pokerGame.getPlayers().get(playerIndex).getName();
+            turnInfoLabel.setText(botName + " is thinking..."); // Update label
+            setButtonsEnabled(false); // Ensure human controls are disabled
+        }
+    }
+
+    private void executeBotDecision(int playerIndex) {
+        // Ensure it's still this bot's turn before acting
+        if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
+            // Simple bot logic: always check if possible, otherwise call
             Player botPlayer = pokerGame.getCurrentPlayer();
+
+            // Basic decision logic (can be expanded)
             if (botPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
                 pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
             } else {
                 pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
             }
         }
+        // Reset thinking state after action attempt
+        isBotThinking = false;
+        thinkingBotIndex = -1;
     }
 }

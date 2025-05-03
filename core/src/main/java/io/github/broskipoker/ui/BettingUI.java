@@ -50,12 +50,20 @@ public class BettingUI {
     private TextButton foldButton;
     private TextButton checkCallButton;
     private TextButton raiseButton;
-    private Slider betSlider;
     private Label betAmountLabel;
     private Label potLabel;
     private Label currentBetLabel;
     private Label playerChipsLabel;
     private Label turnInfoLabel;
+
+    // Preset bet buttons
+    private TextButton minBetButton;
+    private TextButton halfPotButton;
+    private TextButton potButton;
+    private TextButton allInButton;
+
+    // Current bet amount
+    private int currentBetAmount;
 
     // Chip textures for bet visualization
     private final Texture chipTexture;
@@ -77,6 +85,7 @@ public class BettingUI {
         this.pokerGame = pokerGame;
         this.stage = stage;
         this.batch = new SpriteBatch();
+        this.currentBetAmount = 0;
 
         // Initialize FontManager and create specific fonts for different UI elements
         this.fontManager = FontManager.getInstance();
@@ -202,8 +211,7 @@ public class BettingUI {
         playerChipsLabel = new Label("Your Chips: $0", skin, "value");
         turnInfoLabel = new Label("Waiting for other players...", skin, "header");
 
-        // Create bet slider and amount label
-        betSlider = new Slider(0, 1000, 25, false, skin, "default-horizontal");
+        // Create bet amount label
         betAmountLabel = new Label("Bet: $0", skin, "value");
 
         // Create buttons
@@ -240,27 +248,65 @@ public class BettingUI {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (!raiseButton.isDisabled()) {
-                    pokerGame.performAction(PokerGame.PlayerAction.RAISE, (int) betSlider.getValue());
+                    pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
                     setButtonsEnabled(false);
                 }
             }
         });
 
-        // Set up slider listener
-        betSlider.addListener(new ChangeListener() {
+        // Create preset bet buttons table
+        Table betButtonsTable = new Table();
+
+        // Create preset bet buttons
+        minBetButton = new TextButton("Min", skin);
+        halfPotButton = new TextButton("1/2 Pot", skin);
+        potButton = new TextButton("Pot", skin);
+        allInButton = new TextButton("All-In", skin);
+
+        // Add listeners to buttons
+        minBetButton.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                updateBetAmountLabel();
+            public void clicked(InputEvent event, float x, float y) {
+                setBetAmount(pokerGame.getCurrentBet());
             }
         });
+
+        halfPotButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setBetAmount(pokerGame.getPot() / 2);
+            }
+        });
+
+        potButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                setBetAmount(pokerGame.getPot());
+            }
+        });
+
+        allInButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
+                setBetAmount(humanPlayer.getChips());
+            }
+        });
+
+        // Add buttons to table
+        betButtonsTable.add(minBetButton).pad(5);
+        betButtonsTable.add(halfPotButton).pad(5);
+        betButtonsTable.add(potButton).pad(5);
+        betButtonsTable.add(allInButton).pad(5);
 
         // Add components to table with a clear layout
         bettingTable.add(turnInfoLabel).colspan(3).padBottom(PADDING * 2).row();
         bettingTable.add(currentBetLabel).colspan(3).padBottom(PADDING).row();
         bettingTable.add(playerChipsLabel).colspan(3).padBottom(PADDING * 2).row();
 
-        bettingTable.add(betSlider).colspan(2).width(BUTTON_WIDTH * 2 + PADDING);
-        bettingTable.add(betAmountLabel).padLeft(PADDING).row();
+        // Add bet buttons table
+        bettingTable.add(betButtonsTable).colspan(3).row();
+        bettingTable.add(betAmountLabel).colspan(3).pad(10).row();
 
         bettingTable.add(foldButton).size(BUTTON_WIDTH, BUTTON_HEIGHT).pad(PADDING);
         bettingTable.add(checkCallButton).size(BUTTON_WIDTH, BUTTON_HEIGHT).pad(PADDING);
@@ -297,10 +343,6 @@ public class BettingUI {
             setButtonsEnabled(false);
         }
 
-        // Update slider max value based on player's chips
-        int minBet = Math.min(pokerGame.getCurrentBet(), humanPlayer.getChips());
-        betSlider.setRange(minBet, humanPlayer.getChips());
-
         // Update check/call button text based on current bet
         if (humanPlayer.getChips() <= pokerGame.getCurrentBet()) {
             checkCallButton.setText("All-In $" + humanPlayer.getChips());
@@ -314,8 +356,10 @@ public class BettingUI {
         // If player doesn't have enough chips to raise, disable raise button
         raiseButton.setDisabled(humanPlayer.getChips() <= pokerGame.getCurrentBet());
 
-        // Update bet amount label
-        updateBetAmountLabel();
+        // Set minimum bet amount by default
+        if (currentBetAmount == 0) {
+            setBetAmount(pokerGame.getCurrentBet());
+        }
     }
 
     private String getGameStateDescription() {
@@ -333,8 +377,22 @@ public class BettingUI {
         }
     }
 
-    private void updateBetAmountLabel() {
-        betAmountLabel.setText("Bet: $" + (int) betSlider.getValue());
+    /**
+     * Sets the bet amount and updates the bet amount label
+     * @param amount The bet amount to set
+     */
+    private void setBetAmount(int amount) {
+        Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
+
+        // Ensure bet amount is not greater than player's chips
+        int maxBet = humanPlayer.getChips();
+        int minBet = pokerGame.getCurrentBet();
+
+        // Constrain bet amount between min bet and max chips
+        currentBetAmount = Math.min(maxBet, Math.max(minBet, amount));
+
+        // Update bet amount label
+        betAmountLabel.setText("Bet: $" + currentBetAmount);
     }
 
     private int determineChipType(int value) {
@@ -350,10 +408,14 @@ public class BettingUI {
         foldButton.setDisabled(!enabled);
         checkCallButton.setDisabled(!enabled);
         raiseButton.setDisabled(!enabled || pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX).getChips() <= pokerGame.getCurrentBet());
-        betSlider.setDisabled(!enabled);
+
+        // Enable/disable bet preset buttons
+        minBetButton.setDisabled(!enabled);
+        halfPotButton.setDisabled(!enabled);
+        potButton.setDisabled(!enabled);
+        allInButton.setDisabled(!enabled);
     }
 
-    // Metodă nouă pentru a controla vizibilitatea întregului BettingUI
     public void setVisible(boolean visible) {
         backgroundTable.setVisible(visible);
         bettingTable.setVisible(visible);

@@ -298,10 +298,14 @@ public class BettingUI {
         }
 
         // Update slider max value based on player's chips
-        betSlider.setRange(pokerGame.getCurrentBet(), humanPlayer.getChips());
+        int minBet = Math.min(pokerGame.getCurrentBet(), humanPlayer.getChips());
+        betSlider.setRange(minBet, humanPlayer.getChips());
 
         // Update check/call button text based on current bet
-        if (humanPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
+        if (humanPlayer.getChips() <= pokerGame.getCurrentBet()) {
+            checkCallButton.setText("All-In $" + humanPlayer.getChips());
+            raiseButton.setDisabled(true);
+        } else if (humanPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
             checkCallButton.setText("Call $" + (pokerGame.getCurrentBet() - humanPlayer.getCurrentBet()));
         } else {
             checkCallButton.setText("Check");

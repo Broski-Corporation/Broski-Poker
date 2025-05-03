@@ -39,6 +39,7 @@ public class GameRenderer {
     private final Menu menu;
     private final BitmapFont font;
     private final BitmapFont blindsFont;
+    private BitmapFont potFont;
     private final FontManager fontManager;
 
     // Camera settings
@@ -368,8 +369,8 @@ public class GameRenderer {
 
         // Show pot amount
         String potText = "Pot: $" + pokerGame.getPot();
-        font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // White
-        font.draw(batch, potText,centerX+ 100, centerY);
+        potFont = fontManager.getFont(28, new Color(1.0f, 0.84f, 0.0f, 1.0f));
+        potFont.draw(batch, potText,centerX + 80, centerY + 120);
 
         // Handle card dealing animation
         if (state == PokerGame.GameState.BETTING_PRE_FLOP) {

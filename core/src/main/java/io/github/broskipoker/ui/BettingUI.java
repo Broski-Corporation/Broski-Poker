@@ -117,7 +117,7 @@ public class BettingUI {
         // Position the betting UI on the right side of the screen
         bettingTable.setPosition(
             Gdx.graphics.getWidth() * 0.75f,
-            Gdx.graphics.getHeight() * 0.1f
+            Gdx.graphics.getHeight() * 0.005f
         );
         bettingTable.setSize(400, 400);
 
@@ -320,12 +320,13 @@ public class BettingUI {
 
         // Add a background to the table
         backgroundTable = new Table();
-        backgroundTable.add(bettingTable).pad(PADDING * 2);
+        backgroundTable.add(bettingTable).pad(PADDING * 1.25f);
         backgroundTable.setPosition(
             Gdx.graphics.getWidth() * 0.75f,
-            Gdx.graphics.getHeight() * 0.5f
+            Gdx.graphics.getHeight() * 0.03f
         );
         backgroundTable.setSize(420, 420);
+
         stage.addActor(backgroundTable);
     }
 

@@ -29,6 +29,7 @@ import io.github.broskipoker.Menu;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -71,6 +72,16 @@ public class GameRenderer {
     private static final int DISPLAY_CARD_HEIGHT = 90;
     private static final int CARD_SPACING = 15;
 
+    // Chip textures
+    private Texture chipTexture;
+    private TextureRegion[] chipRegion;
+    private static final int[] CHIP_VALUES = {1, 5, 10, 25, 100, 500};
+    private static final int CHIP_SIZE = 58;
+
+    // Small Blind, Big Blind, and Dealer chips textures
+    private final int CHIP_WIDTH = 1465 / 3;
+    private final int CHIP_HEIGHT = 465;
+
     // Chair positions
     private final float[][] chairPositions;
 
@@ -111,9 +122,8 @@ public class GameRenderer {
         backgroundTexture = new Texture("textures/2x/pokerTable.png");
         cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
         enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
+        chipTexture = new Texture(Gdx.files.internal("textures/2x/Chips.png"));
 
-        final int CHIP_WIDTH = 1465 / 3;
-        final int CHIP_HEIGHT = 465;
         // Load buttons sheet
         buttonsSheet = new Texture(Gdx.files.internal("textures/2x/SmallBigDealer.png"));
         smallBlindRegion = new TextureRegion(buttonsSheet, 0, 0, CHIP_WIDTH, CHIP_HEIGHT);
@@ -132,6 +142,13 @@ public class GameRenderer {
             }
         }
 
+        // Load chip textures
+        chipRegion = new TextureRegion[6];
+        for (int i = 0; i < CHIP_VALUES.length - 1; i++) {
+            chipRegion[i] = new TextureRegion(chipTexture, i * CHIP_SIZE, 0, CHIP_SIZE, CHIP_SIZE);
+        }
+        // 500 chip is on the second row
+        chipRegion[5] = new TextureRegion(chipTexture, 0, CHIP_SIZE, CHIP_SIZE, CHIP_SIZE);
 
         // Set up chair positions
         chairPositions = new float[][] {
@@ -422,6 +439,67 @@ public class GameRenderer {
         batch.end();
     }
 
+    private void renderBetChips(int betAmount, float x, float y) {
+        if (betAmount <= 0) return;
+
+        // Map bet to chips (500, 100, 25, 10, 5)
+        int[] chipValues = {5, 10, 25, 100, 500};
+        int[] chipCounts = new int[chipValues.length];
+        int remainingAmount = betAmount;
+
+        // Calculate chips needed (start from highest value)
+        for (int i = chipValues.length - 1; i >= 0; i--) {
+            chipCounts[i] = remainingAmount / chipValues[i];
+            remainingAmount %= chipValues[i];
+        }
+
+        // Display parameters
+        float chipDisplaySize = 40;
+        float stackOffsetY = 4.0f;  // Smaller vertical offset for a more compact stack
+        int totalChipsToRender = 0;
+        int maxChipsToDisplay = 12;  // Limit total stack height
+
+        // Count total chips that will be rendered
+        for (int count : chipCounts) {
+            totalChipsToRender += count;
+        }
+
+        // Reduce count proportionally if we have too many chips
+        if (totalChipsToRender > maxChipsToDisplay) {
+            float reductionRatio = (float)maxChipsToDisplay / totalChipsToRender;
+            for (int i = 0; i < chipCounts.length; i++) {
+                chipCounts[i] = Math.round(chipCounts[i] * reductionRatio);
+            }
+        }
+
+        // Render chips in a single stack from bottom to top
+        int chipIndex = 0;
+
+        // Start with smallest denomination at the bottom
+        for (int i = 0; i < chipValues.length; i++) {
+            for (int j = 0; j < chipCounts[i]; j++) {
+                float yOffset = chipIndex * stackOffsetY;
+
+                // Draw shadow for better visibility
+                batch.setColor(0, 0, 0, 0.5f);
+                batch.draw(chipRegion[i], x + 1, y + yOffset - 1, chipDisplaySize, chipDisplaySize);
+
+                // Draw the chip
+                batch.setColor(Color.WHITE);
+                batch.draw(chipRegion[i], x, y + yOffset, chipDisplaySize, chipDisplaySize);
+
+                chipIndex++;
+                if (chipIndex >= maxChipsToDisplay) {
+                    batch.setColor(Color.WHITE); // Reset color
+                    return;
+                }
+            }
+        }
+
+        // Reset color
+        batch.setColor(Color.WHITE);
+    }
+
     public void toggleZoom() {
         isZoomed = !isZoomed;
 
@@ -472,10 +550,24 @@ public class GameRenderer {
 
             playerFont.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
 
-            // Display current bet if it exists
+            // Display current bet and chips if it exists
             if (players.get(i).getCurrentBet() > 0) {
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
                 betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+
+                // Calculate position for chips based on player position
+                float chipX, chipY;
+                if (i == 0 || i == 1) { // Top players
+                    chipX = x - 60;
+                    chipY = y + 45;
+                } else if (i == 2) { // Right player
+                    chipX = x + 60;
+                    chipY = y + 130;
+                } else { // Bottom players
+                    chipX = x + 145;
+                    chipY = y + 45;
+                }
+                renderBetChips(players.get(i).getCurrentBet(), chipX, chipY);
             }
 
             // Indicator for current player

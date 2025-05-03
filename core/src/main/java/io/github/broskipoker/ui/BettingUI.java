@@ -35,8 +35,14 @@ public class BettingUI {
     private final PokerGame pokerGame;
     private final Stage stage;
     private final SpriteBatch batch;
-    private final BitmapFont font;
     private final Skin skin;
+    private final FontManager fontManager;
+
+    // Different fonts for different UI elements
+    private final BitmapFont defaultFont;
+    private final BitmapFont buttonFont;
+    private final BitmapFont headerFont;
+    private final BitmapFont valueFont;
 
     // UI Components
     private final Table bettingTable;
@@ -71,10 +77,15 @@ public class BettingUI {
         this.pokerGame = pokerGame;
         this.stage = stage;
         this.batch = new SpriteBatch();
-        this.font = new BitmapFont();
-        font.getData().setScale(1.5f);
 
-        // Create a simple skin
+        // Initialize FontManager and create specific fonts for different UI elements
+        this.fontManager = FontManager.getInstance();
+        this.defaultFont = fontManager.getFont(16, Color.WHITE);
+        this.buttonFont = fontManager.getFont(18, Color.WHITE);
+        this.headerFont = fontManager.getFont(20, new Color(1, 0.8f, 0.2f, 1)); // Gold color
+        this.valueFont = fontManager.getFont(16, new Color(0.2f, 0.8f, 1f, 1)); // Light blue
+
+        // Create a simple skin with the fonts
         skin = createSimpleSkin();
 
         // Load chip textures
@@ -129,22 +140,33 @@ public class BettingUI {
         NinePatchDrawable buttonDisabled = new NinePatchDrawable(
             new NinePatch(new TextureRegion(createSolidColorTexture(Color.GRAY)), 9, 9, 9, 9));
 
-        // Add font to skin
-        simpleSkin.add("default-font", font);
+        // Add fonts to skin
+        simpleSkin.add("default-font", defaultFont);
+        simpleSkin.add("button-font", buttonFont);
+        simpleSkin.add("header-font", headerFont);
+        simpleSkin.add("value-font", valueFont);
 
-        // Create button styles
+        // Create button style with better font
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.up = buttonUp;
         textButtonStyle.down = buttonDown;
         textButtonStyle.disabled = buttonDisabled;
-        textButtonStyle.font = font;
+        textButtonStyle.font = buttonFont; // Use the button-specific font
         textButtonStyle.fontColor = Color.WHITE;
         textButtonStyle.disabledFontColor = Color.LIGHT_GRAY;
 
-        // Create label style
-        Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = font;
-        labelStyle.fontColor = Color.WHITE;
+        // Create different label styles
+        Label.LabelStyle defaultLabelStyle = new Label.LabelStyle();
+        defaultLabelStyle.font = defaultFont;
+        defaultLabelStyle.fontColor = Color.WHITE;
+
+        Label.LabelStyle headerLabelStyle = new Label.LabelStyle();
+        headerLabelStyle.font = headerFont;
+        headerLabelStyle.fontColor = new Color(1, 0.8f, 0.2f, 1); // Gold color
+
+        Label.LabelStyle valueLabelStyle = new Label.LabelStyle();
+        valueLabelStyle.font = valueFont;
+        valueLabelStyle.fontColor = new Color(0.2f, 0.8f, 1f, 1); // Light blue
 
         // Create slider style
         Slider.SliderStyle sliderStyle = new Slider.SliderStyle();
@@ -155,7 +177,9 @@ public class BettingUI {
 
         // Add styles to skin
         simpleSkin.add("default", textButtonStyle);
-        simpleSkin.add("default", labelStyle);
+        simpleSkin.add("default", defaultLabelStyle);
+        simpleSkin.add("header", headerLabelStyle);
+        simpleSkin.add("value", valueLabelStyle);
         simpleSkin.add("default-horizontal", sliderStyle);
 
         return simpleSkin;
@@ -172,16 +196,15 @@ public class BettingUI {
     }
 
     private void createBettingControls() {
-        // Create labels for game information
-        potLabel = new Label("Pot: $0", skin);
-        currentBetLabel = new Label("Current Bet: $0", skin);
-        playerChipsLabel = new Label("Your Chips: $0", skin);
-        turnInfoLabel = new Label("Waiting for other players...", skin);
-        turnInfoLabel.setColor(Color.YELLOW);
+        // Create labels for game information using different styles
+        potLabel = new Label("Pot: $0", skin, "header");
+        currentBetLabel = new Label("Current Bet: $0", skin, "value");
+        playerChipsLabel = new Label("Your Chips: $0", skin, "value");
+        turnInfoLabel = new Label("Waiting for other players...", skin, "header");
 
         // Create bet slider and amount label
         betSlider = new Slider(0, 1000, 25, false, skin, "default-horizontal");
-        betAmountLabel = new Label("Bet: $0", skin);
+        betAmountLabel = new Label("Bet: $0", skin, "value");
 
         // Create buttons
         foldButton = new TextButton("Fold", skin);
@@ -264,16 +287,13 @@ public class BettingUI {
         // Update turn info label
         if (pokerGame.getCurrentPlayerIndex() == HUMAN_PLAYER_INDEX && pokerGame.needsPlayerAction()) {
             turnInfoLabel.setText("It's your turn!");
-            turnInfoLabel.setColor(Color.GREEN);
             setButtonsEnabled(true);
         } else if (pokerGame.needsPlayerAction()) {
             String currentPlayerName = pokerGame.getCurrentPlayer().getName();
             turnInfoLabel.setText("Waiting for " + currentPlayerName + "...");
-            turnInfoLabel.setColor(Color.YELLOW);
             setButtonsEnabled(false);
         } else {
             turnInfoLabel.setText(getGameStateDescription());
-            turnInfoLabel.setColor(Color.ORANGE);
             setButtonsEnabled(false);
         }
 
@@ -343,6 +363,7 @@ public class BettingUI {
         chipTexture.dispose();
         buttonTexture.dispose();
         buttonDownTexture.dispose();
+        // FontManager handles font disposal
     }
 
     // Method to handle bot decisions automatically

@@ -16,6 +16,7 @@
 package io.github.broskipoker.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -38,6 +39,7 @@ public class GameRenderer {
     private final Menu menu;
     private final BitmapFont font;
     private final BitmapFont blindsFont;
+    private final FontManager fontManager;
 
     // Camera settings
     private final OrthographicCamera camera;
@@ -89,15 +91,12 @@ public class GameRenderer {
         stage = new Stage(new ScreenViewport());
         menu = new Menu(stage);
 
-        // Initialize font
-        font = new BitmapFont();
-        font.getData().setScale(3);
-        font.setColor(1, 1, 1, 1);
+        // Initialize FontManager
+        fontManager = FontManager.getInstance();
 
-        blindsFont = new BitmapFont();
-        blindsFont.getData().setScale(1.5f);
-        blindsFont.setColor(1, 0.84f, 0, 1); // Gold color
-
+        // Initialize fonts using FontManager for better scaling
+        font = fontManager.getFont(24, Color.WHITE);
+        blindsFont = fontManager.getFont(16, new Color(1, 0.84f, 0, 1)); // Gold color
 
         // Initialize camera
         camera = new OrthographicCamera();
@@ -357,7 +356,7 @@ public class GameRenderer {
 
         // Show pot amount
         String potText = "Pot: $" + pokerGame.getPot();
-        font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Alb
+        font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // White
         font.draw(batch, potText,centerX+ 100, centerY);
 
         // Handle card dealing animation
@@ -431,37 +430,35 @@ public class GameRenderer {
 
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
             float x = chairPositions[i][0];
-            float y = chairPositions[i][1] - 40; // Ajustează această valoare dacă este necesar
+            float y = chairPositions[i][1] - 40;
 
-            // Aplica offset-ul individual pentru fiecare jucător
+            // Apply offset for each player
             float textOffsetX = textOffsets[i][0];
             float textOffsetY = textOffsets[i][1];
 
-            // Desenează informațiile despre jucător
+            // Get player name font based on player type
+            BitmapFont playerFont;
             String playerInfo = players.get(i).getName() + ": $" + players.get(i).getChips();
 
             if (i == HUMAN_PLAYER_INDEX) {
-                font.setColor(0.2f, 0.6f, 1.0f, 1.0f); // Albastru pentru jucătorul uman
+                playerFont = fontManager.getFont(24, new Color(0.2f, 0.6f, 1.0f, 1.0f)); // Blue for human player
                 playerInfo += " (You)";
             } else {
-                font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // Alb pentru ceilalți jucători
+                playerFont = fontManager.getFont(24, Color.WHITE); // White for other players
             }
 
-            font.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
+            playerFont.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
 
-            // Afișează pariul curent, dacă există
+            // Display current bet if it exists
             if (players.get(i).getCurrentBet() > 0) {
-                font.setColor(1.0f, 0.84f, 0.0f, 1.0f); // Auriu pentru sumele pariate
-                font.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+                BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
+                betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
             }
 
-            // Indicator pentru jucătorul curent
+            // Indicator for current player
             if (i == currentPlayerIndex && pokerGame.needsPlayerAction()) {
                 batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25);
             }
-
-            // Resetează culoarea fontului
-            font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
     }
 
@@ -499,10 +496,12 @@ public class GameRenderer {
     public void dispose() {
         batch.dispose();
         stage.dispose();
-        font.dispose();
+        // Don't dispose individual fonts, FontManager will handle it
+        fontManager.dispose();
         cardSheet.dispose();
         enhancersSheet.dispose();
         backgroundTexture.dispose();
+        buttonsSheet.dispose();
         menu.dispose();
         bettingUI.dispose();
     }

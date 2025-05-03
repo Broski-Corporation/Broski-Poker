@@ -214,14 +214,26 @@ public class GameRenderer {
         batch.draw(dealerRegion, dpX, dpY, buttonWidth, buttonHeight);
 
         // Render Small Blind Texture
-        float sbX = chairPositions[smallBlindPosition][0];
-        float sbY = chairPositions[smallBlindPosition][1] + DISPLAY_CARD_HEIGHT + 10;
-        batch.draw(smallBlindRegion, sbX, sbY, buttonWidth, buttonHeight);
+        renderBlindTexture(buttonWidth, buttonHeight, smallBlindPosition, smallBlindRegion);
 
         // Render Big Blind Texture
-        float bbX = chairPositions[bigBlindPosition][0];
-        float bbY = chairPositions[bigBlindPosition][1] + DISPLAY_CARD_HEIGHT + 10;
-        batch.draw(bigBlindRegion, bbX, bbY, buttonWidth, buttonHeight);
+        renderBlindTexture(buttonWidth, buttonHeight, bigBlindPosition, bigBlindRegion);
+    }
+
+    private void renderBlindTexture(int buttonWidth, int buttonHeight, int blindPosition, TextureRegion blindTextureRegion) {
+        if (blindPosition == 0 || blindPosition == 1) { // Render above the players cards
+            float sbX = chairPositions[blindPosition][0] + 20;
+            float sbY = chairPositions[blindPosition][1] + DISPLAY_CARD_HEIGHT + 10;
+            batch.draw(blindTextureRegion, sbX, sbY, buttonWidth, buttonHeight);
+        } else if (blindPosition == 2) { // Render to the right of the players cards
+            float sbX = chairPositions[blindPosition][0] + 2 * DISPLAY_CARD_WIDTH + 30;
+            float sbY = chairPositions[blindPosition][1] - 30;
+            batch.draw(blindTextureRegion, sbX, sbY, buttonWidth, buttonHeight);
+        } else if (blindPosition == 3 || blindPosition == 4) { // Render below the players cards
+            float sbX = chairPositions[blindPosition][0] + 25;
+            float sbY = chairPositions[blindPosition][1] - DISPLAY_CARD_HEIGHT + 5;
+            batch.draw(blindTextureRegion, sbX, sbY, buttonWidth, buttonHeight);
+        }
     }
 
     /**
@@ -457,7 +469,7 @@ public class GameRenderer {
 
             // Indicator for current player
             if (i == currentPlayerIndex && pokerGame.needsPlayerAction()) {
-                batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25);
+//                batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25); // turnIndicatorRegion is not correct texture region for this purpose (by andrei)
             }
         }
     }

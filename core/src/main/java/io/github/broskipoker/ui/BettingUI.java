@@ -202,6 +202,8 @@ public class BettingUI {
         textFieldStyle.messageFont = fontManager.getFont(16, Color.GRAY); // Use a dedicated gray font
         textFieldStyle.background = buttonUp;
         textFieldStyle.cursor = new TextureRegionDrawable(new TextureRegion(lineCursorTexture));
+        textFieldStyle.disabledBackground = buttonDisabled; // Add disabled background
+        textFieldStyle.disabledFontColor = Color.WHITE; // Add disabled font color
 
         // Add styles to skin
         simpleSkin.add("default", textButtonStyle);
@@ -534,13 +536,20 @@ public class BettingUI {
         allInButton.setDisabled(!enabled);
         betTextField.setDisabled(!enabled);
 
-        betAmountLabel.setVisible(enabled);
-
-        // Clear the text field
-        if (!enabled) {
+        // (For custom bet field) Change the placeholder text color based on the enabled state
+        TextField.TextFieldStyle style = betTextField.getStyle();
+        if (enabled) {
+            style.messageFont = fontManager.getFont(16, Color.GRAY);
+        } else {
+            style.messageFont = fontManager.getFont(16, Color.WHITE);
             betTextField.setText("");
         }
+        betTextField.setStyle(style);
+        betTextField.setDisabled(!enabled);
+
+        betAmountLabel.setVisible(enabled);
     }
+
 
     public void setVisible(boolean visible) {
         backgroundTable.setVisible(visible);

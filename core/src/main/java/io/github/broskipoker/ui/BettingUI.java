@@ -26,6 +26,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import io.github.broskipoker.game.Player;
@@ -62,6 +63,8 @@ public class BettingUI {
     private TextButton halfPotButton;
     private TextButton potButton;
     private TextButton allInButton;
+    private TextField betTextField;
+    private TextButton setBetButton;
 
     // Current bet amount
     private int currentBetAmount;
@@ -73,6 +76,7 @@ public class BettingUI {
     // Button textures
     private Texture buttonTexture;
     private Texture buttonDownTexture;
+    private Texture lineCursorTexture;
 
     // Player index for the human player
     private static final int HUMAN_PLAYER_INDEX = 3;
@@ -190,14 +194,35 @@ public class BettingUI {
         sliderStyle.disabledBackground = buttonDisabled;
         sliderStyle.disabledKnob = buttonDisabled;
 
+        // Text field for custom bet
+        TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle();
+        lineCursorTexture = createLineCursorTexture();
+        textFieldStyle.font = valueFont;
+        textFieldStyle.fontColor = Color.WHITE;
+        textFieldStyle.messageFont = fontManager.getFont(16, Color.GRAY); // Use a dedicated gray font
+        textFieldStyle.background = buttonUp;
+        textFieldStyle.cursor = new TextureRegionDrawable(new TextureRegion(lineCursorTexture));
+
         // Add styles to skin
         simpleSkin.add("default", textButtonStyle);
         simpleSkin.add("default", defaultLabelStyle);
         simpleSkin.add("header", headerLabelStyle);
         simpleSkin.add("value", valueLabelStyle);
+        simpleSkin.add("default", textFieldStyle);
         simpleSkin.add("default-horizontal", sliderStyle);
 
         return simpleSkin;
+    }
+
+    // Create a custom narrow cursor texture
+    private Texture createLineCursorTexture() {
+        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(2, 32,
+            com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        pixmap.setColor(new Color(0.2f, 0.6f, 1.0f, 0.8f));
+        pixmap.fill();
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     private Texture createSolidColorTexture(Color color) {
@@ -299,11 +324,60 @@ public class BettingUI {
             }
         });
 
+        // Create text field
+        betTextField = new TextField("", skin);
+        betTextField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        betTextField.setMaxLength(6);
+        betTextField.setMessageText("Custom");
+
+        // Add listener to update bet amount as user types
+        betTextField.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                try {
+                    String text = betTextField.getText().trim();
+                    if (!text.isEmpty()) {
+                        int amount = Integer.parseInt(text);
+                        setBetAmount(amount);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore parsing errors while typing
+                }
+            }
+        });
+
+        // Change cursor when hovering over the text field
+        betTextField.addListener(new InputListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1 && !betTextField.isDisabled()) { // Only respond to mouse events, not touch
+                    Gdx.graphics.setSystemCursor(com.badlogic.gdx.graphics.Cursor.SystemCursor.Ibeam);
+                }
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                if (pointer == -1) {
+                    Gdx.graphics.setSystemCursor(com.badlogic.gdx.graphics.Cursor.SystemCursor.Arrow);
+                }
+            }
+        });
+
+        // Change the cursor when hovering over the button
+        addCursorChangeListener(foldButton);
+        addCursorChangeListener(checkCallButton);
+        addCursorChangeListener(raiseButton);
+        addCursorChangeListener(minBetButton);
+        addCursorChangeListener(halfPotButton);
+        addCursorChangeListener(potButton);
+        addCursorChangeListener(allInButton);
+
         // Add buttons to table
         betButtonsTable.add(minBetButton).pad(5);
         betButtonsTable.add(halfPotButton).pad(5);
         betButtonsTable.add(potButton).pad(5);
         betButtonsTable.add(allInButton).pad(5);
+        betButtonsTable.add(betTextField).width(80).height(43).pad(5);
 
         // Add components to table with a clear layout
         bettingTable.add(turnInfoLabel).colspan(3).padBottom(PADDING * 2).row();
@@ -328,6 +402,25 @@ public class BettingUI {
         backgroundTable.setSize(420, 420);
 
         stage.addActor(backgroundTable);
+    }
+
+    // Changes the cursor when hovering over the button
+    private void addCursorChangeListener(Button button) {
+        button.addListener(new InputListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                if (pointer == -1 && !button.isDisabled()) {
+                    Gdx.graphics.setSystemCursor(com.badlogic.gdx.graphics.Cursor.SystemCursor.Hand);
+                }
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                if (pointer == -1) {
+                    Gdx.graphics.setSystemCursor(com.badlogic.gdx.graphics.Cursor.SystemCursor.Arrow);
+                }
+            }
+        });
     }
 
     public void update() {
@@ -417,7 +510,7 @@ public class BettingUI {
         currentBetAmount = Math.min(maxBet, Math.max(minBet, amount));
 
         // Update bet amount label
-        betAmountLabel.setText("Bet: $" + currentBetAmount);
+        betAmountLabel.setText("Your current bet: $" + currentBetAmount);
     }
 
     private int determineChipType(int value) {
@@ -439,6 +532,14 @@ public class BettingUI {
         halfPotButton.setDisabled(!enabled);
         potButton.setDisabled(!enabled);
         allInButton.setDisabled(!enabled);
+        betTextField.setDisabled(!enabled);
+
+        betAmountLabel.setVisible(enabled);
+
+        // Clear the text field
+        if (!enabled) {
+            betTextField.setText("");
+        }
     }
 
     public void setVisible(boolean visible) {
@@ -454,6 +555,7 @@ public class BettingUI {
         chipTexture.dispose();
         buttonTexture.dispose();
         buttonDownTexture.dispose();
+        lineCursorTexture.dispose();
         // FontManager handles font disposal
     }
 }

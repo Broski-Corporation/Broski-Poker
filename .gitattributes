@@ -2,3 +2,4 @@
 *.bat text=auto eol=crlf
 TinyFacesAPI/avatars/merged_avatars.png filter=lfs diff=lfs merge=lfs -text
 assets/avatars/500_avatars.png filter=lfs diff=lfs merge=lfs -text
+assets/avatars/merged_avatars.png filter=lfs diff=lfs merge=lfs -text

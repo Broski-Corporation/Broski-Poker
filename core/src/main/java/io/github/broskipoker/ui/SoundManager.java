@@ -15,6 +15,7 @@ public class SoundManager implements Disposable {
 
     private Sound cardSound;
     private Sound chipSound;
+    private Sound buttonSound;
     private boolean soundEnabled = true;
 
     // Track which cards have already played sounds
@@ -26,6 +27,7 @@ public class SoundManager implements Disposable {
     private SoundManager() {
         cardSound = Gdx.audio.newSound(Gdx.files.internal("sounds/card1.ogg"));
         chipSound = Gdx.audio.newSound(Gdx.files.internal("sounds/chips1.ogg"));
+        buttonSound = Gdx.audio.newSound(Gdx.files.internal("sounds/button.ogg"));
     }
 
     public static SoundManager getInstance() {
@@ -93,6 +95,12 @@ public class SoundManager implements Disposable {
         }
     }
 
+    public void playButtonSound() {
+        if (soundEnabled) {
+            buttonSound.play(0.4f);
+        }
+    }
+
     // Call this method when starting a new hand
     public void resetCardSounds() {
         cardsPlayed.clear();
@@ -107,5 +115,6 @@ public class SoundManager implements Disposable {
     public void dispose() {
         cardSound.dispose();
         chipSound.dispose();
+        buttonSound.dispose();
     }
 }

@@ -262,11 +262,14 @@ public class BettingUI {
         checkCallButton = new TextButton("Check", skin);
         raiseButton = new TextButton("Raise", skin);
 
+        SoundManager soundManager = SoundManager.getInstance();
+
         // Set up button listeners
         foldButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (!foldButton.isDisabled()) {
+                    soundManager.playButtonSound();
                     pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
                     setButtonsEnabled(false);
                 }
@@ -277,6 +280,7 @@ public class BettingUI {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (!checkCallButton.isDisabled()) {
+                    soundManager.playButtonSound();
                     if (checkCallButton.getText().toString().equals("Check")) {
                         pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
                     } else {
@@ -291,6 +295,7 @@ public class BettingUI {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (!raiseButton.isDisabled()) {
+                    soundManager.playButtonSound();
                     pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
                     setButtonsEnabled(false);
                 }
@@ -310,6 +315,7 @@ public class BettingUI {
         minBetButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                soundManager.playButtonSound();
                 setBetAmount(pokerGame.getCurrentBet());
             }
         });
@@ -317,6 +323,7 @@ public class BettingUI {
         halfPotButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                soundManager.playButtonSound();
                 setBetAmount(pokerGame.getPot() / 2);
             }
         });
@@ -324,6 +331,7 @@ public class BettingUI {
         potButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                soundManager.playButtonSound();
                 setBetAmount(pokerGame.getPot());
             }
         });
@@ -331,6 +339,7 @@ public class BettingUI {
         allInButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                soundManager.playButtonSound();
                 Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
                 setBetAmount(humanPlayer.getChips());
             }
@@ -346,6 +355,7 @@ public class BettingUI {
         betTextField.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                soundManager.playButtonSound();
                 try {
                     String text = betTextField.getText().trim();
                     if (!text.isEmpty()) {

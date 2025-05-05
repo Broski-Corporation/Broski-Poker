@@ -32,7 +32,7 @@ public class GameController extends InputAdapter {
     private float botDecisionTimer = 0;
     private boolean isBotThinking = false;
     private int thinkingBotIndex = -1;
-    private static final float BOT_THINKING_TIME = 3.0f;
+    private static final float BOT_THINKING_TIME = 0.5f;
 
     public GameController(PokerGame pokerGame, GameRenderer renderer) {
         this.pokerGame = pokerGame;
@@ -200,7 +200,10 @@ public class GameController extends InputAdapter {
         } else if (state == PokerGame.GameState.BETTING_RIVER) {
             pokerGame.goToShowdown();
         } else if (state == PokerGame.GameState.SHOWDOWN) {
+            System.out.println("gamecontroller");
             pokerGame.startNewHand();
+            DealingAnimator dealingAnimator = new DealingAnimator(pokerGame.getPlayers().size(), pokerGame.getDealerPosition());
+            dealingAnimator.reset();
         }
     }
 

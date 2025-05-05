@@ -16,6 +16,8 @@
 
 package io.github.broskipoker.game;
 
+import io.github.broskipoker.ui.DealingAnimator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,6 +158,10 @@ public class PokerGame {
                 case SHOWDOWN:
                     // TODO: handle end of hand logic
                     distributeWinnings();
+                    startNewHand();
+                    // Reset the dealing animator
+                    DealingAnimator dealingAnimator = new DealingAnimator(players.size(), dealerPosition);
+                    dealingAnimator.reset();
                     break;
                 default:
                     break;
@@ -197,6 +203,7 @@ public class PokerGame {
     public void goToShowdown() {
         gameState = GameState.SHOWDOWN;
         needsPlayerAction = false;
+
     }
 
     private void resetBettingRound() {
@@ -210,7 +217,7 @@ public class PokerGame {
         }
 
         // First player to act is the one after the dealer (small blind)
-        currentPlayerIndex = (dealerPosition + 1) % players.size();
+        currentPlayerIndex = (dealerPosition + 2) % players.size();
 
         // Skip players who have folded
         while (currentPlayerIndex < players.size() && !players.get(currentPlayerIndex).isActive()) {

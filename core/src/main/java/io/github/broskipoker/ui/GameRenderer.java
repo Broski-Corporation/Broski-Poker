@@ -591,7 +591,6 @@ public class GameRenderer {
 
             // Trigger the bot thinking process in the controller
             gameController.startBotThinking(pokerGame.getCurrentPlayerIndex());
-            System.out.println(pokerGame.getCurrentPlayerIndex());
         }
     }
 

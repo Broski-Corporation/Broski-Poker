@@ -32,6 +32,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 
+import java.util.Objects;
+
 public class BettingUI {
     private final PokerGame pokerGame;
     private final Stage stage;
@@ -480,6 +482,32 @@ public class BettingUI {
         if (currentBetAmount == 0) {
             setBetAmount(pokerGame.getCurrentBet()); // Default to current bet level
         }
+
+        if (pokerGame.getGameState() == PokerGame.GameState.SHOWDOWN) {
+            // Get winners and pot
+            java.util.List<io.github.broskipoker.game.Player> winners = pokerGame.determineWinners();
+            int pot = pokerGame.getPot();
+
+            if (winners.size() == 1) {
+                turnInfoLabel.setText(winners.get(0).getName() + " wins the pot of $" + pot + "!");
+                if (Objects.equals(winners.get(0).getName(), "Player 4")) {
+                    turnInfoLabel.setText("You win the pot of $" + pot + "!");
+                }
+            } else if (winners.size() > 1) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < winners.size(); i++) {
+                    sb.append(winners.get(i).getName());
+                    if (i < winners.size() - 1) sb.append(", ");
+                }
+                sb.append(" split the pot of $").append(pot).append("!");
+                turnInfoLabel.setText(sb.toString());
+            } else {
+                turnInfoLabel.setText("No winner. Pot: $" + pot);
+            }
+            setButtonsEnabled(false);
+            return;
+        }
+
     }
 
     private String getGameStateDescription() {

@@ -73,6 +73,7 @@ public class DealingAnimator {
         dealingComplete = false;
         elapsedTime = 0f;
 
+
         for (boolean[] dealtCard : dealtCards) {
             Arrays.fill(dealtCard, false);
         }

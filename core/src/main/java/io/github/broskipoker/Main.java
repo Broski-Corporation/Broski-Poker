@@ -23,7 +23,7 @@ import io.github.broskipoker.ui.GameRenderer;
 
 public class Main extends ApplicationAdapter {
     private PokerGame pokerGame;
-    private GameRenderer renderer;
+    private static GameRenderer renderer;
     private GameController controller;
 
     @Override
@@ -60,6 +60,10 @@ public class Main extends ApplicationAdapter {
     @Override
     public void resize(int width, int height) {
         renderer.resize(width, height);
+    }
+
+    public static GameRenderer getRenderer() {
+        return renderer;
     }
 
     @Override

@@ -29,7 +29,6 @@ import io.github.broskipoker.Menu;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -86,7 +85,7 @@ public class GameRenderer {
     private final float[][] chairPositions;
 
     // Card dealing animation helper instance
-    private final DealingAnimator dealingAnimator;
+    private static final DealingAnimator dealingAnimator;
 
     // Betting UI
     private BettingUI bettingUI;
@@ -97,6 +96,12 @@ public class GameRenderer {
 
     // Reference to GameController for passing to BettingUI
     private GameController gameController;
+
+    static
+    {
+        // Initialize dealing animator
+        dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition()); // Max 5 players
+    }
 
     public GameRenderer(PokerGame pokerGame) {
         this.pokerGame = pokerGame;
@@ -158,9 +163,6 @@ public class GameRenderer {
             {Gdx.graphics.getWidth() * 0.4f, Gdx.graphics.getHeight() * 0.3f},
             {Gdx.graphics.getWidth() * 0.2f, Gdx.graphics.getHeight() * 0.3f}
         };
-
-        // Initialize dealing animator
-        dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition()); // Max 5 players
 
         // Note: BettingUI will be initialized with the GameController in setGameController()
         // This allows us to avoid circular dependencies
@@ -430,13 +432,15 @@ public class GameRenderer {
             } else if (state == PokerGame.GameState.BETTING_RIVER) {
                 pokerGame.goToShowdown();
             } else if (state == PokerGame.GameState.SHOWDOWN) {
-                // Start new hand
-                pokerGame.startNewHand();
                 dealingAnimator.reset();
             }
         }
 
         batch.end();
+    }
+
+    public static void resetGameRenderer() {
+        dealingAnimator.reset();
     }
 
     private void renderBetChips(int betAmount, float x, float y) {

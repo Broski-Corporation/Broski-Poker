@@ -16,7 +16,10 @@
 
 package io.github.broskipoker.game;
 
+import com.badlogic.gdx.Gdx;
+import io.github.broskipoker.Main;
 import io.github.broskipoker.ui.DealingAnimator;
+import io.github.broskipoker.ui.GameRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,10 +125,13 @@ public class PokerGame {
         // First player to act is UTG (Under the Gun) - player after big blind
         currentPlayerIndex = (bigBlindPos + 1) % players.size();
 
+        gameState = GameState.BETTING_PRE_FLOP;
+        GameRenderer.resetGameRenderer();
+
         // Deal cards
         dealHoleCards();
-        gameState = GameState.BETTING_PRE_FLOP;
         needsPlayerAction = true;
+
     }
 
     // Method called from libGDX game loop
@@ -160,8 +166,6 @@ public class PokerGame {
                     distributeWinnings();
                     startNewHand();
                     // Reset the dealing animator
-                    DealingAnimator dealingAnimator = new DealingAnimator(players.size(), dealerPosition);
-                    dealingAnimator.reset();
                     break;
                 default:
                     break;

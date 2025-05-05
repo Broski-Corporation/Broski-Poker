@@ -200,10 +200,9 @@ public class GameController extends InputAdapter {
         } else if (state == PokerGame.GameState.BETTING_RIVER) {
             pokerGame.goToShowdown();
         } else if (state == PokerGame.GameState.SHOWDOWN) {
-            System.out.println("gamecontroller");
-            pokerGame.startNewHand();
-            DealingAnimator dealingAnimator = new DealingAnimator(pokerGame.getPlayers().size(), pokerGame.getDealerPosition());
-            dealingAnimator.reset();
+//            pokerGame.startNewHand();
+//            DealingAnimator dealingAnimator = new DealingAnimator(5, PokerGame.getDealerPosition());
+//            dealingAnimator.reset();
         }
     }
 

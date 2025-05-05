@@ -579,9 +579,19 @@ public class GameRenderer {
 
     // Handle player turns and betting UI
     private void handlePlayerTurns() {
-        // Simply update the betting UI which now uses GameController for bot thinking status
+        // Update the betting UI
         if (bettingUI != null) {
             bettingUI.update();
+        }
+
+        // Check if it's a bot's turn and we need to start it thinking
+        if (pokerGame.needsPlayerAction() &&
+            pokerGame.getCurrentPlayerIndex() != HUMAN_PLAYER_INDEX &&
+            gameController != null && !gameController.isBotThinking()) {
+
+            // Trigger the bot thinking process in the controller
+            gameController.startBotThinking(pokerGame.getCurrentPlayerIndex());
+            System.out.println(pokerGame.getCurrentPlayerIndex());
         }
     }
 

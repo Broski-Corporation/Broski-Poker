@@ -32,6 +32,8 @@ public class PokerGame {
     private static int dealerPosition;
     private boolean needsPlayerAction;
     private GameState gameState;
+    // Track players who have acted in the current betting round
+    private boolean[] hasActedInRound;
 
     public enum GameState {
         WAITING_FOR_PLAYERS, DEALING, BETTING_PRE_FLOP, FLOP, BETTING_FLOP, TURN, BETTING_TURN, RIVER,
@@ -51,7 +53,7 @@ public class PokerGame {
         this.bigBlind = bigBlind;
         currentBet = 0;
         currentPlayerIndex = 0;
-        lastRaisePlayerIndex = 0;
+        lastRaisePlayerIndex = -1; // Initialize to -1 (no raises yet)
         dealerPosition = -1;
         needsPlayerAction = false;
         gameState = GameState.WAITING_FOR_PLAYERS;
@@ -68,6 +70,8 @@ public class PokerGame {
 
     public void addPlayer(String name, int startingChips) {
         players.add(new Player(name, startingChips));
+        // Resize the hasActedInRound array when adding players
+        hasActedInRound = new boolean[players.size()];
     }
 
     public void startNewHand() {
@@ -80,6 +84,9 @@ public class PokerGame {
         pot = 0;
         currentBet = 0;
         communityCards.clear();
+
+        // Initialize tracking of player actions
+        hasActedInRound = new boolean[players.size()];
 
         // Reset player states
         for (Player player : players) {
@@ -103,12 +110,20 @@ public class PokerGame {
         pot += bigBlindPlayer.bet(bigBlind);
         currentBet = bigBlind;
 
-        // First player to act is the one after the bigBlindPlayer
+        // Mark players who posted blinds as having acted
+        hasActedInRound[smallBlindPos] = true;
+        hasActedInRound[bigBlindPos] = true;
+
+        // Don't set lastRaisePlayerIndex to bigBlindPos as it's not a raise
+        lastRaisePlayerIndex = -1;
+
+        // First player to act is UTG (Under the Gun) - player after big blind
         currentPlayerIndex = (bigBlindPos + 1) % players.size();
 
         // Deal cards
         dealHoleCards();
         gameState = GameState.BETTING_PRE_FLOP;
+        needsPlayerAction = true;
     }
 
     // Method called from libGDX game loop
@@ -187,11 +202,14 @@ public class PokerGame {
     private void resetBettingRound() {
         currentBet = 0;
         lastRaisePlayerIndex = -1;
-        for (Player player : players) {
-            player.resetBet();
+
+        // Reset player bets and action tracking
+        for (int i = 0; i < players.size(); i++) {
+            players.get(i).resetBet();
+            hasActedInRound[i] = false;
         }
 
-        // First player to act is the one after the dealer
+        // First player to act is the one after the dealer (small blind)
         currentPlayerIndex = (dealerPosition + 1) % players.size();
 
         // Skip players who have folded
@@ -209,34 +227,48 @@ public class PokerGame {
             }
         }
 
+        // If only one player remains active, betting is complete
         if (activePlayers <= 1) {
             return true;
         }
 
-        // Check if all active players matched the current bet
-        for (Player player : players) {
-            if (player.isActive() && player.getCurrentBet() < currentBet && player.getChips() > 0) {
+        // Check if all active players have matched the current bet or are all-in
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            if (player.isActive() &&
+                !hasActedInRound[i] &&
+                player.getCurrentBet() < currentBet &&
+                player.getChips() > 0) {
                 return false;
             }
         }
 
-        // Check if we did a complete trip over the table since last raise,
-        // while keeping in mind that there can be inactive players
-        if (lastRaisePlayerIndex == -1) {
-            return true; // no raises and all players checked
+        // Check if all active players have had a chance to act in this round
+        for (int i = 0; i < players.size(); i++) {
+            if (players.get(i).isActive() && !hasActedInRound[i]) {
+                return false;
+            }
         }
 
-        int checkIndex = currentPlayerIndex;
-        do {
-            if (players.get(checkIndex).isActive()) {
-                if (checkIndex == lastRaisePlayerIndex) {
-                    return true; // full circle
-                }
-            }
-            checkIndex = (checkIndex + 1) % players.size();
-        } while (checkIndex != currentPlayerIndex);
+        // If we had a raise, check if everyone after the raiser has had a chance to act
+        if (lastRaisePlayerIndex != -1) {
+            // Start from the player after the last raiser
+            int checkIndex = (lastRaisePlayerIndex + 1) % players.size();
 
-        return false;
+            // Go around until we reach the raiser again
+            while (checkIndex != lastRaisePlayerIndex) {
+                Player player = players.get(checkIndex);
+
+                // If this player is active but hasn't acted since the last raise
+                if (player.isActive() && !hasActedInRound[checkIndex]) {
+                    return false;
+                }
+
+                checkIndex = (checkIndex + 1) % players.size();
+            }
+        }
+
+        return true;
     }
 
     // Called via UI
@@ -251,37 +283,64 @@ public class PokerGame {
             return true;
         }
 
+        boolean validAction = false;
+
         switch (action) {
             case CHECK:
                 if (currentPlayer.getCurrentBet() < currentBet) {
                     return false; // invalid action
                 }
+                validAction = true;
                 break;
+
             case CALL:
                 int callAmount = currentBet - currentPlayer.getCurrentBet();
                 if (callAmount > 0) {
                     pot += currentPlayer.bet(callAmount);
                 }
+                validAction = true;
                 break;
+
             case RAISE:
                 if (betAmount <= currentBet) {
-                    return false; // invalid raise amount (raise mut be at least current bet)
+                    return false; // invalid raise amount (raise must be at least current bet)
                 }
                 int raiseAmount = betAmount - currentPlayer.getCurrentBet();
                 pot += currentPlayer.bet(raiseAmount);
                 currentBet = betAmount;
+
+                // When there's a raise, reset the acted flags except for the raiser
+                for (int i = 0; i < hasActedInRound.length; i++) {
+                    if (i != currentPlayerIndex) {
+                        hasActedInRound[i] = false;
+                    }
+                }
+
                 lastRaisePlayerIndex = currentPlayerIndex;
+                validAction = true;
                 break;
+
             case FOLD:
                 currentPlayer.setActive(false);
+                validAction = true;
                 break;
         }
 
-        moveToNextPlayer();
-        if (isBettingRoundComplete()) {
-            needsPlayerAction = false;
+        if (validAction) {
+            // Mark this player as having acted in this round
+            hasActedInRound[currentPlayerIndex] = true;
+
+            moveToNextPlayer();
+
+            // Check if the betting round is complete after this action
+            if (isBettingRoundComplete() || hasWinnerByFold()) {
+                needsPlayerAction = false;
+            }
+
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     private void moveToNextPlayer() {

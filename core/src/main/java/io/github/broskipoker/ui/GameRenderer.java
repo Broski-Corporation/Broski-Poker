@@ -47,6 +47,7 @@ public class GameRenderer {
     private final float defaultZoom = 1.0f;
     private final float focusedZoom = 0.5f;
     private boolean isZoomed = false;
+    private boolean bettingUIVisible = true;
 
     // Assets
     private final Texture backgroundTexture;
@@ -202,7 +203,7 @@ public class GameRenderer {
             }
 
             // Show betting UI when game is started
-            bettingUI.setVisible(true);
+            bettingUI.setVisible(bettingUIVisible);
 
             batch.setProjectionMatrix(camera.combined);
 
@@ -245,8 +246,8 @@ public class GameRenderer {
         int bigBlindPosition = (dealerPosition + 1) % chairPositions.length;
 
         // Render Dealer Texture
-        float dpX = 100;
-        float dpY = 520;
+        float dpX = 120;
+        float dpY = 513;
         batch.draw(dealerRegion, dpX, dpY, buttonWidth, buttonHeight);
 
         // Render Small Blind Texture
@@ -602,13 +603,13 @@ public class GameRenderer {
         float centerY = Gdx.graphics.getHeight() / 2f;
 
         if (isZoomed) {
-            // Zoom in to flop area
             camera.zoom = focusedZoom;
             camera.position.set(centerX, centerY, 0);
+            bettingUIVisible = false; // Hide betting UI when zoomed in
         } else {
-            // Reset to default view
             camera.zoom = defaultZoom;
             camera.position.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f, 0);
+            bettingUIVisible = true; // Show betting UI when zoomed out
         }
         camera.update();
     }
@@ -716,16 +717,6 @@ public class GameRenderer {
                 // Trigger the bot thinking process in the controller
                 gameController.startBotThinking(pokerGame.getCurrentPlayerIndex());
             }
-
-            // Show betting UI after animation completes
-            if (bettingUI != null) {
-                bettingUI.setVisible(true);
-            }
-        } else {
-            // Hide betting UI during animation
-            if (bettingUI != null) {
-                bettingUI.setVisible(false);
-            }
         }
     }
 
@@ -749,6 +740,10 @@ public class GameRenderer {
 
     public void setWinningCards(List<Card> winningCards) {
         this.winningCards = winningCards;
+    }
+
+    public BettingUI getBettingUI() {
+        return bettingUI;
     }
 
     public void dispose() {

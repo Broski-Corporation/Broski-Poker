@@ -166,6 +166,9 @@ public class GameController extends InputAdapter {
     private void handleZoom() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             renderer.toggleZoom();
+            if (renderer.getBettingUI() != null) {
+                renderer.getBettingUI().setVisible(false);
+            }
         }
     }
 

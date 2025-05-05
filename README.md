@@ -41,3 +41,10 @@ For example, `core:clean` removes `build` folder only from the `core` project.
 ## Bugs
 
 - For animation, the first card dealt is for the small blind, not for chair 1
+
+
+## Tasks before first presentation
+
+- showdown ui (show players cards etc)
+- block actions while card dealing animation is taking place
+- card sounds

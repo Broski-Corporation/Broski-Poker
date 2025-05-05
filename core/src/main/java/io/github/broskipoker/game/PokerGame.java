@@ -420,6 +420,13 @@ public class PokerGame {
         return false;
     }
 
+    public boolean hasPlayerActedInRound(int playerIndex) {
+        if (playerIndex >= 0 && playerIndex < hasActedInRound.length) {
+            return hasActedInRound[playerIndex];
+        }
+        return false;
+    }
+
     public List<Card> getCommunityCards() {
         return communityCards;
     }

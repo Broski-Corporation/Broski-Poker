@@ -554,11 +554,17 @@ public class GameRenderer {
 
             playerFont.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
 
-            // Display current bet and chips if it exists
             if (players.get(i).getCurrentBet() > 0) {
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
-                betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
 
+                // NEW CODE: Check if player has checked (current bet equals game current bet)
+                if (players.get(i).getCurrentBet() == pokerGame.getCurrentBet() &&
+                    hasActedInRound(i) &&
+                    pokerGame.getCurrentBet() == 0) {
+                    betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 25);
+                } else {
+                    betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+                }
                 // Calculate position for chips based on player position
                 float chipX, chipY;
                 if (i == 0 || i == 1) { // Top players
@@ -572,6 +578,17 @@ public class GameRenderer {
                     chipY = y + 45;
                 }
                 renderBetChips(players.get(i).getCurrentBet(), chipX, chipY);
+            } else if (hasActedInRound(i) && pokerGame.getCurrentBet() == 0) {
+                // Player has acted but has no bet (they checked)
+                BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f));
+                betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 25);
+            }
+
+            // Display current bet and chips if it exists
+            if (players.get(i).getCurrentBet() > 0) {
+                BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
+                betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+
             }
 
             // Indicator for current player
@@ -579,6 +596,12 @@ public class GameRenderer {
 //                batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25); // turnIndicatorRegion is not correct texture region for this purpose (by andrei)
             }
         }
+    }
+
+    private boolean hasActedInRound(int playerIndex) {
+        // You need to access the hasActedInRound array from PokerGame
+        // Since it's private, you might need to add a getter method in PokerGame
+        return pokerGame.hasPlayerActedInRound(playerIndex);
     }
 
     // Handle player turns and betting UI

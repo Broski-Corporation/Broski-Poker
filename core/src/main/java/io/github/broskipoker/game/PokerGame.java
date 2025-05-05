@@ -112,10 +112,10 @@ public class PokerGame {
 
         // Mark players who posted blinds as having acted
         hasActedInRound[smallBlindPos] = true;
-        hasActedInRound[bigBlindPos] = true;
+        hasActedInRound[bigBlindPos] = false;
 
         // Don't set lastRaisePlayerIndex to bigBlindPos as it's not a raise
-        lastRaisePlayerIndex = -1;
+        lastRaisePlayerIndex = bigBlindPos;
 
         // First player to act is UTG (Under the Gun) - player after big blind
         currentPlayerIndex = (bigBlindPos + 1) % players.size();

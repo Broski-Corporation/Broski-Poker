@@ -322,7 +322,7 @@ public class GameRenderer {
      * @param y - y coordinate
      * @param rotation - rotation angle in degrees
      */
-    public void renderRotatedCards(Card[] communityCards, float x, float y, float rotation) {
+    public void renderRotatedCards(Card[] communityCards, float x, float y, float rotation, boolean isFaceUp) {
         if (communityCards == null) return;
 
         float originX = DISPLAY_CARD_WIDTH / 2;
@@ -332,18 +332,40 @@ public class GameRenderer {
             if (communityCards[i] != null) {
                 float cardX = x + (DISPLAY_CARD_WIDTH + CARD_SPACING);
 
-                // Draw card background (rotated)
-                batch.draw(cardBack,
-                    cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
-                    originX, originY, // origin for rotation
-                    DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
-                    1, 1, // scale
-                    rotation); // rotation
+                if (isFaceUp) {
+                    // Draw card background (rotated)
+                    batch.draw(cardBackground,
+                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
+                        originX, originY, // origin for rotation
+                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
+                        1, 1, // scale
+                        rotation); // rotation
+
+                    // Draw card face (rotated)
+                    Card card = communityCards[i];
+                    batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()],
+                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
+                        originX, originY, // origin for rotation
+                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
+                        1, 1, // scale
+                        rotation); // rotation
+                } else {
+                    // Draw card back (rotated)
+                    batch.draw(cardBack,
+                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
+                        originX, originY, // origin for rotation
+                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
+                        1, 1, // scale
+                        rotation); // rotation
+                }
             }
         }
     }
 
     private void renderPlayerCards(List<Player> players) {
+        // Check if we're in showdown state
+        boolean isShowdown = pokerGame.getGameState() == PokerGame.GameState.SHOWDOWN;
+
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
             float x = chairPositions[i][0];
             float y = chairPositions[i][1];
@@ -352,10 +374,13 @@ public class GameRenderer {
             for (int j = 0; j < playerCards.length && j < 2; j++) {
                 if (dealingAnimator.isCardDealt(i, j)) {
                     if (i == 2) {
-                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90);
-                    } else if (i == 3) {
+                        // Player at position 2 has rotated cards
+                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90, isShowdown);
+                    } else if (i == 3 || isShowdown) {
+                        // Human player or showdown state - show face up
                         renderCards(new Card[]{playerCards[j]}, x + j * 70, y, true);
                     } else {
+                        // Other players during regular gameplay - show face down
                         renderCards(new Card[]{playerCards[j]}, x + j * 70, y, false);
                     }
                 }

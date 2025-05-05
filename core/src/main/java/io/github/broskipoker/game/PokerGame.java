@@ -39,6 +39,8 @@ public class PokerGame {
     private GameState gameState;
     // Track players who have acted in the current betting round
     private boolean[] hasActedInRound;
+    private float showdownTimer = 0;
+    private final float SHOWDOWN_DURATION = 3.0f;
 
     public enum GameState {
         WAITING_FOR_PLAYERS, DEALING, BETTING_PRE_FLOP, FLOP, BETTING_FLOP, TURN, BETTING_TURN, RIVER,
@@ -162,10 +164,12 @@ public class PokerGame {
                     }
                     break;
                 case SHOWDOWN:
-                    // TODO: handle end of hand logic
-                    distributeWinnings();
-                    startNewHand();
-                    // Reset the dealing animator
+                    showdownTimer += delta;
+                    if (showdownTimer >= SHOWDOWN_DURATION) {
+                        distributeWinnings();
+                        startNewHand();
+                        showdownTimer = 0;
+                    }
                     break;
                 default:
                     break;
@@ -207,7 +211,7 @@ public class PokerGame {
     public void goToShowdown() {
         gameState = GameState.SHOWDOWN;
         needsPlayerAction = false;
-
+        showdownTimer = 0;
     }
 
     private void resetBettingRound() {

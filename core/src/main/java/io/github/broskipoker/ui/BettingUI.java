@@ -29,6 +29,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.game.PokerHand;
@@ -73,6 +74,10 @@ public class BettingUI {
     // Current bet amount
     private int currentBetAmount;
 
+    // For displaying the winning hand at showdown
+    private GameRenderer gameRenderer;
+    private List<Card> winningCards = null;
+
     // Chip textures for bet visualization
     private final Texture chipTexture;
     private final TextureRegion[] chipRegions;
@@ -90,16 +95,17 @@ public class BettingUI {
     private static final int BUTTON_HEIGHT = 40;
     private static final int PADDING = 10;
 
-    public BettingUI(PokerGame pokerGame, Stage stage) {
-        this(pokerGame, stage, null);
+    public BettingUI(PokerGame pokerGame, Stage stage, GameRenderer gameRenderer) {
+        this(pokerGame, stage, null, gameRenderer);
     }
 
-    public BettingUI(PokerGame pokerGame, Stage stage, GameController gameController) {
+    public BettingUI(PokerGame pokerGame, Stage stage, GameController gameController, GameRenderer gameRenderer) {
         this.pokerGame = pokerGame;
         this.stage = stage;
         this.batch = new SpriteBatch();
         this.currentBetAmount = 0;
         this.gameController = gameController;
+        this.gameRenderer = gameRenderer;
 
         // Initialize FontManager and create specific fonts for different UI elements
         this.fontManager = FontManager.getInstance();
@@ -494,6 +500,11 @@ public class BettingUI {
                 if (winners.size() == 1) {
                     Player winner = winners.get(0);
                     PokerHand hand = new PokerHand(winner.getHoleCards(), pokerGame.getCommunityCards());
+
+                    // Get the best hand for rendering during showdown
+                    List<Card> bestHand = hand.getBestHand();
+                    gameRenderer.renderWinningHand(bestHand);
+
                     sb.append(winner.getName())
                         .append(" wins the pot ($")
                         .append(pot)
@@ -518,9 +529,9 @@ public class BettingUI {
             setButtonsEnabled(false);
             return;
         }
-
-
     }
+
+
 
     private String getGameStateDescription() {
         PokerGame.GameState state = pokerGame.getGameState();

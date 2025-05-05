@@ -22,6 +22,7 @@ public class PokerHand {
     private final List<Card> cards;
     private HandRank rank;
     private List<Card.Rank> tieBreakers;
+    private List<Card> bestHand; // Add this field
 
     public PokerHand(List<Card> holeCards, List<Card> communityCards) {
         cards = new ArrayList<>();
@@ -30,11 +31,17 @@ public class PokerHand {
 
         cards.sort((c1, c2) -> c2.getRank().getValue() - c1.getRank().getValue());
 
+        bestHand = new ArrayList<>();
         evaluateHand();
+    }
+
+    public List<Card> getBestHand() { // Add this getter
+        return bestHand;
     }
 
     private void evaluateHand() {
         tieBreakers = new ArrayList<>();
+        bestHand = new ArrayList<>();
 
         if (isRoyalFlush()) {
             rank = HandRank.ROYAL_FLUSH;
@@ -59,6 +66,7 @@ public class PokerHand {
             // Tiebreakers consists of the actual hand (in the case of high card)
             for (Card card : cards) {
                 tieBreakers.add(card.getRank());
+                bestHand.add(card);
                 if (tieBreakers.size() == 5) break;
             }
         }
@@ -95,15 +103,20 @@ public class PokerHand {
     }
 
     private boolean isRoyalFlush() {
-        if (!isStraightFlush()) return false;
-
-        // Find suited cards
         Map<Card.Suit, List<Card>> suitedCards = getSuitedCards();
         for (List<Card> suited : suitedCards.values()) {
             if (suited.size() >= 5) {
                 suited.sort((c1, c2) -> c2.getRank().getValue() - c1.getRank().getValue());
-                if (suited.get(0).getRank() == Card.Rank.ACE && isStraightFlushInList(suited)) {
-                    // Add Ace as a tiebreaker, even if Royal Flush has no tiebreaker
+                // Royal Flush is 10, J, Q, K, A
+                List<Card> rf = new ArrayList<>();
+                Set<Card.Rank> needed = EnumSet.of(Card.Rank.TEN, Card.Rank.JACK, Card.Rank.QUEEN, Card.Rank.KING, Card.Rank.ACE);
+                for (Card card : suited) {
+                    if (needed.contains(card.getRank())) {
+                        rf.add(card);
+                    }
+                }
+                if (rf.size() == 5) {
+                    bestHand = new ArrayList<>(rf);
                     tieBreakers.add(Card.Rank.ACE);
                     return true;
                 }
@@ -117,15 +130,10 @@ public class PokerHand {
         for (List<Card> suited : suitedCards.values()) {
             if (suited.size() >= 5) {
                 suited.sort((c1, c2) -> c2.getRank().getValue() - c1.getRank().getValue());
-                if (isStraightFlushInList(suited)) {
-                    // Tiebreaker is the highest card in the straight flush
-                    int highestValue = getHighestStraightValue(suited);
-                    for (Card card : suited) {
-                        if (card.getRank().getValue() == highestValue) {
-                            tieBreakers.add(card.getRank());
-                            break;
-                        }
-                    }
+                List<Card> straightFlush = getBestStraight(suited);
+                if (straightFlush != null) {
+                    bestHand = new ArrayList<>(straightFlush);
+                    tieBreakers.add(bestHand.get(0).getRank());
                     return true;
                 }
             }
@@ -135,20 +143,28 @@ public class PokerHand {
 
     private boolean isFourOfAKind() {
         Map<Card.Rank, Integer> rankCount = getRankCount();
+        Card.Rank quadRank = null;
         for (Map.Entry<Card.Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 4) {
-                // Tiebreaker is the rank of the four of a kind
-                tieBreakers.add(entry.getKey());
-
-                // Second tiebreaker is the second-highest card in the hand
-                for (Card card : cards) {
-                    if (card.getRank() != entry.getKey()) {
-                        tieBreakers.add(card.getRank());
-                        break;
-                    }
-                }
-                return true;
+                quadRank = entry.getKey();
+                break;
             }
+        }
+        if (quadRank != null) {
+            tieBreakers.add(quadRank);
+            List<Card> quads = new ArrayList<>();
+            Card kicker = null;
+            for (Card card : cards) {
+                if (card.getRank() == quadRank) {
+                    quads.add(card);
+                } else if (kicker == null) {
+                    kicker = card;
+                }
+            }
+            bestHand = new ArrayList<>(quads);
+            if (kicker != null) bestHand.add(kicker);
+            if (kicker != null) tieBreakers.add(kicker.getRank());
+            return true;
         }
         return false;
     }
@@ -178,6 +194,18 @@ public class PokerHand {
         if (threeOfAKindRank != null && pairRank != null) {
             tieBreakers.add(threeOfAKindRank);
             tieBreakers.add(pairRank);
+            List<Card> trips = new ArrayList<>();
+            List<Card> pair = new ArrayList<>();
+            for (Card card : cards) {
+                if (card.getRank() == threeOfAKindRank && trips.size() < 3) {
+                    trips.add(card);
+                } else if (card.getRank() == pairRank && pair.size() < 2) {
+                    pair.add(card);
+                }
+            }
+            bestHand = new ArrayList<>();
+            bestHand.addAll(trips);
+            bestHand.addAll(pair);
             return true;
         }
         return false;
@@ -187,11 +215,9 @@ public class PokerHand {
         Map<Card.Suit, List<Card>> suitedCards = getSuitedCards();
         for (Map.Entry<Card.Suit, List<Card>> entry : suitedCards.entrySet()) {
             if (entry.getValue().size() >= 5) {
-                // Sort cards by rank if flush found
                 List<Card> flushCards = entry.getValue();
                 flushCards.sort((c1, c2) -> c2.getRank().getValue() - c1.getRank().getValue());
-
-                // Tiebreakers consists of the top 5 cards in the flush
+                bestHand = new ArrayList<>(flushCards.subList(0, 5));
                 for (int i = 0; i < 5 && i < flushCards.size(); i++) {
                     tieBreakers.add(flushCards.get(i).getRank());
                 }
@@ -202,53 +228,42 @@ public class PokerHand {
     }
 
     private boolean isStraight() {
-        Set<Integer> values = new HashSet<>();
-        for (Card card : cards) {
-            values.add(card.getRank().getValue());
-        }
-
-        // Check for A-5 straight
-        if (values.contains(14) && values.contains(2) && values.contains(3) &&
-            values.contains(4) && values.contains(5)) {
-            tieBreakers.add(Card.Rank.FIVE);
+        List<Card> straight = getBestStraight(cards);
+        if (straight != null) {
+            bestHand = new ArrayList<>(straight);
+            tieBreakers.add(straight.get(0).getRank());
             return true;
         }
-
-        // Check for other straight flushes
-        for (int i = 14; i >= 5; i--) {
-            if (values.contains(i) && values.contains(i - 1) && values.contains(i - 2) &&
-                values.contains(i - 3) && values.contains(i - 4)) {
-                // Find the card with the highest value
-                for (Card card : cards) {
-                    if (card.getRank().getValue() == i) {
-                        tieBreakers.add(card.getRank());
-                        break;
-                    }
-                }
-                return true;
-            }
-        }
         return false;
-	}
+    }
 
     private boolean isThreeOfAKind() {
         Map<Card.Rank, Integer> rankCount = getRankCount();
+        Card.Rank tripsRank = null;
         for (Map.Entry<Card.Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 3) {
-                //  Three of a kind tiebreaker is the actual rank of the hand
-                tieBreakers.add(entry.getKey());
-
-                // The 2 remainig cards are added to the tiebreaker
-                int added = 0;
-                for (Card card : cards) {
-                    if (card.getRank() != entry.getKey()) {
-                        tieBreakers.add(card.getRank());
-                        added++;
-                        if (added == 2) break;
-                    }
-                }
-                return true;
+                tripsRank = entry.getKey();
+                break;
             }
+        }
+        if (tripsRank != null) {
+            tieBreakers.add(tripsRank);
+            List<Card> trips = new ArrayList<>();
+            List<Card> kickers = new ArrayList<>();
+            for (Card card : cards) {
+                if (card.getRank() == tripsRank && trips.size() < 3) {
+                    trips.add(card);
+                } else if (kickers.size() < 2) {
+                    kickers.add(card);
+                }
+            }
+            bestHand = new ArrayList<>();
+            bestHand.addAll(trips);
+            bestHand.addAll(kickers);
+            for (Card kicker : kickers) {
+                tieBreakers.add(kicker.getRank());
+            }
+            return true;
         }
         return false;
     }
@@ -257,7 +272,6 @@ public class PokerHand {
         Map<Card.Rank, Integer> rankCount = getRankCount();
         List<Card.Rank> pairs = new ArrayList<>();
 
-        // Get pairs
         for (Map.Entry<Card.Rank, Integer> entry : rankCount.entrySet()) {
             if (entry.getValue() == 2) {
                 pairs.add(entry.getKey());
@@ -265,18 +279,26 @@ public class PokerHand {
         }
 
         if (pairs.size() >= 2) {
-            // Sort pairs by rank
             pairs.sort((r1, r2) -> r2.getValue() - r1.getValue());
-            // Tiebreakers are the two highest pairs
             tieBreakers.add(pairs.get(0));
             tieBreakers.add(pairs.get(1));
-            // Additional tiebreaker consist of the remaining 5th card
+            List<Card> pair1 = new ArrayList<>();
+            List<Card> pair2 = new ArrayList<>();
+            Card kicker = null;
             for (Card card : cards) {
-                if (card.getRank() != pairs.get(0) && card.getRank() != pairs.get(1)) {
-                    tieBreakers.add(card.getRank());
-                    break;
+                if (card.getRank() == pairs.get(0) && pair1.size() < 2) {
+                    pair1.add(card);
+                } else if (card.getRank() == pairs.get(1) && pair2.size() < 2) {
+                    pair2.add(card);
+                } else if (kicker == null) {
+                    kicker = card;
                 }
             }
+            bestHand = new ArrayList<>();
+            bestHand.addAll(pair1);
+            bestHand.addAll(pair2);
+            if (kicker != null) bestHand.add(kicker);
+            if (kicker != null) tieBreakers.add(kicker.getRank());
             return true;
         }
         return false;
@@ -294,16 +316,21 @@ public class PokerHand {
         }
 
         if (pairRank != null) {
-            // The first tiebreaker is the rank of the pair
             tieBreakers.add(pairRank);
-            // Additional tiebreakers are the 3 remaining cards
-            int added = 0;
+            List<Card> pair = new ArrayList<>();
+            List<Card> kickers = new ArrayList<>();
             for (Card card : cards) {
-                if (card.getRank() != pairRank) {
-                    tieBreakers.add(card.getRank());
-                    added++;
-                    if (added == 3) break;
+                if (card.getRank() == pairRank && pair.size() < 2) {
+                    pair.add(card);
+                } else if (kickers.size() < 3) {
+                    kickers.add(card);
                 }
+            }
+            bestHand = new ArrayList<>();
+            bestHand.addAll(pair);
+            bestHand.addAll(kickers);
+            for (Card kicker : kickers) {
+                tieBreakers.add(kicker.getRank());
             }
             return true;
         }
@@ -375,5 +402,47 @@ public class PokerHand {
             rankCount.put(card.getRank(), rankCount.getOrDefault(card.getRank(), 0) + 1);
         }
         return rankCount;
+    }
+
+    // Helper to find the best straight in a list of cards (returns 5 cards or null)
+    private List<Card> getBestStraight(List<Card> cardList) {
+        Map<Integer, Card> rankToCard = new HashMap<>();
+        for (Card card : cardList) {
+            int value = card.getRank().getValue();
+            if (!rankToCard.containsKey(value)) {
+                rankToCard.put(value, card);
+            }
+        }
+        List<Integer> values = new ArrayList<>(rankToCard.keySet());
+        Collections.sort(values, Collections.reverseOrder());
+
+        // Check for high straight (A-K-Q-J-10 down to 5-4-3-2-A)
+        for (int i = 0; i < values.size(); i++) {
+            int start = values.get(i);
+            List<Card> straight = new ArrayList<>();
+            straight.add(rankToCard.get(start));
+            int needed = 4;
+            int next = start - 1;
+            while (needed > 0 && rankToCard.containsKey(next)) {
+                straight.add(rankToCard.get(next));
+                next--;
+                needed--;
+            }
+            if (straight.size() == 5) {
+                return straight;
+            }
+        }
+        // Special case: A-2-3-4-5
+        if (rankToCard.containsKey(14) && rankToCard.containsKey(2) && rankToCard.containsKey(3)
+                && rankToCard.containsKey(4) && rankToCard.containsKey(5)) {
+            List<Card> straight = new ArrayList<>();
+            straight.add(rankToCard.get(5));
+            straight.add(rankToCard.get(4));
+            straight.add(rankToCard.get(3));
+            straight.add(rankToCard.get(2));
+            straight.add(rankToCard.get(14));
+            return straight;
+        }
+        return null;
     }
 }

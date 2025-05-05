@@ -34,6 +34,10 @@ public class GameController extends InputAdapter {
     private int thinkingBotIndex = -1;
     private static final float BOT_THINKING_TIME = 2.0f;
 
+    // Previous game state for transition handling
+    private PokerGame.GameState previousGameState = PokerGame.GameState.BETTING_PRE_FLOP;
+    private PokerGame.GameState currentState = PokerGame.GameState.BETTING_PRE_FLOP;
+
     public GameController(PokerGame pokerGame, GameRenderer renderer) {
         this.pokerGame = pokerGame;
         this.renderer = renderer;
@@ -49,6 +53,15 @@ public class GameController extends InputAdapter {
             if (Gdx.input.getInputProcessor() != inputMultiplexer) {
                 Gdx.input.setInputProcessor(inputMultiplexer);
             }
+
+            // Check for showdown -> newHand transition to disable the winning cards rendering
+            currentState = pokerGame.getGameState();
+            // Clear winning hand display when entering BETTING_PRE_FLOP state
+            if (currentState == PokerGame.GameState.BETTING_PRE_FLOP &&
+                previousGameState != PokerGame.GameState.BETTING_PRE_FLOP) {
+                renderer.clearWinningHand();
+            }
+            previousGameState = currentState;
 
             // Update game state
             pokerGame.update(delta);

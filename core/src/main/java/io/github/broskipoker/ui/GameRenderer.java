@@ -90,6 +90,9 @@ public class GameRenderer {
     private static float dealingAnimationTimer = 0;
     private static final float DEALING_ANIMATION_DURATION = 4.0f;
 
+    // Winning hand for rendering during showdown
+    private List<Card> winningCards = null;
+
     // Betting UI
     private BettingUI bettingUI;
     private final TextureRegion turnIndicatorRegion;
@@ -188,7 +191,7 @@ public class GameRenderer {
     public void setGameController(GameController controller) {
         this.gameController = controller;
         // Now initialize the BettingUI with the GameController
-        this.bettingUI = new BettingUI(pokerGame, stage, gameController);
+        this.bettingUI = new BettingUI(pokerGame, stage, this);
     }
 
     public void render(float delta) {
@@ -388,6 +391,49 @@ public class GameRenderer {
         }
     }
 
+    public void renderWinningHand(List<Card> winningCards) {
+        if (winningCards == null || winningCards.isEmpty()) {
+            return;
+        }
+
+        boolean batchWasActive = batch.isDrawing();
+
+        if (!batchWasActive) {
+            batch.begin();
+        }
+
+        try {
+            float startX = Gdx.graphics.getWidth() * 0.84f - (winningCards.size() * 30);
+            float y = Gdx.graphics.getHeight() * 0.35f;
+            float cardSpacing = 75;
+
+            for (int i = 0; i < winningCards.size(); i++) {
+                Card card = winningCards.get(i);
+                float x = startX + i * cardSpacing;
+
+                // Draw gold highlight (semi-transparent rectangle, slightly larger than the card)
+                batch.setColor(1.0f, 0.84f, 0.0f, 0.5f); // Gold with 50% opacity
+                batch.draw(cardBackground, x - 4, y - 4, DISPLAY_CARD_WIDTH + 8, DISPLAY_CARD_HEIGHT + 8);
+
+                // Draw card background
+                batch.setColor(Color.WHITE);
+                batch.draw(cardBackground, x, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+
+                // Draw card face
+                batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()],
+                    x, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+            }
+        } finally {
+            if (!batchWasActive) {
+                batch.end();
+            }
+        }
+    }
+
+    public void clearWinningHand() {
+        this.winningCards = null;
+    }
+
     // Needs to be modified to show current player turn
     private void renderGameElements(float delta) {
         // Get game data
@@ -455,6 +501,9 @@ public class GameRenderer {
         } else {
             renderPlayerInfo(players, -1); // No current player
         }
+
+        // Winning cards rendering (does something only in Showdown because in other game-states winningCards is null)
+//        renderWinningHand();
 
         // Debug info
         font.draw(batch, "Game State: " + state.toString(), 50, 100);
@@ -696,6 +745,10 @@ public class GameRenderer {
 
     public static boolean isDealingAnimationComplete() {
         return dealingAnimationComplete;
+    }
+
+    public void setWinningCards(List<Card> winningCards) {
+        this.winningCards = winningCards;
     }
 
     public void dispose() {

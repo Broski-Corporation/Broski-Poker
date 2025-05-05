@@ -31,6 +31,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
+import io.github.broskipoker.game.PokerHand;
+import java.util.List;
 
 import java.util.Objects;
 
@@ -484,29 +486,39 @@ public class BettingUI {
         }
 
         if (pokerGame.getGameState() == PokerGame.GameState.SHOWDOWN) {
-            // Get winners and pot
-            java.util.List<io.github.broskipoker.game.Player> winners = pokerGame.determineWinners();
+            List<Player> winners = pokerGame.determineWinners();
             int pot = pokerGame.getPot();
 
-            if (winners.size() == 1) {
-                turnInfoLabel.setText(winners.get(0).getName() + " wins the pot of $" + pot + "!");
-                if (Objects.equals(winners.get(0).getName(), "Player 4")) {
-                    turnInfoLabel.setText("You win the pot of $" + pot + "!");
-                }
-            } else if (winners.size() > 1) {
+            if (!winners.isEmpty()) {
                 StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < winners.size(); i++) {
-                    sb.append(winners.get(i).getName());
-                    if (i < winners.size() - 1) sb.append(", ");
+                if (winners.size() == 1) {
+                    Player winner = winners.get(0);
+                    PokerHand hand = new PokerHand(winner.getHoleCards(), pokerGame.getCommunityCards());
+                    sb.append(winner.getName())
+                        .append(" wins the pot ($")
+                        .append(pot)
+                        .append(") with ")
+                        .append(hand.getRank().toString().replace('_', ' ').toLowerCase());
+                } else {
+                    sb.append("Split pot ($").append(pot).append(") between: ");
+                    for (Player winner : winners) {
+                        PokerHand hand = new PokerHand(winner.getHoleCards(), pokerGame.getCommunityCards());
+                        sb.append(winner.getName())
+                            .append(" (")
+                            .append(hand.getRank().toString().replace('_', ' ').toLowerCase())
+                            .append("), ");
+                    }
+                    // Remove trailing comma and space
+                    sb.setLength(sb.length() - 2);
                 }
-                sb.append(" split the pot of $").append(pot).append("!");
                 turnInfoLabel.setText(sb.toString());
             } else {
-                turnInfoLabel.setText("No winner. Pot: $" + pot);
+                turnInfoLabel.setText("No winner.");
             }
             setButtonsEnabled(false);
             return;
         }
+
 
     }
 

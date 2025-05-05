@@ -38,7 +38,7 @@ public class Menu {
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("kevin-macleod-investigations.mp3"));
         menuMusic.setLooping(true);
         menuMusic.setVolume(menuVolume);
-        menuMusic.play();
+//        menuMusic.play();
 
         skin = new Skin(Gdx.files.internal("skin/star-soldier-ui.json"));
 

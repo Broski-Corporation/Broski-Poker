@@ -515,11 +515,18 @@ public class BettingUI {
                     List<Card> bestHand = hand.getBestHand();
                     gameRenderer.renderWinningHand(bestHand);
 
-                    sb.append(winner.getName())
-                        .append(" wins the pot ($")
-                        .append(pot)
-                        .append(") with ")
-                        .append(hand.getRank().toString().replace('_', ' ').toLowerCase());
+                    if (winner.getName().equals("Player 4")) {
+                        sb.append("You win the pot ($")
+                            .append(pot)
+                            .append(") with ")
+                            .append(hand.getRank().toString().replace('_', ' ').toLowerCase());
+                    } else {
+                        sb.append(winner.getName())
+                            .append(" wins the pot ($")
+                            .append(pot)
+                            .append(") with ")
+                            .append(hand.getRank().toString().replace('_', ' ').toLowerCase());
+                    }
                 } else {
                     sb.append("Split pot ($").append(pot).append(") between: ");
                     for (Player winner : winners) {

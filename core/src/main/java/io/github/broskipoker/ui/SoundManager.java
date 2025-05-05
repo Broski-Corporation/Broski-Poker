@@ -16,6 +16,8 @@ public class SoundManager implements Disposable {
     private Sound cardSound;
     private Sound chipSound;
     private Sound buttonSound;
+    private Sound winSound;
+    private Sound loseSound;
     private boolean soundEnabled = true;
 
     // Track which cards have already played sounds
@@ -24,10 +26,14 @@ public class SoundManager implements Disposable {
     // Track player bet amounts to detect changes
     private final Map<Integer, Integer> playerBets = new HashMap<>();
 
+    private boolean showdownSoundPlayed = false;
+
     private SoundManager() {
         cardSound = Gdx.audio.newSound(Gdx.files.internal("sounds/card1.ogg"));
         chipSound = Gdx.audio.newSound(Gdx.files.internal("sounds/chips1.ogg"));
         buttonSound = Gdx.audio.newSound(Gdx.files.internal("sounds/button.ogg"));
+        winSound = Gdx.audio.newSound(Gdx.files.internal("sounds/win.ogg"));
+        loseSound = Gdx.audio.newSound(Gdx.files.internal("sounds/negative.ogg"));
     }
 
     public static SoundManager getInstance() {
@@ -101,10 +107,25 @@ public class SoundManager implements Disposable {
         }
     }
 
+    public void playWinSound() {
+        if (soundEnabled && winSound != null && !showdownSoundPlayed) {
+            winSound.play(0.6f);
+            showdownSoundPlayed = true;
+        }
+    }
+
+    public void playLoseSound() {
+        if (soundEnabled && loseSound != null && !showdownSoundPlayed) {
+            loseSound.play(0.6f);
+            showdownSoundPlayed = true;
+        }
+    }
+
     // Call this method when starting a new hand
     public void resetCardSounds() {
         cardsPlayed.clear();
         playerBets.clear();
+        showdownSoundPlayed = false;
     }
 
     public void setSoundEnabled(boolean enabled) {
@@ -116,5 +137,11 @@ public class SoundManager implements Disposable {
         cardSound.dispose();
         chipSound.dispose();
         buttonSound.dispose();
+        if (winSound != null) winSound.dispose();
+        if (loseSound != null) loseSound.dispose();
+    }
+
+    public boolean isShowdownSoundPlayed() {
+        return showdownSoundPlayed;
     }
 }

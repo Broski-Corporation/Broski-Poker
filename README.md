@@ -48,4 +48,5 @@ For example, `core:clean` removes `build` folder only from the `core` project.
 - avatars
 - auto-exit when 0 balance
 - better bot mechanics
-- override showdon by simple click
+- override showdown by simple click
+- entering '12a' in custom bet field leads to all in bet

@@ -501,8 +501,26 @@ public class GameRenderer {
             renderPlayerInfo(players, -1); // No current player
         }
 
-        // Winning cards rendering (does something only in Showdown because in other game-states winningCards is null)
-//        renderWinningHand();
+        // Play win/lose sounds at showdown
+        if (state == PokerGame.GameState.SHOWDOWN && !soundManager.isShowdownSoundPlayed()) {
+            List<Player> winners = pokerGame.determineWinners();
+            boolean humanPlayerWon = false;
+
+            // Check if human player is among winners
+            for (Player winner : winners) {
+                if (players.indexOf(winner) == HUMAN_PLAYER_INDEX) {
+                    humanPlayerWon = true;
+                    break;
+                }
+            }
+
+            // Play appropriate sound
+            if (humanPlayerWon) {
+                soundManager.playWinSound();
+            } else {
+                soundManager.playLoseSound();
+            }
+        }
 
         // Debug info
         font.draw(batch, "Game State: " + state.toString(), 50, 100);

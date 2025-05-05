@@ -86,6 +86,9 @@ public class GameRenderer {
 
     // Card dealing animation helper instance
     private static final DealingAnimator dealingAnimator;
+    private static boolean dealingAnimationComplete = false;
+    private static float dealingAnimationTimer = 0;
+    private static final float DEALING_ANIMATION_DURATION = 4.0f;
 
     // Betting UI
     private BettingUI bettingUI;
@@ -404,6 +407,18 @@ public class GameRenderer {
         // Handle card dealing animation
         if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
             dealingAnimator.update(delta, players, chairPositions.length);
+
+            // Update animation timer
+            if (!dealingAnimationComplete) {
+                dealingAnimationTimer += delta;
+                if (dealingAnimationTimer >= DEALING_ANIMATION_DURATION) {
+                    dealingAnimationComplete = true;
+                }
+            }
+        } else {
+            // Reset animation timer if not in pre-flop state
+            dealingAnimationComplete = false;
+            dealingAnimationTimer = 0;
         }
 
         // Render each player's cards
@@ -441,6 +456,8 @@ public class GameRenderer {
 
     public static void resetGameRenderer() {
         dealingAnimator.reset();
+        dealingAnimationComplete = false;
+        dealingAnimationTimer = 0;
     }
 
     private void renderBetChips(int betAmount, float x, float y) {
@@ -606,18 +623,35 @@ public class GameRenderer {
 
     // Handle player turns and betting UI
     private void handlePlayerTurns() {
-        // Update the betting UI
-        if (bettingUI != null) {
-            bettingUI.update();
-        }
+        // Check if we should block actions during animation
+        boolean shouldBlock = pokerGame.getGameState() == PokerGame.GameState.BETTING_PRE_FLOP &&
+                             !dealingAnimationComplete;
 
-        // Check if it's a bot's turn and we need to start it thinking
-        if (pokerGame.needsPlayerAction() &&
-            pokerGame.getCurrentPlayerIndex() != HUMAN_PLAYER_INDEX &&
-            gameController != null && !gameController.isBotThinking()) {
+        // Only proceed with betting actions if we shouldn't block
+        if (!shouldBlock) {
+            // Update the betting UI
+            if (bettingUI != null) {
+                bettingUI.update();
+            }
 
-            // Trigger the bot thinking process in the controller
-            gameController.startBotThinking(pokerGame.getCurrentPlayerIndex());
+            // Check if it's a bot's turn and we need to start it thinking
+            if (pokerGame.needsPlayerAction() &&
+                pokerGame.getCurrentPlayerIndex() != HUMAN_PLAYER_INDEX &&
+                gameController != null && !gameController.isBotThinking()) {
+
+                // Trigger the bot thinking process in the controller
+                gameController.startBotThinking(pokerGame.getCurrentPlayerIndex());
+            }
+
+            // Show betting UI after animation completes
+            if (bettingUI != null) {
+                bettingUI.setVisible(true);
+            }
+        } else {
+            // Hide betting UI during animation
+            if (bettingUI != null) {
+                bettingUI.setVisible(false);
+            }
         }
     }
 
@@ -633,6 +667,10 @@ public class GameRenderer {
 
     public Menu getMenu() {
         return menu;
+    }
+
+    public static boolean isDealingAnimationComplete() {
+        return dealingAnimationComplete;
     }
 
     public void dispose() {

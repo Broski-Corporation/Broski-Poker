@@ -32,7 +32,7 @@ public class GameController extends InputAdapter {
     private float botDecisionTimer = 0;
     private boolean isBotThinking = false;
     private int thinkingBotIndex = -1;
-    private static final float BOT_THINKING_TIME = 0.5f;
+    private static final float BOT_THINKING_TIME = 2.0f;
 
     public GameController(PokerGame pokerGame, GameRenderer renderer) {
         this.pokerGame = pokerGame;
@@ -104,14 +104,16 @@ public class GameController extends InputAdapter {
         }
     }
 
-    // Start the bot thinking process
     public void startBotThinking(int playerIndex) {
-        // Check if it's actually a bot's turn
-        if (playerIndex != HUMAN_PLAYER_INDEX && pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
+        // Only start bot thinking if dealing animation is complete
+        if (GameRenderer.isDealingAnimationComplete() ||
+            pokerGame.getGameState() != PokerGame.GameState.BETTING_PRE_FLOP) {
+
             isBotThinking = true;
+            botDecisionTimer = BOT_THINKING_TIME; // Use the defined constant (0.5f)
             thinkingBotIndex = playerIndex;
-            botDecisionTimer = BOT_THINKING_TIME; // Reset timer
         }
+        // Otherwise, don't start bot thinking process at all
     }
 
     // Execute bot decision after thinking time

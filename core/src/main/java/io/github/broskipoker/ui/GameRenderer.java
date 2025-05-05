@@ -533,8 +533,11 @@ public class GameRenderer {
         dealingAnimationTimer = 0;
     }
 
-    private void renderBetChips(int betAmount, float x, float y) {
+    private void renderBetChips(int betAmount, float x, float y, int playerIndex) {
         if (betAmount <= 0) return;
+
+        // Play chip sound when betAmount changes
+        soundManager.playChipSound(betAmount, playerIndex);
 
         // Map bet to chips (500, 100, 25, 10, 5)
         int[] chipValues = {5, 10, 25, 100, 500};
@@ -667,7 +670,7 @@ public class GameRenderer {
                     chipX = x + 145;
                     chipY = y + 45;
                 }
-                renderBetChips(players.get(i).getCurrentBet(), chipX, chipY);
+                renderBetChips(players.get(i).getCurrentBet(), chipX, chipY, i);
             } else if (hasActedInRound(i) && pokerGame.getCurrentBet() == 0) {
                 // Player has acted but has no bet (they checked)
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f));

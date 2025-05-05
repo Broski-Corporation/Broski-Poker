@@ -5,20 +5,27 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.Disposable;
 import io.github.broskipoker.game.Card;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class SoundManager implements Disposable {
     private static SoundManager instance;
 
     private Sound cardSound;
+    private Sound chipSound;
     private boolean soundEnabled = true;
 
     // Track which cards have already played sounds
     private final Set<String> cardsPlayed = new HashSet<>();
 
+    // Track player bet amounts to detect changes
+    private final Map<Integer, Integer> playerBets = new HashMap<>();
+
     private SoundManager() {
         cardSound = Gdx.audio.newSound(Gdx.files.internal("sounds/card1.ogg"));
+        chipSound = Gdx.audio.newSound(Gdx.files.internal("sounds/chips1.ogg"));
     }
 
     public static SoundManager getInstance() {
@@ -43,9 +50,53 @@ public class SoundManager implements Disposable {
         }
     }
 
+    public void playChipSound(int betAmount, int playerIndex) {
+        if (soundEnabled) {
+            // Only play sound when bet amount changes
+            Integer previousBet = playerBets.get(playerIndex);
+            if (previousBet == null || previousBet != betAmount) {
+                // Calculate how many chip sounds to play based on bet size
+                int soundCount = 1;  // Default minimum
+
+                // Scale sound count based on bet amount
+                if (betAmount > 500) {
+                    soundCount = 4;  // Lots of chips
+                } else if (betAmount > 200) {
+                    soundCount = 3;  // Medium-large stack
+                } else if (betAmount > 50) {
+                    soundCount = 2;  // Small-medium stack
+                }
+
+                // Play the chip sound multiple times with slight volume variation
+                for (int i = 0; i < soundCount; i++) {
+                    // Slightly randomize volume for more natural effect
+                    float volume = 0.3f + (float)(Math.random() * 0.2f);
+
+                    // Add small delay between sounds
+                    final int soundIndex = i;
+                    final float soundVolume = volume;
+
+                    Gdx.app.postRunnable(() -> {
+                        // Small delay between chip sounds (20ms per chip)
+                        try {
+                            Thread.sleep(soundIndex * 25);
+                        } catch (InterruptedException e) {
+                            // Ignore interruption
+                        }
+                        chipSound.play(soundVolume);
+                    });
+                }
+
+                // Update the stored bet amount
+                playerBets.put(playerIndex, betAmount);
+            }
+        }
+    }
+
     // Call this method when starting a new hand
     public void resetCardSounds() {
         cardsPlayed.clear();
+        playerBets.clear();
     }
 
     public void setSoundEnabled(boolean enabled) {
@@ -55,5 +106,6 @@ public class SoundManager implements Disposable {
     @Override
     public void dispose() {
         cardSound.dispose();
+        chipSound.dispose();
     }
 }

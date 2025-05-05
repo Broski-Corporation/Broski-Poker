@@ -45,7 +45,7 @@ For example, `core:clean` removes `build` folder only from the `core` project.
 
 ## Tasks before first presentation
 
-- showdown ui (show players cards etc)
-- card sounds
+- chip sounds
 - auto-exit when 0 balance
 - better bot mechanics
+- override showdon by simple click

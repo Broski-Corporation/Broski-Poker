@@ -104,6 +104,9 @@ public class GameRenderer {
     // Reference to GameController for passing to BettingUI
     private GameController gameController;
 
+    // Sound manager
+    private SoundManager soundManager;
+
     static
     {
         // Initialize dealing animator
@@ -117,6 +120,7 @@ public class GameRenderer {
         batch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
         menu = new Menu(stage);
+        soundManager = SoundManager.getInstance();
 
         // Initialize FontManager
         fontManager = FontManager.getInstance();
@@ -287,14 +291,16 @@ public class GameRenderer {
             if (communityCards[i] != null) {
                 float cardX = x + i * (DISPLAY_CARD_WIDTH + CARD_SPACING);
 
+                // Play sound for all cards, not just face up ones
+                soundManager.playCardSound(communityCards[i], i);
+
                 if (isFaceUp) {
                     // Draw card background
                     batch.draw(cardBackground, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
-
                     // Draw card face
                     Card card = communityCards[i];
-                    batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()], cardX, y,
-                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
+                    batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()],
+                        cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
                 } else {
                     // Draw card back
                     batch.draw(cardBack, cardX, y, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
@@ -336,31 +342,23 @@ public class GameRenderer {
             if (communityCards[i] != null) {
                 float cardX = x + (DISPLAY_CARD_WIDTH + CARD_SPACING);
 
+                // Play sound for all cards
+                soundManager.playCardSound(communityCards[i], i);
+
                 if (isFaceUp) {
                     // Draw card background (rotated)
-                    batch.draw(cardBackground,
-                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
-                        originX, originY, // origin for rotation
-                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
-                        1, 1, // scale
-                        rotation); // rotation
+                    batch.draw(cardBackground, cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING),
+                        originX, originY, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, 1, 1, rotation);
 
                     // Draw card face (rotated)
                     Card card = communityCards[i];
                     batch.draw(cardRegions[card.getSuit().ordinal()][card.getRank().ordinal()],
-                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
-                        originX, originY, // origin for rotation
-                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
-                        1, 1, // scale
-                        rotation); // rotation
+                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING),
+                        originX, originY, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, 1, 1, rotation);
                 } else {
                     // Draw card back (rotated)
-                    batch.draw(cardBack,
-                        cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING), // position
-                        originX, originY, // origin for rotation
-                        DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, // size
-                        1, 1, // scale
-                        rotation); // rotation
+                    batch.draw(cardBack, cardX, y - i * (DISPLAY_CARD_WIDTH + CARD_SPACING),
+                        originX, originY, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT, 1, 1, rotation);
                 }
             }
         }
@@ -757,5 +755,6 @@ public class GameRenderer {
         buttonsSheet.dispose();
         menu.dispose();
         bettingUI.dispose();
+        soundManager.dispose();
     }
 }

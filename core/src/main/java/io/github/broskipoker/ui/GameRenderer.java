@@ -16,12 +16,14 @@
 package io.github.broskipoker.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -29,6 +31,7 @@ import io.github.broskipoker.Menu;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
+import com.badlogic.gdx.graphics.Pixmap;
 
 import java.util.List;
 
@@ -106,6 +109,11 @@ public class GameRenderer {
 
     // Sound manager
     private SoundManager soundManager;
+
+    // Avatars textures
+    private Texture avatarsTexture;
+    private TextureRegion[][] avatarRegions;
+    private int[] playerAvatarIndices; // Store which avatar each player uses
 
     static
     {
@@ -191,6 +199,70 @@ public class GameRenderer {
         //     // Fallback to small blind texture region
         //     turnIndicatorRegion = smallBlindRegion;
         // }
+
+        // Avatars asset initialization
+        try {
+            // Load the original image into a Pixmap
+            Pixmap originalPixmap = new Pixmap(Gdx.files.internal("avatars/merged_avatars.png"));
+
+            // Calculate new dimensions
+            int maxSize = 2048;
+            float scale = Math.min(
+                (float)maxSize / originalPixmap.getWidth(),
+                (float)maxSize / originalPixmap.getHeight()
+            );
+
+            int newWidth = Math.min((int)(originalPixmap.getWidth() * scale), maxSize);
+            int newHeight = Math.min((int)(originalPixmap.getHeight() * scale), maxSize);
+
+            // Create a scaled pixmap
+            Pixmap scaledPixmap = new Pixmap(newWidth, newHeight, Pixmap.Format.RGBA8888);
+
+            // Set filter for better quality when downscaling
+            scaledPixmap.setFilter(Pixmap.Filter.BiLinear);
+
+            // Draw the original pixmap onto the scaled one
+            scaledPixmap.drawPixmap(
+                originalPixmap,
+                0, 0, originalPixmap.getWidth(), originalPixmap.getHeight(),
+                0, 0, newWidth, newHeight
+            );
+
+            // Create texture from the scaled pixmap
+            avatarsTexture = new Texture(scaledPixmap);
+
+            // Set filtering for smooth rendering
+            avatarsTexture.setFilter(Texture.TextureFilter.MipMapLinearNearest,
+                                   Texture.TextureFilter.Linear);
+
+            // Calculate dimensions
+            int avatarWidth = avatarsTexture.getWidth() / 10;
+            int avatarHeight = avatarsTexture.getHeight() / 25;
+
+            Gdx.app.debug("GameRenderer", "Resized avatar texture: " +
+                         avatarsTexture.getWidth() + "x" + avatarsTexture.getHeight());
+            Gdx.app.debug("GameRenderer", "Individual avatar size: " +
+                         avatarWidth + "x" + avatarHeight);
+
+            // Create the regions grid
+            avatarRegions = TextureRegion.split(avatarsTexture, avatarWidth, avatarHeight);
+
+            // Initialize player avatar indices
+            playerAvatarIndices = new int[5];
+            for (int i = 0; i < playerAvatarIndices.length; i++) {
+                int row = MathUtils.random(24); // 0-24 (25 rows)
+                int column = MathUtils.random(9); // 0-9 (10 columns)
+                playerAvatarIndices[i] = row * 10 + column;
+            }
+
+            // Clean up resources
+            originalPixmap.dispose();
+            scaledPixmap.dispose();
+
+        } catch (Exception e) {
+            Gdx.app.error("GameRenderer", "Failed to load avatar texture: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void setGameController(GameController controller) {
@@ -633,16 +705,20 @@ public class GameRenderer {
         camera.update();
     }
 
-    // Player info rendering
     private void renderPlayerInfo(List<Player> players, int currentPlayerIndex) {
         // Define individual text offsets for each player
         float[][] textOffsets = {
-            {-50, 300}, // player 1
-            {-50, 300}, // player 2
-            {250, 100}, // player 3
-            {-50, -50},  // player 4
-            {-50, -50}  // player 5
+            {20, 300}, // player 1
+            {20, 300}, // player 2
+            {310, 50}, // player 3
+            {20, -90},  // player 4
+            {20, -90}  // player 5
         };
+
+        // Avatar display settings
+        final int AVATAR_SIZE = 60;
+        final float AVATAR_PADDING = 0;
+        final float BORDER_THICKNESS = 2; // Added border thickness variable
 
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
             float x = chairPositions[i][0];
@@ -651,6 +727,53 @@ public class GameRenderer {
             // Apply offset for each player
             float textOffsetX = textOffsets[i][0];
             float textOffsetY = textOffsets[i][1];
+
+            // Draw player avatar (if available)
+            if (avatarRegions != null) {
+                // Calculate which avatar to use for this player
+                int index = playerAvatarIndices[i];
+                int row = index / 10;
+                int col = index % 10;
+
+                // Position avatar based on player position
+                float avatarX, avatarY;
+
+                if (i == 0 || i == 1) { // Top players
+                    avatarX = x + textOffsetX - AVATAR_SIZE - 10;
+                    avatarY = y + textOffsetY - AVATAR_SIZE/2;
+                } else if (i == 2) { // Right player
+                    avatarX = x + textOffsetX - AVATAR_SIZE - 10;
+                    avatarY = y + textOffsetY - AVATAR_SIZE/2;
+                } else { // Bottom players
+                    avatarX = x + textOffsetX - AVATAR_SIZE - 10;
+                    avatarY = y + textOffsetY - AVATAR_SIZE/2;
+                }
+
+                // Draw border as four lines around the avatar instead of a padded background
+                batch.setColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+                // Top border
+                batch.draw(cardBackground, avatarX - BORDER_THICKNESS, avatarY + AVATAR_SIZE,
+                          AVATAR_SIZE + BORDER_THICKNESS*2, BORDER_THICKNESS);
+
+                // Bottom border
+                batch.draw(cardBackground, avatarX - BORDER_THICKNESS, avatarY - BORDER_THICKNESS,
+                          AVATAR_SIZE + BORDER_THICKNESS*2, BORDER_THICKNESS);
+
+                // Left border
+                batch.draw(cardBackground, avatarX - BORDER_THICKNESS, avatarY - BORDER_THICKNESS,
+                          BORDER_THICKNESS, AVATAR_SIZE + BORDER_THICKNESS*2);
+
+                // Right border
+                batch.draw(cardBackground, avatarX + AVATAR_SIZE, avatarY - BORDER_THICKNESS,
+                          BORDER_THICKNESS, AVATAR_SIZE + BORDER_THICKNESS*2);
+
+                // Draw avatar
+                batch.setColor(Color.WHITE);
+                if (row < avatarRegions.length && col < avatarRegions[0].length) {
+                    batch.draw(avatarRegions[row][col], avatarX, avatarY, AVATAR_SIZE, AVATAR_SIZE);
+                }
+            }
 
             // Get player name font based on player type
             BitmapFont playerFont;
@@ -663,19 +786,23 @@ public class GameRenderer {
                 playerFont = fontManager.getFont(24, Color.WHITE); // White for other players
             }
 
-            playerFont.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY);
+            // Draw player info with shifted Y coordinate (moved up 25 pixels)
+            playerFont.draw(batch, playerInfo, x + textOffsetX, y + textOffsetY + 25);
 
             if (players.get(i).getCurrentBet() > 0) {
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
 
-                // NEW CODE: Check if player has checked (current bet equals game current bet)
+                // Check if player has checked
                 if (players.get(i).getCurrentBet() == pokerGame.getCurrentBet() &&
                     hasActedInRound(i) &&
                     pokerGame.getCurrentBet() == 0) {
-                    betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 25);
+                    // Draw check status with adjusted Y position (moved up 20 pixels)
+                    betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
                 } else {
-                    betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
+                    // Draw bet amount with adjusted Y position (moved up 20 pixels)
+                    betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 10);
                 }
+
                 // Calculate position for chips based on player position
                 float chipX, chipY;
                 if (i == 0 || i == 1) { // Top players
@@ -692,19 +819,44 @@ public class GameRenderer {
             } else if (hasActedInRound(i) && pokerGame.getCurrentBet() == 0) {
                 // Player has acted but has no bet (they checked)
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f));
-                betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 25);
+                // Draw check status with adjusted Y position (moved up 20 pixels)
+                betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
             }
 
-            // Display current bet and chips if it exists
-            if (players.get(i).getCurrentBet() > 0) {
-                BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
-                betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 25);
-
-            }
 
             // Indicator for current player
             if (i == currentPlayerIndex && pokerGame.needsPlayerAction()) {
-//                batch.draw(turnIndicatorRegion, x - 30, y - 10, 25, 25); // turnIndicatorRegion is not correct texture region for this purpose (by andrei)
+                if (avatarRegions != null) {
+                    float avatarX = x + textOffsetX - AVATAR_SIZE - 10;
+                    float avatarY = y + textOffsetY - AVATAR_SIZE/2;
+
+                    float borderThickness = 2f;
+                    float cornerOverlap = borderThickness; // Amount to extend lines for overlap
+
+                    batch.setColor(1.0f, 0.84f, 0.0f, 1.0f); // Gold highlight
+
+                    // Top line - extended on both sides
+                    batch.draw(cardBackground, avatarX - 1 - cornerOverlap,
+                              avatarY + AVATAR_SIZE + 1,
+                              AVATAR_SIZE + 2 + (cornerOverlap * 2), borderThickness);
+
+                    // Bottom line - extended on both sides
+                    batch.draw(cardBackground, avatarX - 1 - cornerOverlap,
+                              avatarY - borderThickness - 1,
+                              AVATAR_SIZE + 2 + (cornerOverlap * 2), borderThickness);
+
+                    // Left line - extended on both ends
+                    batch.draw(cardBackground, avatarX - borderThickness - 1,
+                              avatarY - 1 - cornerOverlap,
+                              borderThickness, AVATAR_SIZE + 2 + (cornerOverlap * 2));
+
+                    // Right line - extended on both ends
+                    batch.draw(cardBackground, avatarX + AVATAR_SIZE + 1,
+                              avatarY - 1 - cornerOverlap,
+                              borderThickness, AVATAR_SIZE + 2 + (cornerOverlap * 2));
+
+                    batch.setColor(Color.WHITE);
+                }
             }
         }
     }
@@ -777,5 +929,6 @@ public class GameRenderer {
         menu.dispose();
         bettingUI.dispose();
         soundManager.dispose();
+        avatarsTexture.dispose();
     }
 }

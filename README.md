@@ -40,13 +40,11 @@ For example, `core:clean` removes `build` folder only from the `core` project.
 
 ## Bugs
 
-- For animation, the first card dealt is for the small blind, not for chair 1
-
 
 ## Tasks before first presentation
 
-- avatars
 - auto-exit when 0 balance
 - better bot mechanics
 - override showdown by simple click
 - entering '12a' in custom bet field leads to all in bet
+- after ending betting round wait 5 seconds to see the pot/bet/players

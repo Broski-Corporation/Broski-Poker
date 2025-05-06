@@ -31,3 +31,20 @@ Useful Gradle tasks and flags:
 
 Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
 For example, `core:clean` removes `build` folder only from the `core` project.
+
+## Updates
+- Added zoom on table function
+- Added splitting cards with 0.3s delay
+- Round reset logic
+- Window mode resizing
+
+## Bugs
+
+
+## Tasks before first presentation
+
+- auto-exit when 0 balance
+- better bot mechanics
+- override showdown by simple click
+- entering '12a' in custom bet field leads to all in bet
+- after ending betting round wait 5 seconds to see the pot/bet/players

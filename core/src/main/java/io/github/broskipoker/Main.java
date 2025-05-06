@@ -1,45 +1,48 @@
+/**
+ * Main.java
+ * <p>
+ * Main application entry point that initializes and coordinates all game components.
+ * Follows the MVC pattern by separating the game (PokerGame), view (GameRenderer),
+ * and controller (GameController) components.
+ * <p>
+ * Responsibilities:
+ * - Initialize core game components
+ * - Manage application lifecycle (create, render, resize, dispose)
+ * - Connect the model, view, and controller components
+ * - Coordinate the main game loop
+ */
+
 package io.github.broskipoker;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Graphics;
-import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-
-import javax.swing.*;
+import io.github.broskipoker.game.PokerGame;
+import io.github.broskipoker.ui.GameController;
+import io.github.broskipoker.ui.GameRenderer;
 
 public class Main extends ApplicationAdapter {
-    private SpriteBatch batch;    // The SpriteBatch to draw the background
-    private Stage stage;          // The Stage to handle UI elements
-    private Menu menu;            // The Menu class instance to manage the menu UI
-    private Texture backgroundTexture;  // The background texture for the game
-    private boolean gameStarted = false;  // Flag to check if the game has started
+    private PokerGame pokerGame;
+    private static GameRenderer renderer;
+    private GameController controller;
 
     @Override
     public void create() {
-        // Create background texture
-        backgroundTexture = new Texture("gameBackground.jpeg");
+        // Initialize core components
+        pokerGame = new PokerGame();
+        pokerGame.startNewHand();
 
-        // Create a new SpriteBatch
-        batch = new SpriteBatch();
+        // Initialize renderer first
+        renderer = new GameRenderer(pokerGame);
 
-        // Create a new Stage for managing UI components
-        stage = new Stage(new ScreenViewport());
+        // Initialize controller
+        controller = new GameController(pokerGame, renderer);
 
-        // Set the Stage as the input processor
-        Gdx.input.setInputProcessor(stage);
+        // Set controller in renderer after both are initialized to avoid circular dependency
+        renderer.setGameController(controller);
 
-        // Create the menu instance
-        menu = new Menu(stage);
-
+        // Set input processor to handle menu first
+        Gdx.input.setInputProcessor(renderer.getStage());
     }
 
     @Override
@@ -47,33 +50,26 @@ public class Main extends ApplicationAdapter {
         // Clear the screen
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Check if the game has started
-        if (menu.isGameStarted()) {
-            // If the game has started, draw the background
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-            batch.begin();
-            batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            batch.end();
+        // Update game state and handle input
+        controller.update(Gdx.graphics.getDeltaTime());
 
-            // Hide the menu buttons
-            for(TextButton button: menu.getButtons()) {
-                button.setVisible(false);
-            }
-        } else {
-            // If the game has not started, draw the menu
-            stage.act(Gdx.graphics.getDeltaTime());
-            stage.draw();
-        }
+        // Render the game
+        renderer.render(Gdx.graphics.getDeltaTime());
+    }
 
-        batch.begin();
-        batch.end();
+    @Override
+    public void resize(int width, int height) {
+        renderer.resize(width, height);
+    }
+
+    public static GameRenderer getRenderer() {
+        return renderer;
     }
 
     @Override
     public void dispose() {
-        // Dispose of resources when done
-        batch.dispose();
-        stage.dispose();
-
+        renderer.dispose();
+        controller.dispose();
+        pokerGame = null;
     }
 }

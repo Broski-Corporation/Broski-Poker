@@ -200,68 +200,32 @@ public class GameRenderer {
         //     turnIndicatorRegion = smallBlindRegion;
         // }
 
-        // Avatars asset initialization
+        // Load avatar texture with scaling
         try {
-            // Load the original image into a Pixmap
-            Pixmap originalPixmap = new Pixmap(Gdx.files.internal("avatars/merged_avatars.png"));
+            // Load the pre-scaled avatar texture
+            avatarsTexture = new Texture(Gdx.files.internal("avatars/merged_avatars_256.png"));
 
-            // Calculate new dimensions
-            int maxSize = 2048;
-            float scale = Math.min(
-                (float)maxSize / originalPixmap.getWidth(),
-                (float)maxSize / originalPixmap.getHeight()
-            );
+            // Total dimensions of the texture
+            int textureWidth = 2560;  // 10 columns × 256 pixels
+            int textureHeight = 6400; // 25 rows × 256 pixels
 
-            int newWidth = Math.min((int)(originalPixmap.getWidth() * scale), maxSize);
-            int newHeight = Math.min((int)(originalPixmap.getHeight() * scale), maxSize);
+            // Calculate dimensions for each avatar (10×25 grid)
+            int avatarWidth = 256;  // Each avatar is 256×256
+            int avatarHeight = 256;
 
-            // Create a scaled pixmap
-            Pixmap scaledPixmap = new Pixmap(newWidth, newHeight, Pixmap.Format.RGBA8888);
-
-            // Set filter for better quality when downscaling
-            scaledPixmap.setFilter(Pixmap.Filter.BiLinear);
-
-            // Draw the original pixmap onto the scaled one
-            scaledPixmap.drawPixmap(
-                originalPixmap,
-                0, 0, originalPixmap.getWidth(), originalPixmap.getHeight(),
-                0, 0, newWidth, newHeight
-            );
-
-            // Create texture from the scaled pixmap
-            avatarsTexture = new Texture(scaledPixmap);
-
-            // Set filtering for smooth rendering
-            avatarsTexture.setFilter(Texture.TextureFilter.MipMapLinearNearest,
-                                   Texture.TextureFilter.Linear);
-
-            // Calculate dimensions
-            int avatarWidth = avatarsTexture.getWidth() / 10;
-            int avatarHeight = avatarsTexture.getHeight() / 25;
-
-            Gdx.app.debug("GameRenderer", "Resized avatar texture: " +
-                         avatarsTexture.getWidth() + "x" + avatarsTexture.getHeight());
-            Gdx.app.debug("GameRenderer", "Individual avatar size: " +
-                         avatarWidth + "x" + avatarHeight);
-
-            // Create the regions grid
+            // Split the texture into individual avatar regions
             avatarRegions = TextureRegion.split(avatarsTexture, avatarWidth, avatarHeight);
 
-            // Initialize player avatar indices
-            playerAvatarIndices = new int[5];
+            // Initialize player avatar indices with random avatars
+            playerAvatarIndices = new int[5]; // One index for each player
             for (int i = 0; i < playerAvatarIndices.length; i++) {
-                int row = MathUtils.random(24); // 0-24 (25 rows)
-                int column = MathUtils.random(9); // 0-9 (10 columns)
-                playerAvatarIndices[i] = row * 10 + column;
+                playerAvatarIndices[i] = MathUtils.random(249); // 250 total avatars (10×25)
             }
-
-            // Clean up resources
-            originalPixmap.dispose();
-            scaledPixmap.dispose();
-
         } catch (Exception e) {
-            Gdx.app.error("GameRenderer", "Failed to load avatar texture: " + e.getMessage());
+            System.err.println("Failed to load avatar textures: " + e.getMessage());
             e.printStackTrace();
+            avatarRegions = null;
+            playerAvatarIndices = null;
         }
     }
 
@@ -718,7 +682,7 @@ public class GameRenderer {
         // Avatar display settings
         final int AVATAR_SIZE = 60;
         final float AVATAR_PADDING = 0;
-        final float BORDER_THICKNESS = 2; // Added border thickness variable
+        final float BORDER_THICKNESS = 3; // Added border thickness variable
 
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
             float x = chairPositions[i][0];

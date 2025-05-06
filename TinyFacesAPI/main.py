@@ -9,8 +9,9 @@ grid with exactly 10 avatars per row. Each individual avatar is still saved sepa
 and they're all combined into a single merged_avatars.png file.
 '''
 
+
 def download_avatars_batch(limit=50, batch_num=1):
-    """Download a batch of avatars and return the image objects"""
+    """Download a batch of avatars, resize to 256x256, and return the image objects"""
     api_url = f"https://tinyfac.es/api/data?limit={limit}&quality=0"
     print(f"Fetching batch {batch_num} from API...")
 
@@ -38,16 +39,20 @@ def download_avatars_batch(limit=50, batch_num=1):
                 img_response = requests.get(avatar_url)
                 img_response.raise_for_status()
 
-                # Save individual image
-                with open(filename, 'wb') as f:
-                    f.write(img_response.content)
-
-                # Open image for merging
+                # Open the image
                 img = Image.open(io.BytesIO(img_response.content))
+
+                # Resize the image to 256x256
+                img = img.resize((256, 256))
+
+                # Save the resized image
+                img.save(filename)
+
+                # Add the resized image to the list for merging
                 avatar_images.append(img)
 
                 successful_downloads += 1
-                print(f"Saved to {filename}")
+                print(f"Saved to {filename} (resized to 256x256)")
 
             except Exception as e:
                 print(f"Error downloading avatar {i + 1} in batch {batch_num}: {e}")

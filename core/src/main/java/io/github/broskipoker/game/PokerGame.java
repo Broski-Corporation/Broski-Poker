@@ -40,7 +40,7 @@ public class PokerGame {
     // Track players who have acted in the current betting round
     private boolean[] hasActedInRound;
     private float showdownTimer = 0;
-    private final float SHOWDOWN_DURATION = 20.0f;
+    private final float SHOWDOWN_DURATION = 10.0f;
 
     public enum GameState {
         WAITING_FOR_PLAYERS, DEALING, BETTING_PRE_FLOP, FLOP, BETTING_FLOP, TURN, BETTING_TURN, RIVER,

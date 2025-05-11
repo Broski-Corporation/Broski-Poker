@@ -410,13 +410,13 @@ public class GameRenderer {
             Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
 
             for (int j = 0; j < playerCards.length && j < 2; j++) {
-                if (dealingAnimator.isCardDealt(i, j)) {
+                if (dealingAnimator.isCardDealt(i, j) && players.get(i).isActive()) {
                     if (i == 2) {
                         // Player at position 2 has rotated cards
-                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90, isShowdown);
+                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90, isShowdown && players.get(i).isActive());
                     } else if (i == 3 || isShowdown) {
                         // Human player or showdown state - show face up
-                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, true);
+                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, players.get(i).isActive());
                     } else {
                         // Other players during regular gameplay - show face down
                         renderCards(new Card[]{playerCards[j]}, x + j * 70, y, false);

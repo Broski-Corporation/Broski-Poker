@@ -36,7 +36,7 @@ public class PokerGame {
     private int lastRaisePlayerIndex;
     private static int dealerPosition;
     private boolean needsPlayerAction;
-    private GameState gameState;
+    private static GameState gameState;
     // Track players who have acted in the current betting round
     private boolean[] hasActedInRound;
     private float showdownTimer = 0;
@@ -345,12 +345,22 @@ public class PokerGame {
             // Mark this player as having acted in this round
             hasActedInRound[currentPlayerIndex] = true;
 
-            moveToNextPlayer();
+            System.out.println(currentPlayerIndex + " " + hasWinnerByFold());
 
             // Check if the betting round is complete after this action
-            if (isBettingRoundComplete() || hasWinnerByFold()) {
+            if (isBettingRoundComplete()) {
                 needsPlayerAction = false;
             }
+            else if(hasWinnerByFold()) {
+                // TODO: cand se se da WinnerByFold, se dau banii celui ramas si se incepe mana noua
+                needsPlayerAction = false;
+                update(showdownTimer);
+                return true;
+            }
+
+
+
+            moveToNextPlayer();
 
             return true;
         }
@@ -443,7 +453,7 @@ public class PokerGame {
         return pot;
     }
 
-    public GameState getGameState() {
+    public static GameState getGameState() {
         return gameState;
     }
 

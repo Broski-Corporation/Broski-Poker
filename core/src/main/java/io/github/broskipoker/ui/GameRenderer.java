@@ -756,12 +756,17 @@ public class GameRenderer {
             if (players.get(i).getCurrentBet() > 0) {
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f)); // Gold for bet amounts
 
-                // Check if player has checked
+                // Check if player has checked or folded
                 if (players.get(i).getCurrentBet() == pokerGame.getCurrentBet() &&
                     hasActedInRound(i) &&
                     pokerGame.getCurrentBet() == 0) {
-                    // Draw check status with adjusted Y position (moved up 20 pixels)
-                    betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
+                    // Draw check/fold status with adjusted Y position (moved up 20 pixels)
+                    if (!players.get(i).isActive()) {
+                        betFont.draw(batch, "Fold", x + textOffsetX, y + textOffsetY - 10);
+                    } else {
+                        betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
+                    }
+
                 } else {
                     // Draw bet amount with adjusted Y position (moved up 20 pixels)
                     betFont.draw(batch, "Bet: $" + players.get(i).getCurrentBet(), x + textOffsetX, y + textOffsetY - 10);
@@ -783,8 +788,13 @@ public class GameRenderer {
             } else if (hasActedInRound(i) && pokerGame.getCurrentBet() == 0) {
                 // Player has acted but has no bet (they checked)
                 BitmapFont betFont = fontManager.getFont(18, new Color(1.0f, 0.84f, 0.0f, 1.0f));
-                // Draw check status with adjusted Y position (moved up 20 pixels)
-                betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
+                // Draw check/fold status with adjusted Y position (moved up 20 pixels)
+                // TODO: Fold nu apare in PREFLOP pentru jucatorul 4 (human)
+                if(!players.get(i).isActive()) {
+                    betFont.draw(batch, "Fold", x + textOffsetX, y + textOffsetY - 10);
+                } else {
+                    betFont.draw(batch, "Check", x + textOffsetX, y + textOffsetY - 10);
+                }
             }
 
 
@@ -834,7 +844,7 @@ public class GameRenderer {
     // Handle player turns and betting UI
     private void handlePlayerTurns() {
         // Check if we should block actions during animation
-        boolean shouldBlock = pokerGame.getGameState() == PokerGame.GameState.BETTING_PRE_FLOP &&
+        boolean shouldBlock = PokerGame.getGameState() == PokerGame.GameState.BETTING_PRE_FLOP &&
                              !dealingAnimationComplete;
 
         // Only proceed with betting actions if we shouldn't block

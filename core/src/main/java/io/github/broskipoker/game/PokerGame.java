@@ -159,7 +159,7 @@ public class PokerGame {
                     }
                     break;
                 case BETTING_RIVER:
-                    if (isBettingRoundComplete()) {
+                    if (isBettingRoundComplete() || hasWinnerByFold()) {
                         goToShowdown();
                     }
                     break;
@@ -235,6 +235,10 @@ public class PokerGame {
     }
 
     public boolean isBettingRoundComplete() {
+        if(hasWinnerByFold()) {
+            goToShowdown();
+            return true;
+        }
         int activePlayers = 0;
         for (Player player : players) {
             if (player.isActive()) {
@@ -287,15 +291,15 @@ public class PokerGame {
     }
 
     // Called via UI
-    public boolean performAction(PlayerAction action, int betAmount) {
+    public void performAction(PlayerAction action, int betAmount) {
         if (!needsPlayerAction) {
-            return false;
+            return;
         }
 
         Player currentPlayer = players.get(currentPlayerIndex);
         if (!currentPlayer.isActive()) {
             moveToNextPlayer();
-            return true;
+            return;
         }
 
         boolean validAction = false;
@@ -303,7 +307,7 @@ public class PokerGame {
         switch (action) {
             case CHECK:
                 if (currentPlayer.getCurrentBet() < currentBet) {
-                    return false; // invalid action
+                    return; // invalid action
                 }
                 validAction = true;
                 break;
@@ -318,7 +322,7 @@ public class PokerGame {
 
             case RAISE:
                 if (betAmount <= currentBet) {
-                    return false; // invalid raise amount (raise must be at least current bet)
+                    return; // invalid raise amount (raise must be at least current bet)
                 }
                 int raiseAmount = betAmount - currentPlayer.getCurrentBet();
                 pot += currentPlayer.bet(raiseAmount);
@@ -345,27 +349,16 @@ public class PokerGame {
             // Mark this player as having acted in this round
             hasActedInRound[currentPlayerIndex] = true;
 
-            System.out.println(currentPlayerIndex + " " + hasWinnerByFold());
-
             // Check if the betting round is complete after this action
-            if (isBettingRoundComplete()) {
+            if (isBettingRoundComplete() || hasWinnerByFold()) {
                 needsPlayerAction = false;
             }
-            else if(hasWinnerByFold()) {
-                // TODO: cand se se da WinnerByFold, se dau banii celui ramas si se incepe mana noua
-                needsPlayerAction = false;
-                update(showdownTimer);
-                return true;
+            else {
+                // Move to the next player
+                moveToNextPlayer();
             }
-
-
-
-            moveToNextPlayer();
-
-            return true;
         }
 
-        return false;
     }
 
     private void moveToNextPlayer() {

@@ -20,14 +20,22 @@ import com.badlogic.gdx.graphics.GL20;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.ui.GameController;
 import io.github.broskipoker.ui.GameRenderer;
+import io.github.broskipoker.utils.DatabaseConnection;
 
 public class Main extends ApplicationAdapter {
     private PokerGame pokerGame;
     private static GameRenderer renderer;
     private GameController controller;
+    public static final DatabaseConnection databaseConnection;
+
+    static
+    {
+        databaseConnection = DatabaseConnection.getInstance();
+    }
 
     @Override
     public void create() {
+
         // Initialize core components
         pokerGame = new PokerGame();
         pokerGame.startNewHand();

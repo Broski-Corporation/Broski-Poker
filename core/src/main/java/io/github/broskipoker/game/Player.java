@@ -18,6 +18,14 @@ public class Player {
         this.currentBet = 0;
     }
 
+    public Player(Player player){
+        this.name = player.name;
+        this.chips = player.chips;
+        this.holeCards = new ArrayList<>(player.holeCards);
+        this.isActive = player.isActive;
+        this.currentBet = player.currentBet;
+    }
+
     public void receiveCard(Card card) {
         holeCards.add(card);
     }

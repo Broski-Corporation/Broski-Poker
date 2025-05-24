@@ -20,6 +20,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import io.github.broskipoker.game.Player;
+import io.github.broskipoker.game.PokerBot;
 import io.github.broskipoker.game.PokerGame;
 
 public class GameController extends InputAdapter {
@@ -135,13 +136,17 @@ public class GameController extends InputAdapter {
         if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
             // Simple bot logic: always check if possible, otherwise call
             Player botPlayer = pokerGame.getCurrentPlayer();
+            PokerBot botPlayer1 = new PokerBot(botPlayer, PokerBot.BotStrategy.AGGRESSIVE);
 
-            // Basic decision logic (can be expanded)
-            if (botPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
-                pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
-            } else {
-                pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+            PokerGame.PlayerAction action = botPlayer1.decideAction(pokerGame, pokerGame.getCommunityCards());
+
+            int betAmount = 0;
+            if (action == PokerGame.PlayerAction.RAISE) {
+                double handStrength = botPlayer1.evaluateHandStrength(pokerGame.getCommunityCards());
+                betAmount = botPlayer1.calculateBetAmount(pokerGame.getPot(), handStrength);
             }
+
+            pokerGame.performAction(action, betAmount);
         }
         // Reset thinking state after action attempt
         isBotThinking = false;

@@ -5,10 +5,11 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import io.github.broskipoker.game.User;
+import io.github.broskipoker.ui.LoginDialog;
+import io.github.broskipoker.utils.UserService;
 
 public class Menu {
     public static Music menuMusic;
@@ -20,12 +21,16 @@ public class Menu {
     private TextButton exitButton;
     private TextButton settingsButton;
     private TextButton friendsButton;
+    private TextButton loginButton;
+    private Label userInfoLabel;
     public static Sound clickSound;
     private boolean gameStarted = false;
     private Skin skin;
+    private final UserService userService;
 
     public Menu(Stage stage) {
         this.stage = stage;
+        this.userService = UserService.getInstance();
         loadSounds();
         createMenu();
     }
@@ -50,18 +55,25 @@ public class Menu {
         friendsButton = new TextButton("Friends", skin);
         settingsButton = new TextButton("Settings", skin);
         exitButton = new TextButton("Exit", skin);
+        loginButton = new TextButton("Login", skin);
+        userInfoLabel = new Label("", skin);
 
         float buttonWidth = Math.min(300, Gdx.graphics.getWidth() * 0.3f);
 
+        table.add(userInfoLabel).width(buttonWidth).padBottom(10);
+        table.row();
         table.add(playButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(friendsButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(settingsButton).width(buttonWidth).padBottom(20);
         table.row();
+        table.add(loginButton).width(buttonWidth).padBottom(20);
+        table.row();
         table.add(exitButton).width(buttonWidth);
 
         stage.addActor(table);
+        updateLoginState();
 
         playButton.addListener(new ChangeListener() {
             @Override
@@ -92,6 +104,23 @@ public class Menu {
             }
         });
 
+        loginButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                clickSoundId = clickSound.play();
+                clickSound.setVolume(clickSoundId, menuVolume);
+
+                if (userService.isLoggedIn()) {
+                    userService.logoutUser();
+                    updateLoginState();
+                } else {
+                    LoginDialog loginDialog = new LoginDialog("Login", skin);
+                    loginDialog.setOnLoginSuccess(() -> updateLoginState());
+                    loginDialog.show(stage);
+                }
+            }
+        });
+
         exitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -100,6 +129,17 @@ public class Menu {
                 Gdx.app.exit();
             }
         });
+    }
+
+    private void updateLoginState() {
+        if (userService.isLoggedIn()) {
+            User user = userService.getCurrentUser().get();
+            userInfoLabel.setText("Welcome, " + user.getUsername() + " | Chips: " + user.getChips());
+            loginButton.setText("Logout");
+        } else {
+            userInfoLabel.setText("");
+            loginButton.setText("Login");
+        }
     }
 
     public void repositionMenu() {
@@ -120,7 +160,7 @@ public class Menu {
     }
 
     public TextButton[] getButtons() {
-        return new TextButton[]{playButton, settingsButton, friendsButton, exitButton};
+        return new TextButton[]{playButton, settingsButton, friendsButton, loginButton, exitButton};
     }
 
     public static float getMenuVolume() {

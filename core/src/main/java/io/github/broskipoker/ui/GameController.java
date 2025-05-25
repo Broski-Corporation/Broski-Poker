@@ -135,12 +135,16 @@ public class GameController extends InputAdapter {
         if (pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
             // Simple bot logic: always check if possible, otherwise call
             Player botPlayer = pokerGame.getCurrentPlayer();
-
+            
             // Basic decision logic (can be expanded)
             if (botPlayer.getCurrentBet() < pokerGame.getCurrentBet()) {
                 pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
-            } else {
+                // TODO: In preflop nu se da fold
+            } else if (playerIndex == PokerGame.getDealerPosition() + 1 && PokerGame.getGameState() == PokerGame.GameState.BETTING_PRE_FLOP) // Big Blind nu da fold din prima
                 pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+            else {
+                // TODO: am schimbat la fold pentru testing
+                pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
             }
         }
         // Reset thinking state after action attempt

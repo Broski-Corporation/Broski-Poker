@@ -14,8 +14,10 @@
  */
 
 package io.github.broskipoker.ui;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -24,6 +26,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -32,6 +35,13 @@ import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import java.util.HashMap;
+import java.util.Map;
+
 
 import java.util.List;
 
@@ -63,6 +73,10 @@ public class GameRenderer {
     private final TextureRegion dealerRegion;
     private final TextureRegion smallBlindRegion;
     private final TextureRegion bigBlindRegion;
+    private TextureRegion[] emojiRegions;
+    private ImageButton emojiButton;
+    private Group emojiDropdown;
+
 
     // Card dimensions
     private static final int CARDS_PER_ROW = 13;
@@ -115,6 +129,18 @@ public class GameRenderer {
     private TextureRegion[][] avatarRegions;
     private int[] playerAvatarIndices; // Store which avatar each player uses
 
+    // Emoji rendering
+    private int selectedEmojiIndex = -1;
+    private long emojiDisplayStartTime = 0;
+    public static final long EMOJI_DISPLAY_DURATION = 3000;
+    // 3 sec
+    private Map<Integer, EmojiDisplayData> activeEmojis = new HashMap<>();
+
+    //boti
+    private float botEmojiTimer = 0f;
+    private static final float BOT_EMOJI_INTERVAL = 5f; // o reactie la ~5 secunde
+
+
     static
     {
         // Initialize dealing animator
@@ -158,6 +184,8 @@ public class GameRenderer {
         cardBackground = new TextureRegion(enhancersSheet, ENHANCER_WIDTH, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
         cardBack = new TextureRegion(enhancersSheet, 0, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
         cardRegions = new TextureRegion[SUITS][CARDS_PER_ROW];
+
+
 
         for (int suit = 0; suit < SUITS; suit++) {
             for (int rank = 0; rank < CARDS_PER_ROW; rank++) {
@@ -227,6 +255,68 @@ public class GameRenderer {
             avatarRegions = null;
             playerAvatarIndices = null;
         }
+
+        //Load emoji textures
+        loadEmojiTextures();
+
+        //Load emoji button
+        TextureRegionDrawable emojiButtonDrawable = new TextureRegionDrawable(emojiRegions[0]); // first emoji as icon
+        emojiButton = new ImageButton(emojiButtonDrawable);
+
+        emojiButton.setPosition(700, 100); // screen position
+        emojiButton.setSize(40, 40);
+        stage.addActor(emojiButton);
+
+        //click dropdwon listener
+        emojiButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean showDropdown = !emojiDropdown.isVisible();
+                emojiDropdown.setVisible(showDropdown);
+                emojiButton.setSize(0,0);
+                // Folosim direct setVisible pentru efect instant
+                emojiButton.setVisible(!showDropdown);
+            }
+        });
+
+
+
+        //adding emoji dropdown
+        emojiDropdown = new Group();
+        emojiDropdown.setVisible(false);
+        emojiDropdown.setPosition(700, 150); // poziția absolută pe ecran
+        stage.addActor(emojiDropdown);
+
+
+        float baseX = 700;
+        float baseY = 150;
+        float size = 40;
+        float spacing = 5;
+
+
+
+        for (int i = 0; i < emojiRegions.length; i++) {
+            final int emojiIndex = i;
+
+            ImageButton emojiChoice = new ImageButton(new TextureRegionDrawable(emojiRegions[i]));
+            emojiChoice.setSize(size, size);
+            emojiChoice.setPosition(i * (size + spacing), 0); // poziție relativă în grup
+
+            emojiChoice.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    activeEmojis.put(HUMAN_PLAYER_INDEX, new EmojiDisplayData(emojiIndex, System.currentTimeMillis()));
+                    emojiDropdown.setVisible(false);
+                    emojiButton.setSize(40, 40);
+                    // reapare butonul după alegere
+                }
+            });
+
+//
+            emojiDropdown.addActor(emojiChoice);
+        }
+
+        stage.addActor(emojiDropdown);
     }
 
     public void setGameController(GameController controller) {
@@ -255,12 +345,23 @@ public class GameRenderer {
             // Draw game elements
             renderGameElements(delta);
 
+            // Render random emojis for bots
+            botEmojiTimer += delta;
+            if (botEmojiTimer >= BOT_EMOJI_INTERVAL) {
+                triggerRandomBotEmoji();
+                botEmojiTimer = 0f;
+            }
+
+
             // Handle player turns
             handlePlayerTurns();
 
             // Update stage
             stage.act(delta);
             stage.draw();
+
+            //emoji button
+            emojiButton.setVisible(true);
 
         } else {
             // Hide betting UI when in menu
@@ -269,7 +370,18 @@ public class GameRenderer {
             // Draw menu
             stage.act(delta);
             stage.draw();
+
+            //hide emoji button when in menu
+            emojiButton.setVisible(false);
+
         }
+
+        // Handle emoji display TEST
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            selectedEmojiIndex = 0;
+            emojiDisplayStartTime = System.currentTimeMillis();
+        }
+
     }
 
     // Modify renderBlindPositions()
@@ -359,6 +471,18 @@ public class GameRenderer {
             float offset = i * -(float) 1.75; // Adjust for visual effect
             batch.draw(cardStackBackground, x + offset, y - offset, DISPLAY_CARD_WIDTH, DISPLAY_CARD_HEIGHT);
         }
+    }
+
+    private void loadEmojiTextures(){
+        // Load emoji textures
+        emojiRegions = new TextureRegion[5];
+
+        emojiRegions[0] = new TextureRegion(new Texture(Gdx.files.internal("emojis/laugh.png")));
+        emojiRegions[1] = new TextureRegion(new Texture(Gdx.files.internal("emojis/cry.png")));
+        emojiRegions[2] = new TextureRegion(new Texture(Gdx.files.internal("emojis/angry.png")));
+        emojiRegions[3] = new TextureRegion(new Texture(Gdx.files.internal("emojis/like.png")));
+        emojiRegions[4] = new TextureRegion(new Texture(Gdx.files.internal("emojis/boss.png")));
+
     }
 
     /**
@@ -737,6 +861,19 @@ public class GameRenderer {
                 if (row < avatarRegions.length && col < avatarRegions[0].length) {
                     batch.draw(avatarRegions[row][col], avatarX, avatarY, AVATAR_SIZE, AVATAR_SIZE);
                 }
+
+                //Emoji test
+                EmojiDisplayData data = activeEmojis.get(i);
+                if (data != null && System.currentTimeMillis() - data.displayStartTime < EMOJI_DISPLAY_DURATION) {
+                    float emojiX = x + textOffsetX + 10;
+                    float emojiY = y + textOffsetY + 70;
+
+                    batch.setColor(1f, 1f, 1f, data.getAlpha()); // fade-out
+                    batch.draw(emojiRegions[data.emojiIndex], emojiX, emojiY, 40, 40);
+                    batch.setColor(Color.WHITE); // reset
+                }
+
+
             }
 
             // Get player name font based on player type
@@ -895,4 +1032,18 @@ public class GameRenderer {
         soundManager.dispose();
         avatarsTexture.dispose();
     }
+
+    private void triggerRandomBotEmoji() {
+        List<Player> players = pokerGame.getPlayers();
+
+        // Alege un bot random (index diferit de HUMAN_PLAYER_INDEX)
+        int randomIndex;
+        do {
+            randomIndex = MathUtils.random(players.size() - 1);
+        } while (randomIndex == HUMAN_PLAYER_INDEX || !players.get(randomIndex).isActive());
+
+        int emojiIndex = MathUtils.random(emojiRegions.length - 1);
+        activeEmojis.put(randomIndex, new EmojiDisplayData(emojiIndex, System.currentTimeMillis()));
+    }
+
 }

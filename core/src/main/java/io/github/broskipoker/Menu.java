@@ -81,6 +81,7 @@ public class Menu {
                 clickSoundId = clickSound.play();
                 clickSound.setVolume(clickSoundId, menuVolume);
                 gameStarted = true;
+                table.setVisible(false);
             }
         });
 

@@ -15,7 +15,31 @@ dependencies {
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
+  // networking library for mp
+  implementation "com.esotericsoftware:kryonet:2.22.0-RC1"
 }
+
+task serverJar(type: Jar) {
+    archiveBaseName = 'poker-server'
+    archiveVersion = '1.0.0'
+
+    from project(':core').sourceSets.main.output
+    include 'io/github/broskipoker/server/**'
+    include 'io/github/broskipoker/game/**'
+    // Don't include shared networking classes yet
+
+    manifest {
+        attributes 'Main-Class': 'io.github.broskipoker.server.PokerServer'
+    }
+
+    // For now, don't include external dependencies
+    // We'll add this back when we implement networking
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+serverJar.dependsOn ':core:classes'
 
 test {
     useJUnitPlatform()

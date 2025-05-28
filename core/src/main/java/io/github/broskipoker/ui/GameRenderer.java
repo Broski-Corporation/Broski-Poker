@@ -172,7 +172,7 @@ public class GameRenderer {
         backgroundTexture = new Texture("textures/2x/pokerTable.png");
         cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
         enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
-        chipTexture = new Texture(Gdx.files.internal("textures/2x/Chips.png"));
+        chipTexture = new Texture(Gdx.files.internal("textures/2x/chips.png"));
 
         // Load buttons sheet
         buttonsSheet = new Texture(Gdx.files.internal("textures/2x/SmallBigDealer.png"));

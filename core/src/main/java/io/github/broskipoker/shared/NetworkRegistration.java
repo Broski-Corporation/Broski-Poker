@@ -21,6 +21,7 @@ public class NetworkRegistration {
         kryo.register(Card.Suit.class);
         kryo.register(Card.Rank.class);
         kryo.register(PokerGame.GameState.class);
+        kryo.register(PokerGame.PlayerAction.class);
 
         // Login messages (if you use them)
         kryo.register(LoginRequest.class);

@@ -3,6 +3,13 @@
 SERVER_IP="104.248.45.171"
 SERVER_USER="poker-server"
 
+# Check if the first argument is "logs"
+if [ "$1" = "logs" ]; then
+    echo "Fetching server logs (press Ctrl+C to exit)..."
+    ssh -i ./rc $SERVER_USER@$SERVER_IP "journalctl -u poker-server -n 20 -f --no-pager"
+    exit 0
+fi
+
 echo "Building server JAR..."
 ./gradlew serverJar
 

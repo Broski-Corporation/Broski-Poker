@@ -87,7 +87,7 @@ public class PokerServer {
 
                     PokerGame.PlayerAction act;
                     try {
-                        act = PokerGame.PlayerAction.valueOf(action.action);
+                        act = action.action;
                     } catch (Exception e) {
                         System.out.println("Invalid action string: " + action.action);
                         return;

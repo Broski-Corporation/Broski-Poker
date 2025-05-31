@@ -23,18 +23,20 @@ dependencies {
 task serverJar(type: Jar) {
     archiveBaseName = 'poker-server'
     archiveVersion = '1.0.0'
+    destinationDirectory = file("$rootDir/core/build/libs")
 
     from project(':core').sourceSets.main.output
-    include 'io/github/broskipoker/server/**'
-    include 'io/github/broskipoker/game/**'
-    // Don't include shared networking classes yet
 
     manifest {
-        attributes 'Main-Class': 'io.github.broskipoker.server.PokerServer'
+        attributes(
+            'Main-Class': 'io.github.broskipoker.server.PokerServer'
+        )
     }
 
-    // For now, don't include external dependencies
-    // We'll add this back when we implement networking
+    // include all runtime dependencies
+    from {
+        project(':core').configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

@@ -1,21 +1,28 @@
 package io.github.broskipoker.shared;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.github.broskipoker.game.Card;
+import io.github.broskipoker.game.PokerGame;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class NetworkRegistration {
     public static void register(Kryo kryo) {
-        // Register collections
+        // Collections used in shared classes
         kryo.register(ArrayList.class);
-        kryo.register(HashMap.class);
 
-        // Register your existing game classes
-        kryo.register(io.github.broskipoker.game.Card.class);
-        kryo.register(io.github.broskipoker.game.Card.Suit.class);
-        kryo.register(io.github.broskipoker.game.Card.Rank.class);
+        // Shared network message classes
+        kryo.register(CardInfo.class);
+        kryo.register(PlayerInfo.class);
+        kryo.register(PlayerAction.class);
+        kryo.register(GameStateUpdate.class);
 
-        // Register network messages
+        // Enums used in shared classes
+        kryo.register(Card.Suit.class);
+        kryo.register(Card.Rank.class);
+        kryo.register(PokerGame.GameState.class);
+
+        // Login messages (if you use them)
         kryo.register(LoginRequest.class);
         kryo.register(LoginResponse.class);
     }

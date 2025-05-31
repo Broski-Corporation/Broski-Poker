@@ -469,4 +469,20 @@ public class PokerGame {
     public static int getDealerPosition() {
         return dealerPosition;
     }
+
+    public int getSmallBlind() {
+        return smallBlind;
+    }
+
+    public int getBigBlind() {
+        return bigBlind;
+    }
+
+    public int getLastRaisePlayerIndex() {
+        return lastRaisePlayerIndex;
+    }
+
+    public boolean[] getHasActedInRound() {
+        return hasActedInRound;
+    }
 }

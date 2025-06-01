@@ -40,6 +40,10 @@ public class TableManager {
         return table;
     }
 
+    public synchronized void joinExistingTable(Connection conn, Table table) {
+        connectionToCode.put(conn, table.getCode());
+    }
+
     public synchronized void leaveTable(Connection conn) {
         String code = connectionToCode.remove(conn);
         if (code != null) {

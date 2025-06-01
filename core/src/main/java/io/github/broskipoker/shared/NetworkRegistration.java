@@ -26,5 +26,10 @@ public class NetworkRegistration {
         // Login messages (if you use them)
         kryo.register(LoginRequest.class);
         kryo.register(LoginResponse.class);
+
+        // Create Table request
+        kryo.register(CreateTableRequest.class);
+        kryo.register(CreateTableResponse.class);
+
     }
 }

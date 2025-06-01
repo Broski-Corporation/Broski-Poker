@@ -97,6 +97,9 @@ public class RegisterDialog extends Dialog {
         setModal(true);
         setMovable(true);
         setResizable(false);
+
+        // Center the title
+        getTitleLabel().setAlignment(com.badlogic.gdx.utils.Align.center);
     }
 
     private void handleRegister() {

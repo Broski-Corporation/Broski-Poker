@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import io.github.broskipoker.game.User;
 import io.github.broskipoker.ui.LoginDialog;
+import io.github.broskipoker.ui.MultiplayerDialog;
 import io.github.broskipoker.utils.UserService;
 
 public class Menu {
@@ -17,11 +18,12 @@ public class Menu {
     public static long clickSoundId;
     private Table table;
     private final Stage stage;
-    private TextButton playButton;
+    private TextButton singleplayerButton;
     private TextButton exitButton;
     private TextButton settingsButton;
     private TextButton friendsButton;
     private TextButton loginButton;
+    private TextButton multiplayerButton;
     private Label userInfoLabel;
     public static Sound clickSound;
     private boolean gameStarted = false;
@@ -51,7 +53,8 @@ public class Menu {
         table.setFillParent(true);
         repositionMenu();
 
-        playButton = new TextButton("Start", skin);
+        singleplayerButton = new TextButton("Singleplayer", skin);
+        multiplayerButton = new TextButton("Multiplayer", skin);
         friendsButton = new TextButton("Friends", skin);
         settingsButton = new TextButton("Settings", skin);
         exitButton = new TextButton("Exit", skin);
@@ -62,7 +65,9 @@ public class Menu {
 
         table.add(userInfoLabel).width(buttonWidth).padBottom(10);
         table.row();
-        table.add(playButton).width(buttonWidth).padBottom(20);
+        table.add(singleplayerButton).width(buttonWidth).padBottom(20);
+        table.row();
+        table.add(multiplayerButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(friendsButton).width(buttonWidth).padBottom(20);
         table.row();
@@ -75,12 +80,36 @@ public class Menu {
         stage.addActor(table);
         updateLoginState();
 
-        playButton.addListener(new ChangeListener() {
+        singleplayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 clickSoundId = clickSound.play();
                 clickSound.setVolume(clickSoundId, menuVolume);
                 gameStarted = true;
+            }
+        });
+
+        multiplayerButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                clickSoundId = clickSound.play();
+                clickSound.setVolume(clickSoundId, menuVolume);
+
+                if(userService.isLoggedIn()){
+                    MultiplayerDialog multiplayerDialog = new MultiplayerDialog("Multiplayer", skin);
+                    multiplayerDialog.show(stage);
+                }
+                else {
+                    Dialog messageDialog = new Dialog("Attention!", skin);
+                    messageDialog.getTitleLabel().setAlignment(com.badlogic.gdx.utils.Align.center);
+
+                    // Text label to control
+                    Label textLabel = new Label("You need to login first", skin);
+                    messageDialog.getContentTable().add(textLabel).pad(30, 20, 20, 20);
+
+                    messageDialog.button("OK");
+                    messageDialog.show(stage);
+                }
             }
         });
 
@@ -160,7 +189,7 @@ public class Menu {
     }
 
     public TextButton[] getButtons() {
-        return new TextButton[]{playButton, settingsButton, friendsButton, loginButton, exitButton};
+        return new TextButton[]{singleplayerButton, settingsButton, friendsButton, loginButton, exitButton};
     }
 
     public static float getMenuVolume() {

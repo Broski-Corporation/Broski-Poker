@@ -3,6 +3,7 @@ package io.github.broskipoker;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -29,6 +30,8 @@ public class Menu {
     private boolean gameStarted = false;
     private Skin skin;
     private final UserService userService;
+    private Texture backgroundTexture;
+    private Image backgroundImage;
 
     public Menu(Stage stage) {
         this.stage = stage;
@@ -48,6 +51,7 @@ public class Menu {
 //        menuMusic.play();
 
         skin = new Skin(Gdx.files.internal("skin/star-soldier-ui.json"));
+        setBackground("menu_background.png");
 
         table = new Table();
         table.setFillParent(true);
@@ -160,6 +164,20 @@ public class Menu {
         });
     }
 
+    private void setBackground(String imagePath) {
+        backgroundTexture = new Texture(Gdx.files.internal(imagePath));
+        backgroundImage = new Image(backgroundTexture);
+
+        // Size the background to fill the screen
+        backgroundImage.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Add the background to the stage first so it appears behind other elements
+        stage.addActor(backgroundImage);
+
+        // Move the background to the back
+        backgroundImage.toBack();
+    }
+
     private void updateLoginState() {
         if (userService.isLoggedIn()) {
             User user = userService.getCurrentUser().get();
@@ -185,6 +203,9 @@ public class Menu {
         clickSound.dispose();
         if (menuMusic != null) {
             menuMusic.dispose();
+        }
+        if (backgroundTexture != null) {
+            backgroundTexture.dispose();
         }
     }
 

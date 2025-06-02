@@ -50,24 +50,31 @@ public class PokerServerConnectionTest {
 
     private void startUpdateThread(Client clientToUpdate) {
         updateThread = new Thread(() -> {
-            System.out.println("Update thread started");
+            System.out.println("Update thread started for client: " + clientToUpdate.getID()); // Added client ID for clarity
             while (running.get()) {
                 try {
-                    clientToUpdate.update(10);  // More frequent updates (was 20)
+                    clientToUpdate.update(10);
                 } catch (IOException e) {
-                    // Handle exception more gracefully
                     if (clientToUpdate.isConnected() && running.get()) {
-                        System.err.println("Error in update thread: " + e.getMessage());
+                        System.err.println("CLIENT UPDATE THREAD IOException for client " + clientToUpdate.getID() + ": " + e.getMessage());
+                        e.printStackTrace(); // It's good to see the stack trace for IOExceptions too
                     }
+                } catch (Throwable t) { // Catch KryoException and other RuntimeExceptions
+                    System.err.println("CLIENT UPDATE THREAD CRITICAL ERROR for client " + clientToUpdate.getID() + ": " + t.getMessage());
+                    t.printStackTrace(); // This will print the stack trace for KryoExceptions
+                    // Consider stopping the 'running' loop or re-throwing if appropriate.
+                    // For testing, logging it is crucial for diagnosis.
+                    // running.set(false); // Optionally stop the thread on critical error, or let it break
+                    break; // Exit loop if a critical error occurs
                 }
                 try {
-                    Thread.sleep(5);  // Shorter sleep for more frequent updates (was 10)
+                    Thread.sleep(5);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
                 }
             }
-            System.out.println("Update thread stopped");
+            System.out.println("Update thread stopped for client: " + clientToUpdate.getID()); // Added client ID
         });
         updateThread.setDaemon(true);
         updateThread.start();

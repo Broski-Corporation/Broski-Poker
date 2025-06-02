@@ -107,6 +107,13 @@ public class UserService {
         return currentUser != null;
     }
 
+    public User getCurrentUserOrThrow() {
+        if (currentUser == null) {
+            throw new IllegalStateException("No user is currently logged in");
+        }
+        return currentUser;
+    }
+
     /**
      * Get the current logged-in user
      * @return Optional containing the current user, or empty if not logged in

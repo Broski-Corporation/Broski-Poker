@@ -1,6 +1,7 @@
 package io.github.broskipoker.game.tests;
 
 import com.esotericsoftware.kryonet.*;
+import io.github.broskipoker.game.Player;
 import io.github.broskipoker.shared.*;
 import io.github.broskipoker.game.PokerGame;
 import java.util.Scanner;
@@ -14,9 +15,17 @@ public class TestClient {
     private volatile boolean shouldUpdate = true;
     private Thread updateThread;
 
+    // Turn-based gameplay fields
+    private volatile boolean isMyTurn = false;
+    private volatile boolean waitingForAction = false;
+    private String currentPlayer = "";
+    private Scanner actionScanner;
+    private Thread actionThread;
+
     public TestClient(String username) {
         this.username = username;
         this.client = new Client();
+        this.actionScanner = new Scanner(System.in);
         NetworkRegistration.register(client.getKryo());
     }
 
@@ -44,15 +53,13 @@ public class TestClient {
             tempUpdateThread.start();
 
             System.out.println("Attempting to connect to " + host + ":" + port + "...");
-            client.connect(10000, host, port); // triggers TCP registration
+            client.connect(10000, host, port);
 
-            tempUpdateThread.join(); // wait for update thread to finish
+            tempUpdateThread.join();
 
             if (client.isConnected()) {
                 connected = true;
                 System.out.println("✅ Connected to server as: " + username + " at " + host + ":" + port);
-
-                // Start the regular update thread
                 startUpdateThread();
             } else {
                 System.out.println("❌ Failed to establish connection");
@@ -74,7 +81,7 @@ public class TestClient {
             System.out.println("Update thread started");
             while (shouldUpdate) {
                 try {
-                    client.update(50); // Update every 50ms - less frequent but more stable
+                    client.update(50);
                 } catch (IOException e) {
                     if (shouldUpdate) {
                         System.err.println("Update thread IO error: " + e.getMessage());
@@ -105,11 +112,12 @@ public class TestClient {
             public void disconnected(Connection connection) {
                 System.out.println("❌ Client listener: Disconnected from server");
                 connected = false;
+                isMyTurn = false;
+                waitingForAction = false;
             }
 
             @Override
             public void received(Connection connection, Object object) {
-//                System.out.println("📨 Received: " + object.getClass().getSimpleName());
                 handleServerMessage(object);
             }
         });
@@ -136,6 +144,7 @@ public class TestClient {
         else if (object instanceof GameStateUpdate) {
             GameStateUpdate update = (GameStateUpdate) object;
             displayGameState(update);
+            checkIfMyTurn(update);
         }
         else if (object instanceof LoginResponse) {
             LoginResponse resp = (LoginResponse) object;
@@ -145,16 +154,154 @@ public class TestClient {
                 System.out.println("❌ Login failed: " + resp.message);
             }
         }
-        else {
-//            System.out.println("📨 Unknown message type: " + object.getClass().getSimpleName());
+    }
+
+    private void checkIfMyTurn(GameStateUpdate update) {
+        // Assuming the update contains current player info
+        // You might need to adjust this based on your actual GameStateUpdate structure
+        boolean wasMyTurn = isMyTurn;
+
+        // Check if it's my turn (adjust this logic based on your server's implementation)
+        if (update.currentPlayer != null) {
+            currentPlayer = update.currentPlayer;
+            isMyTurn = currentPlayer.equals(username);
+        } else {
+            isMyTurn = false;
+        }
+
+        // If it just became my turn, start action input
+        if (isMyTurn && !wasMyTurn && !waitingForAction) {
+            startActionInput();
+        } else if (!isMyTurn && waitingForAction) {
+            stopActionInput();
+        }
+    }
+
+    private void startActionInput() {
+        waitingForAction = true;
+        System.out.println("\n🎯 IT'S YOUR TURN! Choose an action:");
+        displayAvailableActions();
+
+        actionThread = new Thread(() -> {
+            while (waitingForAction && isMyTurn && connected) {
+                try {
+                    if (System.in.available() > 0) {
+                        String input = actionScanner.nextLine().trim().toLowerCase();
+                        handlePlayerInput(input);
+                        break;
+                    }
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    if (waitingForAction) {
+                        System.err.println("Error in action thread: " + e.getMessage());
+                    }
+                    break;
+                }
+            }
+        });
+        actionThread.setDaemon(true);
+        actionThread.start();
+    }
+
+    private void stopActionInput() {
+        waitingForAction = false;
+        if (actionThread != null) {
+            actionThread.interrupt();
+        }
+    }
+
+    private void displayAvailableActions() {
+        System.out.println("Available actions:");
+        System.out.println("  [c] Call");
+        System.out.println("  [r] Raise");
+        System.out.println("  [f] Fold");
+        System.out.println("  [a] All-in");
+        System.out.print("Enter your choice: ");
+    }
+
+    private void handlePlayerInput(String input) {
+        if (!isMyTurn) {
+            System.out.println("❌ It's not your turn!");
+            return;
+        }
+
+        switch (input) {
+            case "c":
+                performAction(PokerGame.PlayerAction.CALL, 0);
+                System.out.println("🎯 You called!");
+                break;
+            case "f":
+                performAction(PokerGame.PlayerAction.FOLD, 0);
+                System.out.println("🎯 You folded!");
+                break;
+            case "r":
+                handleRaiseAction();
+                return; // Don't stop waiting yet, handleRaiseAction will do it
+            case "a":
+                performAction(PokerGame.PlayerAction.ALL_IN, 0);
+                System.out.println("🎯 You went all-in!");
+                break;
+            default:
+                System.out.println("❌ Invalid action! Use: c (call), r (raise), f (fold), a (all-in)");
+                displayAvailableActions();
+                return; // Keep waiting for valid input
+        }
+
+        waitingForAction = false;
+        isMyTurn = false; // We made our move
+    }
+
+    private void handleRaiseAction() {
+        System.out.print("Enter raise amount: ");
+        try {
+            // Wait for the next line of input
+            String amountStr = actionScanner.nextLine().trim();
+            int amount = Integer.parseInt(amountStr);
+            performAction(PokerGame.PlayerAction.RAISE, amount);
+            System.out.println("🎯 You raised by " + amount + "!");
+            waitingForAction = false;
+            isMyTurn = false;
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Invalid amount! Please enter a number:");
+            handleRaiseAction(); // Try again
         }
     }
 
     private void displayGameState(GameStateUpdate update) {
-        System.out.println("\n=== GAME STATE UPDATE ===");
-        System.out.println(update.currentPlayerIndex);
-        System.out.println(update.gameState);
-        System.out.println(update.players.size());
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("🎮 POKER GAME STATE");
+        System.out.println("=".repeat(60));
+        System.out.println("📊 Game Status: " + update.gameState);
+
+        if (currentPlayer != null && !currentPlayer.isEmpty()) {
+            if (currentPlayer.equals(username)) {
+                System.out.println("🎯 >>> IT'S YOUR TURN! <<<");
+            } else {
+                System.out.println("⏳ Waiting for: " + currentPlayer);
+            }
+        }
+
+        System.out.println("\n👥 Players:");
+        for(int i = 0; i < update.players.size(); i++) {
+            Player player = update.players.get(i);
+            String indicator = player.name.equals(username) ? " (YOU)" : "";
+            String turnIndicator = (currentPlayer != null &&
+                currentPlayer.equals(player.name)) ? " 🎯" : "";
+            System.out.println("  " + (i+1) + ". " + player.name + indicator + turnIndicator);
+            // Add more player info if available in your Player class
+            // System.out.println("     Chips: " + player.chips);
+        }
+
+        // Add more game state info if available
+        // if (update.pot > 0) {
+        //     System.out.println("\n💰 Pot: " + update.pot);
+        // }
+
+        System.out.println("=".repeat(60));
+
+        if (!isMyTurn && currentPlayer != null && !currentPlayer.equals(username)) {
+            System.out.println("⏳ Waiting for " + currentPlayer + " to make a move...");
+        }
     }
 
     public void createTable(int smallBlind, int bigBlind, int chips) {
@@ -206,10 +353,16 @@ public class TestClient {
         System.out.println("Disconnecting...");
         connected = false;
         shouldUpdate = false;
+        waitingForAction = false;
+        isMyTurn = false;
+
+        if (actionThread != null) {
+            actionThread.interrupt();
+        }
 
         if (updateThread != null) {
             try {
-                updateThread.join(1000); // Wait max 1 second for thread to finish
+                updateThread.join(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -233,22 +386,22 @@ public class TestClient {
         return connected && client != null && client.isConnected();
     }
 
-    // Main method pentru testare
+    // IMPROVED MAIN METHOD WITH TURN-BASED GAMEPLAY
     public static void main(String[] args) {
-        System.out.println("=== Poker Test Client ===");
+        System.out.println("=== Turn-Based Poker Test Client ===");
         System.out.println("Choose test mode:");
-        System.out.println("1. Automatic test (2 clients)");
-        System.out.println("2. Interactive test");
+        System.out.println("1. Automatic test (2 clients turn-based)");
+        System.out.println("2. Interactive test (turn-based)");
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter choice (1 or 2): ");
 
         try {
             int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
+            scanner.nextLine();
 
             if (choice == 1) {
-                testCreateAndJoinTable();
+                testTurnBasedGameplay();
             } else if (choice == 2) {
                 interactiveTest();
             } else {
@@ -261,69 +414,63 @@ public class TestClient {
         }
     }
 
-    private static void testCreateAndJoinTable() {
-        TestClient client1 = new TestClient("Alice");
-        TestClient client2 = new TestClient("Bob");
+    private static void testTurnBasedGameplay() {
+        TestClient alice = new TestClient("Alice");
+        TestClient bob = new TestClient("Bob");
 
         try {
-            System.out.println("=== Testing Table Creation and Join ===\n");
+            System.out.println("=== Turn-Based Poker Test ===\n");
 
             String serverHost = "104.248.45.171";
             int serverPort = 8080;
 
             // Connect Alice
             System.out.println("🔗 Connecting Alice to " + serverHost + ":" + serverPort);
-            client1.connect(serverHost, serverPort);
-            Thread.sleep(3000); // Wait longer for stable connection
+            alice.connect(serverHost, serverPort);
+            Thread.sleep(3000);
 
-            if (!client1.isConnected()) {
+            if (!alice.isConnected()) {
                 System.out.println("❌ Alice failed to connect!");
                 return;
             }
 
             // Alice creates table
             System.out.println("🎯 Alice creating table...");
-            client1.createTable(50, 100, 10000);
-            Thread.sleep(4000); // Wait for table creation
+            alice.createTable(50, 100, 10000);
+            Thread.sleep(4000);
 
-            String tableCode = client1.getTableCode();
+            String tableCode = alice.getTableCode();
             if (tableCode != null) {
                 System.out.println("✅ Table created with code: " + tableCode);
 
                 // Connect Bob
                 System.out.println("🔗 Connecting Bob to " + serverHost + ":" + serverPort);
-                client2.connect(serverHost, serverPort);
+                bob.connect(serverHost, serverPort);
                 Thread.sleep(3000);
 
-                if (!client2.isConnected()) {
+                if (!bob.isConnected()) {
                     System.out.println("❌ Bob failed to connect!");
                     return;
                 }
 
                 // Bob joins table
                 System.out.println("🎯 Bob joining table: " + tableCode);
-                client2.joinTable(tableCode, 10000);
+                bob.joinTable(tableCode, 10000);
                 Thread.sleep(4000);
 
-                // Test some actions
-                System.out.println("\n=== Testing Game Actions ===");
-                Thread.sleep(2000);
+                System.out.println("\n🎮 Turn-based game started!");
+                System.out.println("Players will automatically make moves when it's their turn...");
 
-                System.out.println("🎲 Alice performing action...");
-                client1.performAction(PokerGame.PlayerAction.CALL, 0);
-                Thread.sleep(3000);
+                // Simulate some automatic moves for testing
+                Thread.sleep(5000);
 
-                System.out.println("🎲 Bob performing action...");
-                client2.performAction(PokerGame.PlayerAction.CALL, 0);
-                Thread.sleep(3000);
+                // Let the game run for a while to see turn-based gameplay
+                System.out.println("⏳ Game running... Watch for turn notifications...");
+                Thread.sleep(30000);
 
             } else {
                 System.out.println("❌ Table code not received from server!");
             }
-
-            // Keep running to see final updates
-            System.out.println("⏳ Waiting for final updates...");
-            Thread.sleep(5000);
 
         } catch (InterruptedException e) {
             System.err.println("Test interrupted: " + e.getMessage());
@@ -331,20 +478,20 @@ public class TestClient {
             System.err.println("Test error: " + e.getMessage());
         } finally {
             System.out.println("🧹 Cleaning up...");
-            client1.disconnect();
-            client2.disconnect();
-            System.out.println("✅ Test completed");
+            alice.disconnect();
+            bob.disconnect();
+            System.out.println("✅ Turn-based test completed");
         }
     }
 
     public static void interactiveTest() {
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter your username: ");
         String username = scanner.nextLine();
         TestClient client = new TestClient(username);
 
         try {
-
-            System.out.println("🔗 Connecting to " + "104.248.45.171" + ":" + "8080");
+            System.out.println("🔗 Connecting to server...");
             client.connect();
             Thread.sleep(3000);
 
@@ -367,14 +514,17 @@ public class TestClient {
                 int bigBlind = scanner.nextInt();
                 System.out.print("Enter your chips: ");
                 int chips = scanner.nextInt();
+                scanner.nextLine(); // consume newline
 
                 client.createTable(smallBlind, bigBlind, chips);
                 Thread.sleep(4000);
 
                 if (client.getTableCode() != null) {
                     System.out.println("✅ Your table code is: " + client.getTableCode());
+                    System.out.println("Share this code with other players to join!");
                 } else {
                     System.out.println("❌ Table creation failed or timed out");
+                    return;
                 }
 
             } else if (choice == 2) {
@@ -382,50 +532,27 @@ public class TestClient {
                 String code = scanner.nextLine().trim();
                 System.out.print("Enter your chips: ");
                 int chips = scanner.nextInt();
+                scanner.nextLine(); // consume newline
 
                 client.joinTable(code, chips);
                 Thread.sleep(4000);
             }
 
-            System.out.println("\n⏳ Listening for updates... Press Enter to exit");
-            scanner.nextLine();
+            System.out.println("\n🎮 Game started! The client will automatically handle turns.");
+            System.out.println("When it's your turn, you'll see action options and can make your move.");
+            System.out.println("Type 'quit' and press Enter to exit the game.\n");
 
-            // Set up a timer for 5 minutes
-            long endTime = System.currentTimeMillis() + (5 * 60 * 1000);
-            boolean running = true;
+            boolean playing = true;
+            while (playing && client.isConnected()) {
+                String input = scanner.nextLine().trim();
 
-            while (running && System.currentTimeMillis() < endTime && client.isConnected()) {
-                // Check if input is available to avoid blocking
-                if (System.in.available() > 0) {
-                    String input = scanner.nextLine().trim();
-                    if (!input.isEmpty()) {
-                        char key = input.charAt(0);
-                        switch (key) {
-                            case 'c':
-                                System.out.println("Calling...");
-                                client.performAction(PokerGame.PlayerAction.CALL, 0);
-                                break;
-                            case 'r':
-                                System.out.print("Enter raise amount: ");
-                                int amount = scanner.nextInt();
-                                scanner.nextLine(); // consume newline
-                                client.performAction(PokerGame.PlayerAction.RAISE, amount);
-                                break;
-                            case 'f':
-                                System.out.println("Folding...");
-                                client.performAction(PokerGame.PlayerAction.FOLD, 0);
-                                break;
-                            case 'q':
-                                System.out.println("Quitting...");
-                                running = false;
-                                break;
-                        }
-                    }
+                if ("quit".equalsIgnoreCase(input)) {
+                    playing = false;
+                    System.out.println("🚪 Exiting game...");
                 }
-                // Sleep briefly to avoid CPU spinning
-                Thread.sleep(100);
+                // All turn-based input is handled automatically in the background
+                // The main thread just waits for 'quit' command
             }
-
 
         } catch (Exception e) {
             System.err.println("❌ Error: " + e.getMessage());

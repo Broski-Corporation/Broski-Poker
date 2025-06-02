@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import io.github.broskipoker.game.User;
 import io.github.broskipoker.ui.LoginDialog;
 import io.github.broskipoker.ui.MultiplayerDialog;
@@ -90,6 +91,8 @@ public class Menu {
                 clickSoundId = clickSound.play();
                 clickSound.setVolume(clickSoundId, menuVolume);
                 gameStarted = true;
+                // Hide the menu and start the game
+                stage.clear();
             }
         });
 
@@ -191,7 +194,7 @@ public class Menu {
 
     public void repositionMenu() {
         if (table != null) {
-            table.center().left().pad(50);
+            table.setPosition(-300, -70,  200);
         }
     }
 
@@ -210,7 +213,7 @@ public class Menu {
     }
 
     public TextButton[] getButtons() {
-        return new TextButton[]{singleplayerButton, settingsButton, friendsButton, loginButton, exitButton};
+        return new TextButton[]{singleplayerButton, multiplayerButton, settingsButton, friendsButton, loginButton, exitButton};
     }
 
     public static float getMenuVolume() {

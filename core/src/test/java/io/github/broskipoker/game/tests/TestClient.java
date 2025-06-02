@@ -143,8 +143,10 @@ public class TestClient {
         }
         else if (object instanceof GameStateUpdate) {
             GameStateUpdate update = (GameStateUpdate) object;
-            displayGameState(update);
-            checkIfMyTurn(update);
+            if (update.players.size() > 1 ) {
+                displayGameState(update);
+                checkIfMyTurn(update);
+            }
         }
         else if (object instanceof LoginResponse) {
             LoginResponse resp = (LoginResponse) object;
@@ -187,6 +189,7 @@ public class TestClient {
                 try {
                     if (System.in.available() > 0) {
                         String input = actionScanner.nextLine().trim().toLowerCase();
+                        System.out.printf("Received input: %s%n", input);
                         handlePlayerInput(input);
                         break;
                     }
@@ -401,7 +404,7 @@ public class TestClient {
             scanner.nextLine();
 
             if (choice == 1) {
-                testTurnBasedGameplay();
+//                testTurnBasedGameplay();
             } else if (choice == 2) {
                 interactiveTest();
             } else {
@@ -414,75 +417,75 @@ public class TestClient {
         }
     }
 
-    private static void testTurnBasedGameplay() {
-        TestClient alice = new TestClient("Alice");
-        TestClient bob = new TestClient("Bob");
-
-        try {
-            System.out.println("=== Turn-Based Poker Test ===\n");
-
-            String serverHost = "104.248.45.171";
-            int serverPort = 8080;
-
-            // Connect Alice
-            System.out.println("🔗 Connecting Alice to " + serverHost + ":" + serverPort);
-            alice.connect(serverHost, serverPort);
-            Thread.sleep(3000);
-
-            if (!alice.isConnected()) {
-                System.out.println("❌ Alice failed to connect!");
-                return;
-            }
-
-            // Alice creates table
-            System.out.println("🎯 Alice creating table...");
-            alice.createTable(50, 100, 10000);
-            Thread.sleep(4000);
-
-            String tableCode = alice.getTableCode();
-            if (tableCode != null) {
-                System.out.println("✅ Table created with code: " + tableCode);
-
-                // Connect Bob
-                System.out.println("🔗 Connecting Bob to " + serverHost + ":" + serverPort);
-                bob.connect(serverHost, serverPort);
-                Thread.sleep(3000);
-
-                if (!bob.isConnected()) {
-                    System.out.println("❌ Bob failed to connect!");
-                    return;
-                }
-
-                // Bob joins table
-                System.out.println("🎯 Bob joining table: " + tableCode);
-                bob.joinTable(tableCode, 10000);
-                Thread.sleep(4000);
-
-                System.out.println("\n🎮 Turn-based game started!");
-                System.out.println("Players will automatically make moves when it's their turn...");
-
-                // Simulate some automatic moves for testing
-                Thread.sleep(5000);
-
-                // Let the game run for a while to see turn-based gameplay
-                System.out.println("⏳ Game running... Watch for turn notifications...");
-                Thread.sleep(30000);
-
-            } else {
-                System.out.println("❌ Table code not received from server!");
-            }
-
-        } catch (InterruptedException e) {
-            System.err.println("Test interrupted: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Test error: " + e.getMessage());
-        } finally {
-            System.out.println("🧹 Cleaning up...");
-            alice.disconnect();
-            bob.disconnect();
-            System.out.println("✅ Turn-based test completed");
-        }
-    }
+//    private static void testTurnBasedGameplay() {
+//        TestClient alice = new TestClient("Alice");
+//        TestClient bob = new TestClient("Bob");
+//
+//        try {
+//            System.out.println("=== Turn-Based Poker Test ===\n");
+//
+//            String serverHost = "104.248.45.171";
+//            int serverPort = 8080;
+//
+//            // Connect Alice
+//            System.out.println("🔗 Connecting Alice to " + serverHost + ":" + serverPort);
+//            alice.connect(serverHost, serverPort);
+//            Thread.sleep(3000);
+//
+//            if (!alice.isConnected()) {
+//                System.out.println("❌ Alice failed to connect!");
+//                return;
+//            }
+//
+//            // Alice creates table
+//            System.out.println("🎯 Alice creating table...");
+//            alice.createTable(50, 100, 10000);
+//            Thread.sleep(4000);
+//
+//            String tableCode = alice.getTableCode();
+//            if (tableCode != null) {
+//                System.out.println("✅ Table created with code: " + tableCode);
+//
+//                // Connect Bob
+//                System.out.println("🔗 Connecting Bob to " + serverHost + ":" + serverPort);
+//                bob.connect(serverHost, serverPort);
+//                Thread.sleep(3000);
+//
+//                if (!bob.isConnected()) {
+//                    System.out.println("❌ Bob failed to connect!");
+//                    return;
+//                }
+//
+//                // Bob joins table
+//                System.out.println("🎯 Bob joining table: " + tableCode);
+//                bob.joinTable(tableCode, 10000);
+//                Thread.sleep(4000);
+//
+//                System.out.println("\n🎮 Turn-based game started!");
+//                System.out.println("Players will automatically make moves when it's their turn...");
+//
+//                // Simulate some automatic moves for testing
+//                Thread.sleep(5000);
+//
+//                // Let the game run for a while to see turn-based gameplay
+//                System.out.println("⏳ Game running... Watch for turn notifications...");
+//                Thread.sleep(30000);
+//
+//            } else {
+//                System.out.println("❌ Table code not received from server!");
+//            }
+//
+//        } catch (InterruptedException e) {
+//            System.err.println("Test interrupted: " + e.getMessage());
+//        } catch (Exception e) {
+//            System.err.println("Test error: " + e.getMessage());
+//        } finally {
+//            System.out.println("🧹 Cleaning up...");
+//            alice.disconnect();
+//            bob.disconnect();
+//            System.out.println("✅ Turn-based test completed");
+//        }
+//    }
 
     public static void interactiveTest() {
         Scanner scanner = new Scanner(System.in);

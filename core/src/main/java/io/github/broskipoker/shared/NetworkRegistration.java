@@ -3,6 +3,10 @@ package io.github.broskipoker.shared;
 import com.esotericsoftware.kryo.Kryo;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.PokerGame;
+import io.github.broskipoker.server.PokerServer;
+import io.github.broskipoker.server.PokerServerMultipleTables;
+import io.github.broskipoker.server.Table;
+import io.github.broskipoker.server.TableManager;
 
 import java.util.ArrayList;
 
@@ -10,6 +14,7 @@ public class NetworkRegistration {
     public static void register(Kryo kryo) {
         // Collections used in shared classes
         kryo.register(ArrayList.class);
+        kryo.register(boolean[].class);
 
         // Shared network message classes
         kryo.register(CardInfo.class);
@@ -30,6 +35,14 @@ public class NetworkRegistration {
         // Create Table request
         kryo.register(CreateTableRequest.class);
         kryo.register(CreateTableResponse.class);
+        kryo.register(JoinTableRequest.class);
+        kryo.register(JoinTableResponse.class);
+        kryo.register(Table.class);
+        kryo.register(TableManager.class);
+
+        // Server registration
+        kryo.register(PokerServerMultipleTables.class);
+
 
     }
 }

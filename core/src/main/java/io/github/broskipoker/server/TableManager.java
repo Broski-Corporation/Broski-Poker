@@ -4,7 +4,8 @@ import com.esotericsoftware.kryonet.Connection;
 import java.util.*;
 
 public class TableManager {
-    private final Map<String, Table> codeToTable = new HashMap<>();
+
+    private static final Map<String, Table> codeToTable = new HashMap<>();
     private final Map<Connection, String> connectionToCode = new HashMap<>();
     private final Random random = new Random();
 
@@ -55,5 +56,9 @@ public class TableManager {
     public synchronized Table getTableByConnection(Connection conn) {
         String code = connectionToCode.get(conn);
         return code != null ? codeToTable.get(code) : null;
+    }
+
+    public static Map<String, Table> getCodeToTable() {
+        return codeToTable;
     }
 }

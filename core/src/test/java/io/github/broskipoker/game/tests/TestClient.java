@@ -109,7 +109,7 @@ public class TestClient {
 
             @Override
             public void received(Connection connection, Object object) {
-                System.out.println("📨 Received: " + object.getClass().getSimpleName());
+//                System.out.println("📨 Received: " + object.getClass().getSimpleName());
                 handleServerMessage(object);
             }
         });
@@ -146,12 +146,15 @@ public class TestClient {
             }
         }
         else {
-            System.out.println("📨 Unknown message type: " + object.getClass().getSimpleName());
+//            System.out.println("📨 Unknown message type: " + object.getClass().getSimpleName());
         }
     }
 
     private void displayGameState(GameStateUpdate update) {
         System.out.println("\n=== GAME STATE UPDATE ===");
+        System.out.println(update.currentPlayerIndex);
+        System.out.println(update.gameState);
+        System.out.println(update.players.size());
     }
 
     public void createTable(int smallBlind, int bigBlind, int chips) {
@@ -335,20 +338,14 @@ public class TestClient {
     }
 
     public static void interactiveTest() {
-        TestClient client = new TestClient("TestUser");
         Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        TestClient client = new TestClient(username);
 
         try {
-            System.out.print("Enter server host (104.248.45.171): ");
-            String host = scanner.nextLine().trim();
-            if (host.isEmpty()) host = "104.248.45.171";
 
-            System.out.print("Enter server port (8080): ");
-            String portStr = scanner.nextLine().trim();
-            int port = portStr.isEmpty() ? 8080 : Integer.parseInt(portStr);
-
-            System.out.println("🔗 Connecting to " + host + ":" + port);
-            client.connect(host, port);
+            System.out.println("🔗 Connecting to " + "104.248.45.171" + ":" + "8080");
+            client.connect();
             Thread.sleep(3000);
 
             if (!client.isConnected()) {
@@ -392,6 +389,43 @@ public class TestClient {
 
             System.out.println("\n⏳ Listening for updates... Press Enter to exit");
             scanner.nextLine();
+
+            // Set up a timer for 5 minutes
+            long endTime = System.currentTimeMillis() + (5 * 60 * 1000);
+            boolean running = true;
+
+            while (running && System.currentTimeMillis() < endTime && client.isConnected()) {
+                // Check if input is available to avoid blocking
+                if (System.in.available() > 0) {
+                    String input = scanner.nextLine().trim();
+                    if (!input.isEmpty()) {
+                        char key = input.charAt(0);
+                        switch (key) {
+                            case 'c':
+                                System.out.println("Calling...");
+                                client.performAction(PokerGame.PlayerAction.CALL, 0);
+                                break;
+                            case 'r':
+                                System.out.print("Enter raise amount: ");
+                                int amount = scanner.nextInt();
+                                scanner.nextLine(); // consume newline
+                                client.performAction(PokerGame.PlayerAction.RAISE, amount);
+                                break;
+                            case 'f':
+                                System.out.println("Folding...");
+                                client.performAction(PokerGame.PlayerAction.FOLD, 0);
+                                break;
+                            case 'q':
+                                System.out.println("Quitting...");
+                                running = false;
+                                break;
+                        }
+                    }
+                }
+                // Sleep briefly to avoid CPU spinning
+                Thread.sleep(100);
+            }
+
 
         } catch (Exception e) {
             System.err.println("❌ Error: " + e.getMessage());

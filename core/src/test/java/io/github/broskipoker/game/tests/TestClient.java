@@ -162,8 +162,8 @@ public class TestClient {
         boolean wasMyTurn = isMyTurn;
 
         // Check if it's my turn (adjust this logic based on your server's implementation)
-        if (update.currentPlayer != null) {
-            currentPlayer = update.currentPlayer;
+        if (update.players.get(update.currentPlayerIndex).name != null) {
+            currentPlayer = update.players.get(update.currentPlayerIndex).name;
             isMyTurn = currentPlayer.equals(username);
         } else {
             isMyTurn = false;
@@ -238,7 +238,7 @@ public class TestClient {
                 handleRaiseAction();
                 return; // Don't stop waiting yet, handleRaiseAction will do it
             case "a":
-                performAction(PokerGame.PlayerAction.ALL_IN, 0);
+                performAction(PokerGame.PlayerAction.RAISE, 50);
                 System.out.println("🎯 You went all-in!");
                 break;
             default:
@@ -283,7 +283,7 @@ public class TestClient {
 
         System.out.println("\n👥 Players:");
         for(int i = 0; i < update.players.size(); i++) {
-            Player player = update.players.get(i);
+            PlayerInfo player = update.players.get(i);
             String indicator = player.name.equals(username) ? " (YOU)" : "";
             String turnIndicator = (currentPlayer != null &&
                 currentPlayer.equals(player.name)) ? " 🎯" : "";

@@ -14,27 +14,26 @@
  */
 
 package io.github.broskipoker.ui;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.broskipoker.Menu;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -49,7 +48,7 @@ public class GameRenderer {
     private final PokerGame pokerGame;
     private final SpriteBatch batch;
     private final Stage stage;
-    private final Menu menu;
+    private Menu menu;
     private final BitmapFont font;
     private final BitmapFont blindsFont;
     private BitmapFont potFont;
@@ -140,6 +139,17 @@ public class GameRenderer {
     private float botEmojiTimer = 0f;
     private static final float BOT_EMOJI_INTERVAL = 5f; // o reactie la ~5 secunde
 
+    //LOADING:
+    private boolean loadingStarted = false; //boolean
+    private float loadingTime = 0f;
+    private final float LOADING_DURATION = 2f; //2 secunde
+
+    private ProgressBar loadingBar;
+    private Stage loadingStage;
+    private Skin skin;
+    public static GameRenderer instance;
+    private TextButton exitButton;
+
 
     static
     {
@@ -149,7 +159,7 @@ public class GameRenderer {
 
     public GameRenderer(PokerGame pokerGame) {
         this.pokerGame = pokerGame;
-
+        GameRenderer.instance =this;
         // Initialize rendering components
         batch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
@@ -317,6 +327,49 @@ public class GameRenderer {
         }
 
         stage.addActor(emojiDropdown);
+
+        //initializez loading:
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        loadingStage = new Stage(new ScreenViewport());
+        loadingBar = new ProgressBar(0f, 1f, 0.01f, false, skin);
+        loadingBar.setSize(300, 40);
+        loadingBar.setPosition(
+            (Gdx.graphics.getWidth() - loadingBar.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - loadingBar.getHeight()) / 2f
+        );
+        loadingStage.addActor(loadingBar);
+
+
+        // --- Exit Button ---
+        exitButton = new TextButton("Exit", skin);
+        exitButton.setSize(80, 40);
+        exitButton.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+
+        exitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ExitDialog exitDialog = new ExitDialog(skin,
+                    () -> {
+                        // Back to Game – nu face nimic, doar închide dialogul
+                    },
+                    () -> {
+//                        // Exit to Lobby – curăță scena și reafișează meniul
+//                        stage.clear();
+//                        Menu newMenu = new Menu(stage);
+//
+//                        // dacă ai metoda getTable(), adaug-o
+//                        stage.addActor(newMenu.getTable()); // doar dacă ai public Table getTable()
+                        resetGame();
+
+                    }
+                );
+                stage.addActor(exitDialog);
+                exitDialog.setVisible(true);
+                exitDialog.toFront();
+            }
+        });
+
+        stage.addActor(exitButton);
     }
 
     public void setGameController(GameController controller) {
@@ -326,6 +379,23 @@ public class GameRenderer {
     }
 
     public void render(float delta) {
+        if (loadingStarted && !menu.isGameStarted()) {
+            loadingTime += delta;
+            float progress = Math.min(loadingTime / LOADING_DURATION, 1f);
+            loadingBar.setValue(progress);
+
+            Gdx.gl.glClearColor(0, 0, 0, 1);
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+            loadingStage.act(delta);
+            loadingStage.draw();
+
+            if (loadingTime >= LOADING_DURATION) {
+                stage.clear();
+                setupGameUI(); // vezi pasul următor
+                menu.setGameStarted(true);
+            }
+            return;
+        }
         if (menu.isGameStarted()) {
             // Hide menu buttons
             for (TextButton button : menu.getButtons()) {
@@ -362,7 +432,7 @@ public class GameRenderer {
 
             //emoji button
             emojiButton.setVisible(true);
-
+            exitButton.setVisible(true);
         } else {
             // Hide betting UI when in menu
             bettingUI.setVisible(false);
@@ -373,7 +443,7 @@ public class GameRenderer {
 
             //hide emoji button when in menu
             emojiButton.setVisible(false);
-
+            exitButton.setVisible(false);
         }
 
         // Handle emoji display TEST
@@ -1055,5 +1125,42 @@ public class GameRenderer {
         int emojiIndex = MathUtils.random(emojiRegions.length - 1);
         activeEmojis.put(randomIndex, new EmojiDisplayData(emojiIndex, System.currentTimeMillis()));
     }
+
+    private void setupGameUI() {
+//        stage.addActor(bettingUI);
+        stage.addActor(emojiButton);
+        stage.addActor(emojiDropdown);
+        stage.addActor(exitButton);
+        // dacă ai
+    }
+
+    public void startLoading() {
+        loadingStarted = true;
+        loadingTime = 0f;
+    }
+
+    public void resetGame() {
+        // Reset flags
+        loadingStarted = false;
+        loadingTime = 0;
+        menu.setGameStarted(false);
+
+        // Clear stage and actors
+        stage.clear();
+
+        // Recreate menu
+        this.menu = new Menu(stage);
+        stage.addActor(menu.getTable());
+
+        // Ascunde butoanele
+        exitButton.setVisible(false);
+        emojiButton.setVisible(false);
+        pokerGame.reset();
+
+
+        // Important: recreează obiectele necesare când jocul va porni din nou
+    }
+
+
 
 }

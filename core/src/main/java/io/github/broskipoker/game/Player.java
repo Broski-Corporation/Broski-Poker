@@ -45,6 +45,15 @@ public class Player {
         return actualBet;
     }
 
+    public void resetForNewGame() {
+        clearHand();
+        currentBet = 0;
+        isActive = true;
+        // Dacă vrei ca fiecare joc să înceapă cu 1000 chips, decomentează:
+        // chips = 1000;
+    }
+
+
     public void addChips(int amount) {
         chips += amount;
     }

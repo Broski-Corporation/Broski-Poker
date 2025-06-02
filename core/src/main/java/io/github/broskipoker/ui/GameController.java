@@ -232,4 +232,19 @@ public class GameController extends InputAdapter {
     public void dispose() {
         // Nothing to dispose
     }
+
+    public void reset() {
+        // Reset bot thinking logic
+        isBotThinking = false;
+        thinkingBotIndex = -1;
+        botDecisionTimer = 0;
+
+        // Reset game states
+        currentState = PokerGame.GameState.BETTING_PRE_FLOP;
+        previousGameState = PokerGame.GameState.BETTING_PRE_FLOP;
+
+        // Reset input multiplexer
+        Gdx.input.setInputProcessor(renderer.getStage()); // revine la input-ul pentru meniu
+    }
+
 }

@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import io.github.broskipoker.game.User;
+import io.github.broskipoker.ui.GameRenderer;
 import io.github.broskipoker.ui.LoginDialog;
 import io.github.broskipoker.ui.MultiplayerDialog;
 import io.github.broskipoker.utils.UserService;
@@ -49,7 +50,7 @@ public class Menu {
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("kevin-macleod-investigations.mp3"));
         menuMusic.setLooping(true);
         menuMusic.setVolume(menuVolume);
-//        menuMusic.play();
+        // menuMusic.play();
 
         skin = new Skin(Gdx.files.internal("skin/star-soldier-ui.json"));
         setBackground("menu_background.png");
@@ -90,8 +91,7 @@ public class Menu {
             public void changed(ChangeEvent event, Actor actor) {
                 clickSoundId = clickSound.play();
                 clickSound.setVolume(clickSoundId, menuVolume);
-                gameStarted = true;
-                // Hide the menu and start the game
+                GameRenderer.instance.startLoading();
                 stage.clear();
             }
         });
@@ -102,18 +102,14 @@ public class Menu {
                 clickSoundId = clickSound.play();
                 clickSound.setVolume(clickSoundId, menuVolume);
 
-                if(userService.isLoggedIn()){
+                if (userService.isLoggedIn()) {
                     MultiplayerDialog multiplayerDialog = new MultiplayerDialog("Multiplayer", skin);
                     multiplayerDialog.show(stage);
-                }
-                else {
+                } else {
                     Dialog messageDialog = new Dialog("Attention!", skin);
-                    messageDialog.getTitleLabel().setAlignment(com.badlogic.gdx.utils.Align.center);
-
-                    // Text label to control
+                    messageDialog.getTitleLabel().setAlignment(Align.center);
                     Label textLabel = new Label("You need to login first", skin);
                     messageDialog.getContentTable().add(textLabel).pad(30, 20, 20, 20);
-
                     messageDialog.button("OK");
                     messageDialog.show(stage);
                 }
@@ -170,14 +166,8 @@ public class Menu {
     private void setBackground(String imagePath) {
         backgroundTexture = new Texture(Gdx.files.internal(imagePath));
         backgroundImage = new Image(backgroundTexture);
-
-        // Size the background to fill the screen
         backgroundImage.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        // Add the background to the stage first so it appears behind other elements
         stage.addActor(backgroundImage);
-
-        // Move the background to the back
         backgroundImage.toBack();
     }
 
@@ -194,7 +184,7 @@ public class Menu {
 
     public void repositionMenu() {
         if (table != null) {
-            table.setPosition(-300, -70,  200);
+            table.setPosition(-300, -70, 200);
         }
     }
 
@@ -202,14 +192,14 @@ public class Menu {
         return gameStarted;
     }
 
+    public void setGameStarted(boolean b) {
+        this.gameStarted = b;
+    }
+
     public void dispose() {
         clickSound.dispose();
-        if (menuMusic != null) {
-            menuMusic.dispose();
-        }
-        if (backgroundTexture != null) {
-            backgroundTexture.dispose();
-        }
+        if (menuMusic != null) menuMusic.dispose();
+        if (backgroundTexture != null) backgroundTexture.dispose();
     }
 
     public TextButton[] getButtons() {
@@ -222,5 +212,13 @@ public class Menu {
 
     public static void setMenuVolume(float newVolume) {
         menuVolume = newVolume;
+    }
+
+    public Skin getSkin() {
+        return skin;
+    }
+
+    public Table getTable() {
+        return table;
     }
 }

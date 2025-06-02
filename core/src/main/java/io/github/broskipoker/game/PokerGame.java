@@ -427,12 +427,47 @@ public class PokerGame {
         return false;
     }
 
+    public void resetGameLogic() {
+        // Ștergi jucătorii, mâinile, potul, etc.
+        players.clear();
+        pot = 0;
+        gameState = GameState.WAITING_FOR_PLAYERS;
+
+
+    }
+
     public boolean hasPlayerActedInRound(int playerIndex) {
         if (playerIndex >= 0 && playerIndex < hasActedInRound.length) {
             return hasActedInRound[playerIndex];
         }
         return false;
     }
+
+    public void reset() {
+        this.communityCards.clear();
+        this.pot = 0;
+        this.currentBet = 0;
+        this.currentPlayerIndex = 0;
+        this.gameState = GameState.BETTING_PRE_FLOP;
+
+        for (Player player : players) {
+            player.resetForNewGame();
+        }
+
+        deck.reset(); // reumple și amestecă pachetul
+        for (Player player : players) {
+            player.resetForNewGame(); // golește mâna, resetează bet-ul și activează jucătorul
+        }
+        communityCards.clear(); // golește cărțile comune
+        pot = 0;
+        currentPlayerIndex = 0;
+        gameState = GameState.BETTING_PRE_FLOP;
+
+// Apoi pornești o nouă mână:
+        dealHoleCards();
+
+    }
+
 
     public List<Card> getCommunityCards() {
         return communityCards;
@@ -485,4 +520,6 @@ public class PokerGame {
     public boolean[] getHasActedInRound() {
         return hasActedInRound;
     }
+
+
 }

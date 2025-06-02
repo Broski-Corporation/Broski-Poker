@@ -249,4 +249,7 @@ public class ClientConnection {
         return connected && client != null && client.isConnected();
     }
 
+    public void setTableCode(String tableCode) {
+        this.tableCode = tableCode;
+    }
 }

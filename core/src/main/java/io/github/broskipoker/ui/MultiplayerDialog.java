@@ -149,6 +149,8 @@ public class MultiplayerDialog extends Dialog {
             client.joinTable(tableCode, 10000);
             Thread.sleep(2000); // Wait for join response
 
+            client.setTableCode(tableCode); // Set the table code in client
+
             // Check if join was successful (you'll need to implement this check based on your ClientConnection)
             if (isJoinSuccessful(client, tableCode)) {
                 statusLabel.setText("Successfully joined table!");

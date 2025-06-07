@@ -92,7 +92,10 @@ public class Menu {
                 clickSound.setVolume(clickSoundId, menuVolume);
                 gameStarted = true;
                 // Hide the menu and start the game
-                stage.clear();
+                table.remove();
+                if (backgroundImage != null) {
+                    backgroundImage.remove();
+                }
             }
         });
 

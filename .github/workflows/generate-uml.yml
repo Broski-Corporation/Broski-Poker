@@ -2,8 +2,8 @@ name: Generate UML Diagrams
 
 on:
   push:
-    paths:
-      - '../../docs/PokerGame.puml'
+    branches:
+      - feature/github-actions
   workflow_dispatch:
 
 jobs:

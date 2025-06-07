@@ -6,6 +6,7 @@ on:
       - 'docs/*.puml'
   workflow_dispatch:
 
+
 jobs:
   plantuml:
     runs-on: ubuntu-latest

@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+
+actor "Jucător" as Player
+actor "Administrator" as Admin
+
+rectangle "Sistem Poker Game" {
+    (Autentificare)
+    (Vizualizare lobby)
+    (Alăturare joc)
+    (Începe joc)
+    (Plasează pariu)
+    (Vede cărțile)
+    (Vede rezultatul mâinii)
+    (Ieșire joc)
+    (Gestionează utilizatori) as ManageUsers
+    (Modifică setări joc) as ChangeSettings
+}
+
+Player --> (Autentificare)
+Player --> (Vizualizare lobby)
+Player --> (Alăturare joc)
+Player --> (Începe joc)
+Player --> (Plasează pariu)
+Player --> (Vede cărțile)
+Player --> (Vede rezultatul mâinii)
+Player --> (Ieșire joc)
+
+Admin --> ManageUsers
+Admin --> ChangeSettings
+
+@enduml

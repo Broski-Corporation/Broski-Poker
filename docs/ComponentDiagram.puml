@@ -1,0 +1,14 @@
+@startuml
+package "Poker Game App" {
+  [UI]
+  [Game Logic]
+  [Database]
+  [Network Service]
+}
+
+[UI] --> [Game Logic]
+[Game Logic] --> [Database]
+[Game Logic] --> [Network Service]
+[UI] ..> [Network Service] : notificări/mesaje
+
+@enduml

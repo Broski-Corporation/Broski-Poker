@@ -1,0 +1,40 @@
+@startuml
+start
+
+:Inițializare joc (creare jucători, stabilire blinduri, amestecare pachet);
+
+:Împărțire cărți către jucători (2 fiecare);
+
+partition "Pre-Flop" {
+    :Rundă de pariuri pre-flop;
+}
+
+partition "Flop" {
+    :Se adaugă 3 cărți comunitare pe masă;
+    :Rundă de pariuri;
+}
+
+partition "Turn" {
+    :Se adaugă a 4-a carte comunitară;
+    :Rundă de pariuri;
+}
+
+partition "River" {
+    :Se adaugă a 5-a carte comunitară;
+    :Ultima rundă de pariuri;
+}
+
+:Showdown (se arată cărțile, se determină câștigătorul);
+
+:Distribuire pot câștigător;
+
+:Verifică dacă mai există jucători cu fise;
+if (Mai există jucători cu fise?) then (Da)
+    :Pornește o nouă mână;
+    -> [back] start
+else (Nu)
+    :Sfârșit joc;
+    stop
+endif
+
+@enduml

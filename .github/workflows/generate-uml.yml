@@ -2,8 +2,8 @@ name: Generate UML Diagrams
 
 on:
   push:
-    branches:
-      - feature/github-actions
+    paths:
+      - 'docs/*.puml'
   workflow_dispatch:
 
 jobs:
@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate PlantUML diagrams
-        uses: plantuml-action/plantuml-action@v1
+        uses: ts-graphviz/plantuml-action@v2
         with:
-          args: docs/*.puml -o docs/generated
+          args: docs/*.puml -tpng -o docs/generated
 
       - name: Upload diagrams as artifact
         uses: actions/upload-artifact@v4

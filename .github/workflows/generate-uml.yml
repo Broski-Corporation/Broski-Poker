@@ -1,0 +1,25 @@
+name: Generate UML Diagrams
+
+on:
+  push:
+    paths:
+      - '../../docs/PokerGame.puml'
+  workflow_dispatch:
+
+jobs:
+  plantuml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate PlantUML diagrams
+        uses: plantuml-action/plantuml-action@v1
+        with:
+          args: docs/*.puml -o docs/generated
+
+      - name: Upload diagrams as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uml-diagrams
+          path: docs/generated

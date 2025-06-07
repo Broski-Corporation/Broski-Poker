@@ -49,6 +49,7 @@ public class Player {
         clearHand();
         currentBet = 0;
         isActive = true;
+
         // Dacă vrei ca fiecare joc să înceapă cu 1000 chips, decomentează:
         // chips = 1000;
     }

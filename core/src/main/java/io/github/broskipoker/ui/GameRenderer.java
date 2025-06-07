@@ -43,6 +43,8 @@ import java.util.Map;
 
 
 import java.util.List;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 
 public class GameRenderer {
     private final PokerGame pokerGame;
@@ -149,6 +151,9 @@ public class GameRenderer {
     private Skin skin;
     public static GameRenderer instance;
     private TextButton exitButton;
+
+    private Image loadingIcon;
+
 
 
     static
@@ -332,6 +337,43 @@ public class GameRenderer {
         skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
         loadingStage = new Stage(new ScreenViewport());
         loadingBar = new ProgressBar(0f, 1f, 0.01f, false, skin);
+        // După aceste linii din constructor:
+        skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+        loadingStage = new Stage(new ScreenViewport());
+        loadingBar = new ProgressBar(0f, 1f, 0.01f, false, skin);
+        loadingBar.setSize(300, 40);
+        loadingBar.setPosition(
+            (Gdx.graphics.getWidth() - loadingBar.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() - loadingBar.getHeight()) / 2f
+        );
+        loadingStage.addActor(loadingBar);
+
+// --- Loading Screen Background ---
+        Texture loadingBgTexture = new Texture(Gdx.files.internal("menu_background.png"));
+        Image loadingBg = new Image(loadingBgTexture);
+        loadingBg.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        loadingStage.addActor(loadingBg);
+
+// --- Loading Label ---
+        Label.LabelStyle labelStyle = new Label.LabelStyle();
+        labelStyle.font = fontManager.getFont(32, Color.WHITE);
+        Label loadingLabel = new Label("Loading...", labelStyle);
+        loadingLabel.setPosition(
+            (Gdx.graphics.getWidth() - loadingLabel.getWidth()) / 2f,
+            (Gdx.graphics.getHeight() + loadingBar.getHeight()) / 2f + 60
+        );
+        loadingStage.addActor(loadingLabel);
+
+// --- Animated Loading Icon (opțional) ---
+        Texture loadingIconTexture = new Texture(Gdx.files.internal("loading_spinner.png"));
+        loadingIcon = new Image(loadingIconTexture);
+        loadingIcon.setSize(48, 48);
+        loadingIcon.setOrigin(24, 24);
+        loadingIcon.setPosition(
+            (Gdx.graphics.getWidth() - loadingIcon.getWidth()) / 2f,
+            loadingBar.getY() + loadingBar.getHeight() -10
+        );
+        loadingStage.addActor(loadingIcon);
         loadingBar.setSize(300, 40);
         loadingBar.setPosition(
             (Gdx.graphics.getWidth() - loadingBar.getWidth()) / 2f,
@@ -341,14 +383,17 @@ public class GameRenderer {
 
 
         // --- Exit Button ---
-        exitButton = new TextButton("Exit", skin);
-        exitButton.setSize(80, 40);
-        exitButton.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
-
+        exitButton = new TextButton("Exit", new Skin(Gdx.files.internal("skin/star-soldier-ui.json")), "default");
+        exitButton.setSize(300, 100); // width: 300, height: 40
+        exitButton.setPosition(
+            Gdx.graphics.getWidth() - exitButton.getWidth() - 20, // 20px from right edge
+            Gdx.graphics.getHeight() - exitButton.getHeight() - 20 // 20px from top edge
+        ); // or same as menu buttons
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                ExitDialog exitDialog = new ExitDialog(skin,
+                ExitDialog exitDialog = new ExitDialog(            new Skin(Gdx.files.internal("skin/star-soldier-ui.json")) // use the same skin as LoginDialog
+                    ,
                     () -> {
                         // Back to Game – nu face nimic, doar închide dialogul
                     },
@@ -380,6 +425,7 @@ public class GameRenderer {
 
     public void render(float delta) {
         if (loadingStarted && !menu.isGameStarted()) {
+            loadingIcon.rotateBy(360 * delta);
             loadingTime += delta;
             float progress = Math.min(loadingTime / LOADING_DURATION, 1f);
             loadingBar.setValue(progress);
@@ -1157,6 +1203,13 @@ public class GameRenderer {
         emojiButton.setVisible(false);
         pokerGame.reset();
 
+        // Reset dealing animation state
+        dealingAnimator.reset();
+        dealingAnimationComplete = false;
+        dealingAnimationTimer = 0f;
+
+
+        setupGameUI();
 
         // Important: recreează obiectele necesare când jocul va porni din nou
     }

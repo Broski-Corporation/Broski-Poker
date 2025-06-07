@@ -15,21 +15,29 @@ public class ExitDialog extends Window {
         this.onBackToGame = onBackToGame;
         this.onExitToLobby = onExitToLobby;
 
+        // Titlul centrat
         getTitleLabel().setAlignment(Align.center);
-        setSize(300, 200);
-        centerWindow();
 
+        // Etichetă cu mesaj complet + wrap
         Label message = new Label("Are you sure you want to exit to the lobby?", skin);
+        message.setWrap(true);
         message.setAlignment(Align.center);
+        message.setWidth(400); // sau orice altă lățime care încapă bine
 
+        // Butoane
         TextButton backButton = new TextButton("Back to Game", skin);
         TextButton exitButton = new TextButton("Exit to Lobby", skin);
+        backButton.getLabel().setWrap(true);
+        backButton.getLabel().setAlignment(Align.center);
+
+        exitButton.getLabel().setWrap(true);
+        exitButton.getLabel().setAlignment(Align.center);
 
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 if (onBackToGame != null) onBackToGame.run();
-                setVisible(false);
+                remove();
             }
         });
 
@@ -37,17 +45,23 @@ public class ExitDialog extends Window {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 if (onExitToLobby != null) onExitToLobby.run();
-                setVisible(false);
+                remove();
             }
         });
 
-        // Layout
-        this.add(message).padTop(30);
-        this.row().padTop(30);
+        // Organizare butoane
         Table buttonTable = new Table();
-        buttonTable.add(backButton).padRight(20);
-        buttonTable.add(exitButton);
-        this.add(buttonTable);
+        buttonTable.add(backButton).width(220).height(100).padRight(20);
+        buttonTable.add(exitButton).width(220).height(100);
+
+        // Layout general
+        this.pad(40);
+        this.add(message).width(400).expandX().center().row();
+        this.add(buttonTable).padTop(40).expandX().center();
+
+        // Dimensiune și poziționare
+        setSize(500, 300);
+        centerWindow();
     }
 
     private void centerWindow() {
@@ -56,3 +70,4 @@ public class ExitDialog extends Window {
         this.setPosition(centerX, centerY);
     }
 }
+

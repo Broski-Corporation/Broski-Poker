@@ -454,6 +454,8 @@ public class PokerGame {
             player.resetForNewGame();
         }
 
+
+
         deck.reset(); // reumple și amestecă pachetul
         for (Player player : players) {
             player.resetForNewGame(); // golește mâna, resetează bet-ul și activează jucătorul
@@ -462,6 +464,7 @@ public class PokerGame {
         pot = 0;
         currentPlayerIndex = 0;
         gameState = GameState.BETTING_PRE_FLOP;
+
 
 // Apoi pornești o nouă mână:
         dealHoleCards();

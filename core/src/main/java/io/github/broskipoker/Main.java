@@ -80,4 +80,9 @@ public class Main extends ApplicationAdapter {
         controller.dispose();
         pokerGame = null;
     }
+
+
+    public static void setRenderer(GameRenderer newRenderer) {
+        renderer = newRenderer;
+    }
 }

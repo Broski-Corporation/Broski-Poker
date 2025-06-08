@@ -82,7 +82,7 @@ public class Main extends ApplicationAdapter {
         // Initialize poker game with multiplayer mode
         pokerGame = new PokerGame();
         controller.getRenderer().getBettingUI().setMultiplayerMode(client); // prepare UI for multiplayer
-        pokerGame.startNewHand();
+//        pokerGame.startNewHand(); TODO: should this be called here? it is called in PokerGameMultipleTables as well
     }
 
     public static GameRenderer getRenderer() {

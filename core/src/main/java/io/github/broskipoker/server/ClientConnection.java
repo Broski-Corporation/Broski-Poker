@@ -125,6 +125,17 @@ public class ClientConnection {
         }
     }
 
+    public void requestStartGame() {
+        if (isConnected() && tableCode != null) {
+            StartGameRequest request = new StartGameRequest();
+            request.tableCode = tableCode;
+            client.sendTCP(request);
+            System.out.println("📤 " + username + " requesting to start game for table: " + tableCode);
+        } else {
+            System.out.println("❌ Not connected or no table code - can't start game");
+        }
+    }
+
     private void setupListener() {
         client.addListener(new Listener() {
             @Override
@@ -231,6 +242,15 @@ public class ClientConnection {
 
         System.out.println("📤 " + username + " joining table with code: " + code);
         client.sendTCP(request);
+    }
+
+    public void sendAction(PlayerAction action) {
+        if (isConnected()) {
+            System.out.println("📤 " + username + " sending action: " + action.action);
+            client.sendTCP(action);
+        } else {
+            System.out.println("❌ Not connected - can't send action");
+        }
     }
 
     public void disconnect() {

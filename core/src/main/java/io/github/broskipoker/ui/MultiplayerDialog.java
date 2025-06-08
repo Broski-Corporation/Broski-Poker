@@ -95,7 +95,8 @@ public class MultiplayerDialog extends Dialog {
 
     private void showLobbyAfterCreation(String tableCode, ClientConnection client) {
         // Create lobby panel and add it to the stage
-        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true);
+        String clientUsername = UserService.getInstance().getCurrentUserOrThrow().getUsername();
+        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true, clientUsername);
         lobbyPanel.addPlayer(UserService.getInstance().getCurrentUserOrThrow().getUsername());
         client.setLobbyPanel(lobbyPanel); // Set lobby panel in client
         lobbyPanel.setPosition(
@@ -105,8 +106,9 @@ public class MultiplayerDialog extends Dialog {
 
         // Set callback when game starts
         lobbyPanel.setOnStartGame(() -> {
-            // TODO: Implement game start logic here
-            System.out.println("Starting game with code: " + tableCode);
+            if (client != null) {
+                client.requestStartGame();
+            }
         });
 
         // Set callback when leaving
@@ -124,7 +126,8 @@ public class MultiplayerDialog extends Dialog {
 
     private void showLobbyAfterJoin(String tableCode, ClientConnection client) {
         // Create lobby panel and add it to the stage (not host)
-        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true);
+        String clientUsername = UserService.getInstance().getCurrentUserOrThrow().getUsername();
+        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true, clientUsername);
         lobbyPanel.addPlayer(UserService.getInstance().getCurrentUserOrThrow().getUsername());
         client.setLobbyPanel(lobbyPanel); // Set lobby panel in client
         lobbyPanel.setPosition(

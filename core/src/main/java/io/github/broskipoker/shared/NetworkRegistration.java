@@ -45,5 +45,9 @@ public class NetworkRegistration {
 
         // for refreshing lobby panel
         kryo.register(GameStateRequest.class);
+
+        // start game in lobby label
+        kryo.register(StartGameRequest.class);
+        kryo.register(StartGameResponse.class);
     }
 }

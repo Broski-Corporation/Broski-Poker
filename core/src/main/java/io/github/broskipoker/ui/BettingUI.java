@@ -33,6 +33,8 @@ import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.game.PokerHand;
+import io.github.broskipoker.server.ClientConnection;
+import io.github.broskipoker.shared.PlayerAction;
 import java.util.List;
 
 import java.util.Objects;
@@ -92,11 +94,15 @@ public class BettingUI {
 
     // Constants for UI layout
     private static final int BUTTON_WIDTH = 120;
-    private static final int BUTTON_HEIGHT = 40;
-    private static final int PADDING = 10;
+    private static final int BUTTON_HEIGHT = 40;private static final int PADDING = 10;
+
 
     // Sound manager
     private final SoundManager soundManager = SoundManager.getInstance();
+
+    // Multiplayer
+    private ClientConnection clientConnection;
+    private boolean isMultiplayer = false;
 
     public BettingUI(PokerGame pokerGame, Stage stage, GameRenderer gameRenderer) {
         this(pokerGame, stage, null, gameRenderer);
@@ -149,6 +155,16 @@ public class BettingUI {
 
         // Initially disable betting controls
         setButtonsEnabled(false);
+    }
+
+    public void setMultiplayerMode(ClientConnection clientConnection) {
+        this.clientConnection = clientConnection;
+        this.isMultiplayer = true;
+
+        // Update the betting UI to reflect multiplayer mode
+//        if (clientConnection != null) {
+//            clientConnection.addGameStateListener(this::updateFromServer); // TODO
+//        }
     }
 
     private Skin createSimpleSkin() {
@@ -271,7 +287,14 @@ public class BettingUI {
             public void clicked(InputEvent event, float x, float y) {
                 if (!foldButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
-                    pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
+                    if (isMultiplayer) {
+                        PlayerAction action = new PlayerAction();
+                        action.action = PokerGame.PlayerAction.FOLD;
+                        action.amount = 0;
+                        clientConnection.sendAction(action);
+                    } else {
+                        pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
+                    }
                     setButtonsEnabled(false);
                 }
             }
@@ -283,9 +306,23 @@ public class BettingUI {
                 if (!checkCallButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
                     if (checkCallButton.getText().toString().equals("Check")) {
-                        pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+                        if (isMultiplayer) {
+                            PlayerAction action = new PlayerAction();
+                            action.action = PokerGame.PlayerAction.CHECK;
+                            action.amount = 0;
+                            clientConnection.sendAction(action);
+                        } else {
+                            pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+                        }
                     } else {
-                        pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
+                        if (isMultiplayer) {
+                            PlayerAction action = new PlayerAction();
+                            action.action = PokerGame.PlayerAction.CALL;
+                            action.amount = pokerGame.getCurrentBet() - pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX).getCurrentBet();
+                            clientConnection.sendAction(action);
+                        } else {
+                            pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
+                        }
                     }
                     setButtonsEnabled(false);
                 }
@@ -297,7 +334,14 @@ public class BettingUI {
             public void clicked(InputEvent event, float x, float y) {
                 if (!raiseButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
-                    pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
+                    if (isMultiplayer) {
+                        PlayerAction action = new PlayerAction();
+                        action.action = PokerGame.PlayerAction.RAISE;
+                        action.amount = currentBetAmount;
+                        clientConnection.sendAction(action);
+                    } else {
+                        pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
+                    }
                     setButtonsEnabled(false);
                 }
             }

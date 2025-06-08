@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.Align;
 import io.github.broskipoker.server.ClientConnection;
 import io.github.broskipoker.shared.GameStateUpdate;
 import io.github.broskipoker.shared.PlayerInfo;
-
+import io.github.broskipoker.game.PokerGame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,12 +18,15 @@ public class LobbyPanel extends Dialog {
     private ClientConnection clientConnection;
     private Runnable onStartGame;
     private Runnable onLeaveGame;
-    private boolean isHost;
+    private boolean isHost = false;
+    private String username = "Player";
 
-    public LobbyPanel(String title, Skin skin, String tableCode, ClientConnection clientConnection, boolean isHost) {
+    public LobbyPanel(String title, Skin skin, String tableCode, ClientConnection clientConnection,
+                      boolean isHost, String username) {
         super(title, skin);
         this.clientConnection = clientConnection;
         this.isHost = isHost;
+        this.username = username;
 
         setupDialog();
         clientConnection.addGameStateListener(this::onGameStateUpdate);
@@ -71,7 +74,15 @@ public class LobbyPanel extends Dialog {
         TextButton refreshButton = new TextButton("REFRESH", getSkin());
         TextButton leaveButton = new TextButton("LEAVE", getSkin());
 
-        startButton.setDisabled(!isHost || players.size() < 2);
+        startButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if (onStartGame != null) {
+                    onStartGame.run();
+                }
+            }
+        });
+        startButton.setVisible(false); // Initially hidden
 
         Table buttonTable = new Table();
         buttonTable.add(startButton).padRight(-40);
@@ -158,7 +169,14 @@ public class LobbyPanel extends Dialog {
         for (PlayerInfo player : update.players) {
             updatedPlayers.add(player.name);
         }
-        setPlayers(updatedPlayers);
+        // Show start button only for host when waiting for players with at least 2 players
+        if (update.players.size() > 0) {
+            String firstPlayerName = update.players.get(0).name;
+            isHost = firstPlayerName.equals(username);
+            startButton.setVisible(isHost &&
+                                  update.gameState == PokerGame.GameState.WAITING_FOR_PLAYERS &&
+                                  update.players.size() == 2);
+        }
     }
 
     public void setHost(boolean isHost) {

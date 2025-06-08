@@ -173,6 +173,42 @@ public class PokerServerMultipleTables {
                     }
                     return;
                 }
+
+                if (object instanceof StartGameRequest) {
+                    StartGameRequest req = (StartGameRequest) object;
+                    Table table = tableManager.getTableByCode(req.tableCode);
+
+                    StartGameResponse resp = new StartGameResponse();
+                    if (table != null) {
+                        // Check if this is the host (first player in the table)
+                        if (table.getConnections().get(0) == connection) {
+                            // Start the game
+                            PokerGame pokerGame = table.getPokerGame();
+                            if (pokerGame.getGameState() == PokerGame.GameState.WAITING_FOR_PLAYERS &&
+                                pokerGame.getPlayers().size() >= 2) {
+
+                                pokerGame.startNewHand();
+                                resp.success = true;
+                                resp.message = "Game started successfully";
+
+                                // Broadcast the updated game state to all players
+                                broadcastGameStateToTable(table);
+                            } else {
+                                resp.success = false;
+                                resp.message = "Need at least 2 players to start the game";
+                            }
+                        } else {
+                            resp.success = false;
+                            resp.message = "Only the host can start the game";
+                        }
+                    } else {
+                        resp.success = false;
+                        resp.message = "Table not found";
+                    }
+
+                    connection.sendTCP(resp);
+                    return;
+                }
             }
         });
 

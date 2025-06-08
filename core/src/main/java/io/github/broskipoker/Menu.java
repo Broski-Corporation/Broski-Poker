@@ -68,17 +68,17 @@ public class Menu {
 
         float buttonWidth = Math.min(300, Gdx.graphics.getWidth() * 0.3f);
 
-        table.add(userInfoLabel).width(buttonWidth).padBottom(10);
+        table.add(userInfoLabel).padBottom(10);
         table.row();
         table.add(singleplayerButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(multiplayerButton).width(buttonWidth).padBottom(20);
         table.row();
+        table.add(loginButton).width(buttonWidth).padBottom(20);
+        table.row();
         table.add(friendsButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(settingsButton).width(buttonWidth).padBottom(20);
-        table.row();
-        table.add(loginButton).width(buttonWidth).padBottom(20);
         table.row();
         table.add(exitButton).width(buttonWidth);
 
@@ -187,7 +187,8 @@ public class Menu {
     private void updateLoginState() {
         if (userService.isLoggedIn()) {
             User user = userService.getCurrentUser().get();
-            userInfoLabel.setText("Welcome, " + user.getUsername() + " | Chips: " + user.getChips());
+//            userInfoLabel.setText("Welcome, " + user.getUsername() + " | Chips: " + user.getChips());
+            userInfoLabel.setText("Welcome, " + user.getUsername()); // user chips reset after every game
             loginButton.setText("Logout");
         } else {
             userInfoLabel.setText("");

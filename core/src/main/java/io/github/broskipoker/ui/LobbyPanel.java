@@ -74,8 +74,8 @@ public class LobbyPanel extends Dialog {
         startButton.setDisabled(!isHost || players.size() < 2);
 
         Table buttonTable = new Table();
-        buttonTable.add(startButton).padRight(5);
-        buttonTable.add(refreshButton).padRight(5);
+        buttonTable.add(startButton).padRight(-40);
+        buttonTable.add(refreshButton).padRight(-40);
         buttonTable.add(leaveButton);
 
         content.add(buttonTable).center();

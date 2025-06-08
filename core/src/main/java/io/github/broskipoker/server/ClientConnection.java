@@ -161,18 +161,16 @@ public class ClientConnection {
         }
         else if (object instanceof GameStateUpdate) {
             GameStateUpdate update = (GameStateUpdate) object;
+            System.out.println("📥 Received GameStateUpdate with " + update.players.size() + " players");
 
             // notify all registered listeners about the game state update
             for(Consumer<GameStateUpdate> listener : gameStateListeners) {
                 listener.accept(update);
             }
 
-            // also update the lobby panel if it exists
-            if (update.players.size() > 1) {
-                // Update the lobby with the new game state
-                if (lobbyPanel != null) {
-                    lobbyPanel.onGameStateUpdate(update);
-                }
+            // Always update the lobby panel regardless of player count
+            if (lobbyPanel != null) {
+                lobbyPanel.onGameStateUpdate(update);
             }
         }
         else if (object instanceof JoinTableResponse) {
@@ -183,12 +181,12 @@ public class ClientConnection {
                 System.out.println("❌ " + username + " failed to join table: " + resp.failReason);
             }
         }
-        else if (object instanceof GameStateUpdate) {
-            GameStateUpdate update = (GameStateUpdate) object;
-            if (update.players.size() > 1 ) {
-//                TODO:
-            }
-        }
+//        else if (object instanceof GameStateUpdate) {
+//            GameStateUpdate update = (GameStateUpdate) object;
+//            if (update.players.size() > 1 ) {
+////                TODO:
+//            }
+//        }
         else if (object instanceof LoginResponse) {
             LoginResponse resp = (LoginResponse) object;
             if (resp.success) {
@@ -199,7 +197,7 @@ public class ClientConnection {
         }
     }
 
-    private void setLobbyPanel(LobbyPanel lobbyPanel)
+    public void setLobbyPanel(LobbyPanel lobbyPanel)
     {
         this.lobbyPanel = lobbyPanel;
     }

@@ -155,6 +155,24 @@ public class PokerServerMultipleTables {
                     broadcastGameStateToTable(table);
                     return;
                 }
+
+                // Handle game state refresh requests
+                if (object instanceof GameStateRequest) {
+                    GameStateRequest req = (GameStateRequest) object;
+                    System.out.println("Server received GameStateRequest for table: " + req.tableCode);
+
+                    // Find the table by code
+                    Table table = tableManager.getTableByCode(req.tableCode);
+
+                    if (table != null) {
+                        // Send game state to the requesting player
+                        sendGameStateToPlayer(table, connection);
+                        System.out.println("Server sent GameStateUpdate for table: " + req.tableCode);
+                    } else {
+                        System.out.println("Table not found for code: " + req.tableCode);
+                    }
+                    return;
+                }
             }
         });
 

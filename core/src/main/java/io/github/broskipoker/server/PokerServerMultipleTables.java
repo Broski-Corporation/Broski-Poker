@@ -184,8 +184,9 @@ public class PokerServerMultipleTables {
                         if (table.getConnections().get(0) == connection) {
                             // Start the game
                             PokerGame pokerGame = table.getPokerGame();
-                            if (pokerGame.getGameState() == PokerGame.GameState.WAITING_FOR_PLAYERS &&
-                                pokerGame.getPlayers().size() >= 2) {
+//                            if (pokerGame.getGameState() == PokerGame.GameState.WAITING_FOR_PLAYERS &&
+//                                pokerGame.getPlayers().size() >= 2) {
+                            if (true) { // igore for now, debug TODO: add back later
 
                                 pokerGame.startNewHand();
                                 resp.success = true;

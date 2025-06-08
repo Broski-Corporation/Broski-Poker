@@ -68,12 +68,14 @@ public class LobbyPanel extends Dialog {
 
     private void createButtons(Table content) {
         startButton = new TextButton("START", getSkin());
+        TextButton refreshButton = new TextButton("REFRESH", getSkin());
         TextButton leaveButton = new TextButton("LEAVE", getSkin());
 
         startButton.setDisabled(!isHost || players.size() < 2);
 
         Table buttonTable = new Table();
-        buttonTable.add(startButton).width(150).padRight(30);
+        buttonTable.add(startButton).width(150).padRight(10);
+        buttonTable.add(refreshButton).width(150).padRight(10);
         buttonTable.add(leaveButton).width(150);
 
         content.add(buttonTable).center();
@@ -86,6 +88,13 @@ public class LobbyPanel extends Dialog {
             }
         });
 
+        refreshButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                refreshGameState();
+            }
+        });
+
         leaveButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -95,6 +104,14 @@ public class LobbyPanel extends Dialog {
             }
         });
     }
+
+    public void refreshGameState() {
+        if (clientConnection != null && clientConnection.isConnected()) {
+            clientConnection.requestGameStateUpdate();
+        }
+    }
+
+
 
     private void updatePlayerDisplay() {
         for (int i = 0; i < 5; i++) {

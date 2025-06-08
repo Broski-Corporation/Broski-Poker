@@ -116,6 +116,15 @@ public class ClientConnection {
         gameStateListeners.add(listener);
     }
 
+    public void requestGameStateUpdate() {
+        if (isConnected()) {
+            GameStateRequest request = new GameStateRequest();
+            request.tableCode = tableCode;
+            client.sendTCP(request);
+            System.out.println("📤 " + username + " requesting game state update for table: " + tableCode);
+        }
+    }
+
     private void setupListener() {
         client.addListener(new Listener() {
             @Override

@@ -126,6 +126,13 @@ public class MultiplayerDialog extends Dialog {
         // Create lobby panel and add it to the stage (not host)
         LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true);
         lobbyPanel.addPlayer(UserService.getInstance().getCurrentUserOrThrow().getUsername());
+
+        lobbyPanel.setPosition(
+            (getStage().getWidth() - lobbyPanel.getWidth()) / 2 - 670,
+            (getStage().getHeight() - lobbyPanel.getHeight()) / 2 - 70
+        );
+
+
         // Set callback when leaving
         lobbyPanel.setOnLeaveGame(() -> {
             System.out.println("Leaving lobby with code: " + tableCode);

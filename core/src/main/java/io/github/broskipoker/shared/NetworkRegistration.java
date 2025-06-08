@@ -43,6 +43,7 @@ public class NetworkRegistration {
         // Server registration
         kryo.register(PokerServerMultipleTables.class);
 
-
+        // for refreshing lobby panel
+        kryo.register(GameStateRequest.class);
     }
 }

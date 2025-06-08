@@ -130,10 +130,6 @@ public class LobbyPanel extends Dialog {
             text += (i < players.size()) ? players.get(i) : "NOT JOINED";
             playerLabels[i].setText(text);
         }
-
-        if (startButton != null) {
-            startButton.setDisabled(!isHost || players.size() < 2);
-        }
     }
 
     // Public API methods
@@ -169,13 +165,16 @@ public class LobbyPanel extends Dialog {
         for (PlayerInfo player : update.players) {
             updatedPlayers.add(player.name);
         }
+        setPlayers(updatedPlayers);
+
         // Show start button only for host when waiting for players with at least 2 players
         if (update.players.size() > 0) {
             String firstPlayerName = update.players.get(0).name;
             isHost = firstPlayerName.equals(username);
-            startButton.setVisible(isHost &&
-                                  update.gameState == PokerGame.GameState.WAITING_FOR_PLAYERS &&
-                                  update.players.size() == 2);
+//            startButton.setVisible(isHost &&
+//                                  update.gameState == PokerGame.GameState.WAITING_FOR_PLAYERS &&
+//                                  update.players.size() >= 2);
+                startButton.setVisible(isHost && update.players.size() >= 2); // TODO gamestate is not waiting for players
         }
     }
 

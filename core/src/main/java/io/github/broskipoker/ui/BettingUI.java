@@ -94,7 +94,8 @@ public class BettingUI {
 
     // Constants for UI layout
     private static final int BUTTON_WIDTH = 120;
-    private static final int BUTTON_HEIGHT = 40;private static final int PADDING = 10;
+    private static final int BUTTON_HEIGHT = 40;
+    private static final int PADDING = 10;
 
 
     // Sound manager

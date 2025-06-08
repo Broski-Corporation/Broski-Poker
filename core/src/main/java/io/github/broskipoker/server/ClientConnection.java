@@ -3,12 +3,15 @@ package io.github.broskipoker.server;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
+import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.shared.*;
 import io.github.broskipoker.ui.LobbyPanel;
-
+import java.util.List;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class ClientConnection {
 
@@ -31,7 +34,7 @@ public class ClientConnection {
     private boolean automaticMode = false;
     private Random random = new Random();
 
-
+    private List<Consumer<GameStateUpdate>> gameStateListeners = new ArrayList<>();
 
     public ClientConnection(String username) {
         this.username = username;
@@ -109,6 +112,10 @@ public class ClientConnection {
         updateThread.start();
     }
 
+    public void addGameStateListener(Consumer<GameStateUpdate> listener) {
+        gameStateListeners.add(listener);
+    }
+
     private void setupListener() {
         client.addListener(new Listener() {
             @Override
@@ -145,6 +152,13 @@ public class ClientConnection {
         }
         else if (object instanceof GameStateUpdate) {
             GameStateUpdate update = (GameStateUpdate) object;
+
+            // notify all registered listeners about the game state update
+            for(Consumer<GameStateUpdate> listener : gameStateListeners) {
+                listener.accept(update);
+            }
+
+            // also update the lobby panel if it exists
             if (update.players.size() > 1) {
                 // Update the lobby with the new game state
                 if (lobbyPanel != null) {

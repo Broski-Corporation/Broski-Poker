@@ -24,7 +24,7 @@ public class MultiplayerDialog extends Dialog {
     private void createMultiplayerForm() {
         // Create form elements
         tableCodeField = new TextField("", getSkin());
-        tableCodeField.setMessageText("Enter table code");
+        tableCodeField.setMessageText("Table code");
 
         statusLabel = new Label("", getSkin());
         statusLabel.setColor(1, 0, 0, 1); // Red color for error messages
@@ -36,8 +36,21 @@ public class MultiplayerDialog extends Dialog {
 
         // Layout the dialog
         getContentTable().pad(30); // Add the padding
-        getContentTable().add(new Label("Table Code:", getSkin())).padRight(10);
-        getContentTable().add(tableCodeField).width(250).padBottom(20);
+
+        // Create a container table for horizontal alignment
+        Table inputContainer = new Table();
+
+        // Input label with right alignment
+        Label codeLabel = new Label("TABLE CODE:", getSkin());
+        codeLabel.setAlignment(com.badlogic.gdx.utils.Align.right);
+        inputContainer.add(codeLabel).width(120).padRight(15).right();
+
+        // Input field
+        tableCodeField.setAlignment(com.badlogic.gdx.utils.Align.center);
+        inputContainer.add(tableCodeField).width(250).height(40).left();
+
+        // Add the container to content table with padding
+        getContentTable().add(inputContainer).fillX().padBottom(25).colspan(2);
         getContentTable().row();
 
         getContentTable().add(statusLabel).colspan(2).padBottom(20);
@@ -82,8 +95,13 @@ public class MultiplayerDialog extends Dialog {
 
     private void showLobbyAfterCreation(String tableCode, ClientConnection client) {
         // Create lobby panel and add it to the stage
-        LobbyPanel lobbyPanel = new LobbyPanel(getSkin(), tableCode, client, true);
+        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true);
         lobbyPanel.addPlayer(UserService.getInstance().getCurrentUserOrThrow().getUsername());
+
+        lobbyPanel.setPosition(
+            (getStage().getWidth() - lobbyPanel.getWidth()) / 2 - 670,
+            (getStage().getHeight() - lobbyPanel.getHeight()) / 2 - 70
+        );
 
         // Set callback when game starts
         lobbyPanel.setOnStartGame(() -> {
@@ -106,9 +124,8 @@ public class MultiplayerDialog extends Dialog {
 
     private void showLobbyAfterJoin(String tableCode, ClientConnection client) {
         // Create lobby panel and add it to the stage (not host)
-        LobbyPanel lobbyPanel = new LobbyPanel(getSkin(), tableCode, client, false);
+        LobbyPanel lobbyPanel = new LobbyPanel("Game Lobby", getSkin(), tableCode, client, true);
         lobbyPanel.addPlayer(UserService.getInstance().getCurrentUserOrThrow().getUsername());
-
         // Set callback when leaving
         lobbyPanel.setOnLeaveGame(() -> {
             System.out.println("Leaving lobby with code: " + tableCode);
@@ -131,103 +148,215 @@ public class MultiplayerDialog extends Dialog {
             return;
         }
 
+        // Disable buttons during loading
+        joinButton.setDisabled(true);
+        createButton.setDisabled(true);
+
+        // Initial status
         statusLabel.setText("Joining table...");
-        statusLabel.setColor(0, 1, 0, 1); // Green color for success
+        statusLabel.setColor(0.2f, 0.6f, 1f, 1); // Blue color for loading
 
-        // Create client connection and attempt to join
-        ClientConnection client = new ClientConnection(UserService.getInstance().getCurrentUserOrThrow().getUsername());
-        try {
-            client.connect();
-            Thread.sleep(1000); // Simulate network delay
-            if (!client.isConnected()) {
-                statusLabel.setText("Failed to connect to server!");
-                statusLabel.setColor(1, 0, 0, 1);
-                return;
-            }
-
-            // Attempt to join the table
-            client.joinTable(tableCode, 10000);
-            Thread.sleep(2000); // Wait for join response
-
-            client.setTableCode(tableCode); // Set the table code in client
-
-            // Check if join was successful (you'll need to implement this check based on your ClientConnection)
-            if (isJoinSuccessful(client, tableCode)) {
-                statusLabel.setText("Successfully joined table!");
-                statusLabel.setColor(0, 1, 0, 1);
-
-                // Delay hiding the dialog to show success message
-                addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
-                    com.badlogic.gdx.scenes.scene2d.actions.Actions.delay(1f),
+        // Add loading animation using actions
+        statusLabel.clearActions();
+        statusLabel.addAction(
+            com.badlogic.gdx.scenes.scene2d.actions.Actions.forever(
+                com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
                     com.badlogic.gdx.scenes.scene2d.actions.Actions.run(() -> {
-                        hide();
-                        showLobbyAfterJoin(tableCode, client);
-                        if (onJoinTableSuccess != null) {
-                            onJoinTableSuccess.run();
+                        String text = statusLabel.getText().toString();
+                        if (text.endsWith("...")) {
+                            statusLabel.setText("Joining table");
+                        } else {
+                            statusLabel.setText(text + ".");
                         }
-                    })
-                ));
-            } else {
-                statusLabel.setText("Failed to join table - table not found or full");
-                statusLabel.setColor(1, 0, 0, 1);
-                tableCodeField.setText(""); // Clear code field
-            }
+                    }),
+                    com.badlogic.gdx.scenes.scene2d.actions.Actions.delay(0.5f)
+                )
+            )
+        );
 
-        } catch (Exception e) {
-            statusLabel.setText("Failed to join table: " + e.getMessage());
-            statusLabel.setColor(1, 0, 0, 1);
-            tableCodeField.setText(""); // Clear code field
-        }
+        // Run in a separate thread to avoid blocking UI
+        new Thread(() -> {
+            ClientConnection client = new ClientConnection(UserService.getInstance().getCurrentUserOrThrow().getUsername());
+            try {
+                client.connect();
+                Thread.sleep(1000); // Network connection delay
+
+                if (!client.isConnected()) {
+                    updateUIThreadSafe(() -> {
+                        statusLabel.clearActions();
+                        statusLabel.setText("Failed to connect to server!");
+                        statusLabel.setColor(1, 0, 0, 1);
+                        joinButton.setDisabled(false);
+                        createButton.setDisabled(false);
+                    });
+                    return;
+                }
+
+                // Attempt to join the table
+                client.joinTable(tableCode, 10000);
+                Thread.sleep(2000); // Wait for join response
+
+                client.setTableCode(tableCode); // Set the table code in client
+                final ClientConnection finalClient = client;
+
+                // Check if join was successful
+                if (isJoinSuccessful(client, tableCode)) {
+                    updateUIThreadSafe(() -> {
+                        statusLabel.clearActions();
+                        statusLabel.setText("Successfully joined table!");
+                        statusLabel.setColor(0, 1, 0, 1);
+
+                        // Delay hiding the dialog to show success message
+                        addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
+                            com.badlogic.gdx.scenes.scene2d.actions.Actions.delay(1f),
+                            com.badlogic.gdx.scenes.scene2d.actions.Actions.run(() -> {
+                                hide();
+                                showLobbyAfterJoin(tableCode, finalClient);
+                                if (onJoinTableSuccess != null) {
+                                    onJoinTableSuccess.run();
+                                }
+                            })
+                        ));
+                    });
+                } else {
+                    updateUIThreadSafe(() -> {
+                        statusLabel.clearActions();
+                        statusLabel.setText("Failed to join table - table not found or full");
+                        statusLabel.setColor(1, 0, 0, 1);
+                        tableCodeField.setText(""); // Clear code field
+                        joinButton.setDisabled(false);
+                        createButton.setDisabled(false);
+                    });
+                }
+            } catch (Exception e) {
+                updateUIThreadSafe(() -> {
+                    statusLabel.clearActions();
+                    statusLabel.setText("Failed to join table: " + e.getMessage());
+                    statusLabel.setColor(1, 0, 0, 1);
+                    tableCodeField.setText(""); // Clear code field
+                    joinButton.setDisabled(false);
+                    createButton.setDisabled(false);
+                });
+            }
+        }).start();
     }
 
     private void handleCreateTable() {
+        // Disable buttons during loading
+        joinButton.setDisabled(true);
+        createButton.setDisabled(true);
+
+        // Initial status
         statusLabel.setText("Creating new table...");
-        statusLabel.setColor(0, 1, 0, 1); // Green color for success
+        statusLabel.setColor(0.2f, 0.6f, 1f, 1); // Blue color for loading
 
-        ClientConnection client = new ClientConnection(UserService.getInstance().getCurrentUserOrThrow().getUsername());
-        try {
-            client.connect();
-            Thread.sleep(1000); // Simulate network delay
-            if (!client.isConnected()) {
-                System.out.println("❌ Failed to connect to server!");
-                statusLabel.setText("Failed to connect to server!");
-                statusLabel.setColor(1, 0, 0, 1);
-                return;
-            }
-
-            client.createTable(50, 100, 10000); // Example blinds and chips
-            Thread.sleep(3000); // Wait for table creation response
-
-            if (client.getTableCode() != null) {
-                System.out.println("✅ Your table code is: " + client.getTableCode());
-                System.out.println("Share this code with other players to join!");
-
-                // Show the generated table code
-                statusLabel.setText("Table created! Code: " + client.getTableCode());
-                tableCodeField.setText(client.getTableCode());
-
-                // Delay hiding the dialog to show success message
-                addAction(com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
-                    com.badlogic.gdx.scenes.scene2d.actions.Actions.delay(2f),
+        // Add loading animation using actions
+        statusLabel.clearActions();
+        statusLabel.addAction(
+            com.badlogic.gdx.scenes.scene2d.actions.Actions.forever(
+                com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence(
                     com.badlogic.gdx.scenes.scene2d.actions.Actions.run(() -> {
-                        hide();
-                        showLobbyAfterCreation(client.getTableCode(), client);
-                        if (onCreateTableSuccess != null) {
-                            onCreateTableSuccess.run();
+                        String text = statusLabel.getText().toString();
+                        if (text.endsWith("...")) {
+                            statusLabel.setText("Creating new table");
+                        } else {
+                            statusLabel.setText(text + ".");
                         }
-                    })
-                ));
-            } else {
-                System.out.println("❌ Table creation failed or timed out");
-                statusLabel.setText("❌ Table creation failed or timed out");
-                statusLabel.setColor(1, 0, 0, 1);
-                return;
+                    }),
+                    com.badlogic.gdx.scenes.scene2d.actions.Actions.delay(0.5f)
+                )
+            )
+        );
+
+        // Run in a separate thread to avoid blocking UI
+        new Thread(() -> {
+            ClientConnection client = new ClientConnection(UserService.getInstance().getCurrentUserOrThrow().getUsername());
+            try {
+                client.connect();
+                Thread.sleep(1000); // Network connection delay
+
+                if (!client.isConnected()) {
+                    updateUIThreadSafe(() -> {
+                        statusLabel.clearActions();
+                        statusLabel.setText("Failed to connect to server!");
+                        statusLabel.setColor(1, 0, 0, 1);
+                        joinButton.setDisabled(false);
+                        createButton.setDisabled(false);
+                    });
+                    return;
+                }
+
+                client.createTable(50, 100, 10000);
+                Thread.sleep(3000); // Wait for response
+
+                final ClientConnection finalClient = client;
+                updateUIThreadSafe(() -> {
+                    statusLabel.clearActions();
+
+                    if (finalClient.getTableCode() != null) {
+                        // Success case
+                        statusLabel.setText("Table created!");
+                        statusLabel.setColor(0, 1, 0, 1);
+                        tableCodeField.setText(finalClient.getTableCode());
+
+                        // Replace buttons
+                        getButtonTable().clear();
+                        TextButton proceedButton = new TextButton("Continue to Lobby", getSkin());
+                        TextButton copyButton = new TextButton("Copy Code", getSkin());
+                        TextButton cancelButton = new TextButton("Cancel", getSkin());
+
+                        getButtonTable().add(copyButton).padRight(10);
+                        getButtonTable().add(proceedButton).padRight(10);
+                        getButtonTable().add(cancelButton);
+
+                        copyButton.addListener(new ChangeListener() {
+                            @Override
+                            public void changed(ChangeEvent event, Actor actor) {
+                                com.badlogic.gdx.Gdx.app.getClipboard().setContents(tableCodeField.getText());
+                                statusLabel.setText("Code copied to clipboard!");
+                                statusLabel.setColor(0, 1, 0, 1);
+                            }
+                        });
+
+                        proceedButton.addListener(new ChangeListener() {
+                            @Override
+                            public void changed(ChangeEvent event, Actor actor) {
+                                hide();
+                                showLobbyAfterCreation(finalClient.getTableCode(), finalClient);
+                                if (onCreateTableSuccess != null) {
+                                    onCreateTableSuccess.run();
+                                }
+                            }
+                        });
+
+                        cancelButton.addListener(new ChangeListener() {
+                            @Override
+                            public void changed(ChangeEvent event, Actor actor) {
+                                hide();
+                            }
+                        });
+                    } else {
+                        statusLabel.setText("Table creation failed or timed out");
+                        statusLabel.setColor(1, 0, 0, 1);
+                        joinButton.setDisabled(false);
+                        createButton.setDisabled(false);
+                    }
+                });
+            } catch (Exception e) {
+                updateUIThreadSafe(() -> {
+                    statusLabel.clearActions();
+                    statusLabel.setText("Failed to connect to server: " + e.getMessage());
+                    statusLabel.setColor(1, 0, 0, 1);
+                    joinButton.setDisabled(false);
+                    createButton.setDisabled(false);
+                });
             }
-        } catch (Exception e) {
-            statusLabel.setText("Failed to connect to server: " + e.getMessage());
-            statusLabel.setColor(1, 0, 0, 1);
-            return;
-        }
+        }).start();
+    }
+
+    // Helper method to update UI from background thread
+    private void updateUIThreadSafe(Runnable runnable) {
+        com.badlogic.gdx.Gdx.app.postRunnable(runnable);
     }
 
     // Helper method to check if join was successful

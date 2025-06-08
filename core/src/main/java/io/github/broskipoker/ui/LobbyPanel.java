@@ -18,6 +18,7 @@ public class LobbyPanel extends Dialog {
     private ClientConnection clientConnection;
     private Runnable onStartGame;
     private Runnable onLeaveGame;
+    private Runnable gameStartedCallback;
     private boolean isHost = false;
     private String username = "Player";
 
@@ -122,7 +123,11 @@ public class LobbyPanel extends Dialog {
         }
     }
 
-
+    public void onGameStarted() {
+        if (gameStartedCallback != null) {
+            gameStartedCallback.run();
+        }
+    }
 
     private void updatePlayerDisplay() {
         for (int i = 0; i < 5; i++) {
@@ -160,6 +165,8 @@ public class LobbyPanel extends Dialog {
         this.onLeaveGame = callback;
     }
 
+
+
     public void onGameStateUpdate(GameStateUpdate update) {
         List<String> updatedPlayers = new ArrayList<>();
         for (PlayerInfo player : update.players) {
@@ -181,5 +188,9 @@ public class LobbyPanel extends Dialog {
     public void setHost(boolean isHost) {
         this.isHost = isHost;
         updatePlayerDisplay();
+    }
+
+    public void setOnGameStarted(Runnable callback) {
+        this.gameStartedCallback = callback;
     }
 }

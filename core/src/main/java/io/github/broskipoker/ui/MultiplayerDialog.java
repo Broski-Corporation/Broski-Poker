@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import io.github.broskipoker.server.ClientConnection;
 import io.github.broskipoker.utils.UserService;
+import io.github.broskipoker.Main;
 
 public class MultiplayerDialog extends Dialog {
     private TextField tableCodeField;
@@ -111,6 +112,15 @@ public class MultiplayerDialog extends Dialog {
             }
         });
 
+        // Add this callback for when the game actually starts
+        lobbyPanel.setOnGameStarted(() -> {
+            // Hide the lobby/dialog
+            hide();
+
+            // Start the actual game with the client connection
+            Main.getInstance().startMultiplayerGame(client);
+        });
+
         // Set callback when leaving
         lobbyPanel.setOnLeaveGame(() -> {
             System.out.println("Leaving lobby with code: " + tableCode);
@@ -135,6 +145,14 @@ public class MultiplayerDialog extends Dialog {
             (getStage().getHeight() - lobbyPanel.getHeight()) / 2 - 70
         );
 
+        // Add this callback for when the game actually starts
+        lobbyPanel.setOnGameStarted(() -> {
+            // Hide the lobby/dialog
+            hide();
+
+            // Start the actual game with the client connection
+            Main.getInstance().startMultiplayerGame(client);
+        });
 
         // Set callback when leaving
         lobbyPanel.setOnLeaveGame(() -> {

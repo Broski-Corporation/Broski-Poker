@@ -232,4 +232,12 @@ public class GameController extends InputAdapter {
     public void dispose() {
         // Nothing to dispose
     }
+
+    public PokerGame getPokerGame() {
+        return pokerGame;
+    }
+
+    public GameRenderer getRenderer() {
+        return renderer;
+    }
 }

@@ -21,8 +21,10 @@ import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.ui.GameController;
 import io.github.broskipoker.ui.GameRenderer;
 import io.github.broskipoker.utils.DatabaseConnection;
+import io.github.broskipoker.server.ClientConnection;
 
 public class Main extends ApplicationAdapter {
+    private static Main instance;
     private PokerGame pokerGame;
     private static GameRenderer renderer;
     private GameController controller;
@@ -33,8 +35,13 @@ public class Main extends ApplicationAdapter {
         databaseConnection = DatabaseConnection.getInstance();
     }
 
+    public static Main getInstance() {
+        return instance;
+    }
+
     @Override
     public void create() {
+        instance = this;
 
         // Initialize core components
         pokerGame = new PokerGame();
@@ -70,8 +77,24 @@ public class Main extends ApplicationAdapter {
         renderer.resize(width, height);
     }
 
+    public void startMultiplayerGame(ClientConnection client) {
+        // Hide menu/lobby
+        // Initialize poker game with multiplayer mode
+        pokerGame = new PokerGame();
+        controller.getRenderer().getBettingUI().setMultiplayerMode(client); // prepare UI for multiplayer
+        pokerGame.startNewHand();
+    }
+
     public static GameRenderer getRenderer() {
         return renderer;
+    }
+
+    public PokerGame getPokerGame() {
+        return pokerGame;
+    }
+
+    public GameController getController() {
+        return controller;
     }
 
     @Override
@@ -79,5 +102,6 @@ public class Main extends ApplicationAdapter {
         renderer.dispose();
         controller.dispose();
         pokerGame = null;
+        instance = null;
     }
 }

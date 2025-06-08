@@ -206,6 +206,20 @@ public class ClientConnection {
                 System.out.println("❌ " + username + " login failed: " + resp.message);
             }
         }
+        // In ClientConnection.java, add to the handleServerMessage method
+        else if (object instanceof StartGameResponse) {
+            StartGameResponse resp = (StartGameResponse) object;
+            if (resp.success) {
+                System.out.println("✅ Game started successfully: " + resp.message);
+                // Notify the game that it should transition to gameplay
+                if (lobbyPanel != null) {
+                    lobbyPanel.onGameStarted();
+                }
+            } else {
+                System.out.println("❌ Failed to start game: " + resp.message);
+                // Optionally show an error message in the UI
+            }
+        }
     }
 
     public void setLobbyPanel(LobbyPanel lobbyPanel)

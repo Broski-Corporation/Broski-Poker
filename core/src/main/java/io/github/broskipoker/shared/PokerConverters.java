@@ -18,6 +18,12 @@ public class PokerConverters {
         return info;
     }
 
+    // CardInfo -> Card
+    public static Card fromCardInfo(CardInfo info) {
+        if (info == null) return null;
+        return new Card(info.suit, info.rank);
+    }
+
     // List<Card> -> List<CardInfo>
     public static List<CardInfo> toCardInfoList(List<Card> cards) {
         if (cards == null) return null;

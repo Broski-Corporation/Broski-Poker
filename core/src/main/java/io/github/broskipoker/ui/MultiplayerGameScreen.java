@@ -161,6 +161,10 @@ public class MultiplayerGameScreen implements Screen {
         return gameRenderer;
     }
 
+    public GameController getGameController() {
+        return gameController;
+    }
+
     public ClientConnection getClientConnection() {
         return clientConnection;
     }

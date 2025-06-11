@@ -1,5 +1,6 @@
 package io.github.broskipoker.server;
 
+import com.badlogic.gdx.Gdx;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -206,14 +207,15 @@ public class ClientConnection {
                 System.out.println("❌ " + username + " login failed: " + resp.message);
             }
         }
-        // In ClientConnection.java, add to the handleServerMessage method
         else if (object instanceof StartGameResponse) {
             StartGameResponse resp = (StartGameResponse) object;
             if (resp.success) {
                 System.out.println("✅ Game started successfully: " + resp.message);
                 // Notify the game that it should transition to gameplay
                 if (lobbyPanel != null) {
-                    lobbyPanel.onGameStarted();
+                    Gdx.app.postRunnable(() -> {
+                       lobbyPanel.onGameStarted();
+                    });
                 }
             } else {
                 System.out.println("❌ Failed to start game: " + resp.message);
@@ -308,3 +310,4 @@ public class ClientConnection {
         this.tableCode = tableCode;
     }
 }
+

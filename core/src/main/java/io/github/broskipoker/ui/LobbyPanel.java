@@ -1,5 +1,6 @@
 package io.github.broskipoker.ui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -125,8 +126,14 @@ public class LobbyPanel extends Dialog {
 
     public void onGameStarted() {
         if (gameStartedCallback != null) {
-            gameStartedCallback.run();
+            System.out.println("Running gameStartedCallback.");
+            // ensure we run on main thread so we don't get opengl seg fault
+            Gdx.app.postRunnable(() -> {
+                gameStartedCallback.run();
+            });
         }
+        // hide the lobby panel
+        hide();
     }
 
     private void updatePlayerDisplay() {
@@ -181,7 +188,7 @@ public class LobbyPanel extends Dialog {
 //            startButton.setVisible(isHost &&
 //                                  update.gameState == PokerGame.GameState.WAITING_FOR_PLAYERS &&
 //                                  update.players.size() >= 2);
-                startButton.setVisible(isHost && update.players.size() >= 2); // TODO gamestate is not waiting for players
+                startButton.setVisible(isHost && update.players.size() >= 1); // TODO gamestate is not waiting for players
         }
     }
 
@@ -194,3 +201,4 @@ public class LobbyPanel extends Dialog {
         this.gameStartedCallback = callback;
     }
 }
+

@@ -8,9 +8,8 @@ buildscript {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
   }
+
   dependencies {
-
-
   }
 }
 
@@ -54,6 +53,16 @@ configure(subprojects) {
   compileJava {
     options.incremental = true
   }
+
+  dependencies {
+    // Necesar pentru teste Broski-Poker/core/src/test/java/io/github/broskipoker/game/tests/PokerGameTest.java
+    // pwp de la Rares daca nu mai merge codu'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+    testImplementation 'org.mockito:mockito-core:5.12.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+  }
 }
 
 subprojects {
@@ -70,4 +79,6 @@ subprojects {
   }
 }
 
+
 eclipse.project.name = 'BroskiPoker' + '-parent'
+

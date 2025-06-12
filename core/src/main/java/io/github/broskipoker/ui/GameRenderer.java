@@ -1138,6 +1138,10 @@ public class GameRenderer {
         return bettingUI;
     }
 
+    public boolean isMultiplayer() {
+        return isMultiplayer;
+    }
+
     public void dispose() {
         batch.dispose();
         stage.dispose();

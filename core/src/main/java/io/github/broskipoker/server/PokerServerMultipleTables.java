@@ -195,7 +195,7 @@ public class PokerServerMultipleTables {
                                 // send startgame response to all players
                                 for (Connection playerConnection : table.getConnections()) {
                                     System.out.println("Sending StartGameResponse to player: " + playerConnection.getID()
-                                        + " table has " + table.getConnections().size() + " connected players");
+                                        + ", table has " + table.getConnections().size() + " connected players");
                                     StartGameResponse playerResponse = new StartGameResponse();
                                     playerResponse.success = true;
                                     playerResponse.message = "Game started successfully";

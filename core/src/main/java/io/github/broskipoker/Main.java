@@ -102,6 +102,8 @@ public class Main extends ApplicationAdapter {
         Gdx.input.setInputProcessor(null);
         pokerGame = multiplayerGameScreen.getPokerGame();
         renderer = multiplayerGameScreen.getGameRenderer();
+        // hide the menu
+        renderer.setMenuStarted(true);
         controller = multiplayerGameScreen.getGameController();
         Gdx.input.setInputProcessor(renderer.getStage());
         client.requestGameStateUpdate();

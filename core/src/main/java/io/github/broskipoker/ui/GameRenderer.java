@@ -1112,6 +1112,12 @@ public class GameRenderer {
         };
     }
 
+    public void setMenuStarted(boolean started) {
+        if (menu != null) {
+            menu.setGameStarted(started);
+        }
+    }
+
     public Stage getStage() {
         return stage;
     }

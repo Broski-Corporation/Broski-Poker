@@ -32,17 +32,25 @@ public class MultiplayerGameScreen implements Screen {
         this.stage = new Stage(new ScreenViewport(), batch);
         Gdx.input.setInputProcessor(stage);
 
+        // get username from client connection
+        String username = clientConnection.getUsername();
+
         // Create a placeholder PokerGame for initial rendering
         this.pokerGame = new PokerGame();
         this.gameRenderer = new GameRenderer(pokerGame);
+        this.gameRenderer.setMultiplayerMode(clientConnection, username);
         this.gameController = new GameController(pokerGame, gameRenderer);
         this.gameRenderer.setGameController(gameController);
+        // hide the menu
+        this.gameRenderer.setMenuStarted(true);
 
         // Register as listener for game state updates
         clientConnection.addGameStateListener(this::onGameStateUpdate);
 
         // Request initial game state
         clientConnection.requestGameStateUpdate();
+
+        System.out.println("MultiplayerGameScreen initialized with username: " + username + "and table code: " + tableCode);
     }
 
     private void onGameStateUpdate(GameStateUpdate update) {

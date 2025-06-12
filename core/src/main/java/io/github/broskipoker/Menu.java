@@ -206,6 +206,43 @@ public class Menu {
         return gameStarted;
     }
 
+    public void setGameStarted(boolean started) {
+        this.gameStarted = started;
+
+        // hide the menu if the game has started
+        if (started) {
+            // hide buttons
+            for (TextButton button : getButtons()) {
+                button.setVisible(false);
+            }
+
+            // hide background
+            if (backgroundImage != null) {
+                backgroundImage.setVisible(false);
+            }
+
+            // hide user info label
+            if (userInfoLabel != null) {
+                userInfoLabel.setVisible(false);
+            }
+        } else {
+            // show buttons
+            for (TextButton button : getButtons()) {
+                button.setVisible(true);
+            }
+
+            // show background
+            if (backgroundImage != null) {
+                backgroundImage.setVisible(true);
+            }
+
+            // show user info label
+            if (userInfoLabel != null) {
+                userInfoLabel.setVisible(true);
+            }
+        }
+    }
+
     public void dispose() {
         clickSound.dispose();
         if (menuMusic != null) {

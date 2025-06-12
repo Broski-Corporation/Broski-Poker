@@ -309,5 +309,9 @@ public class ClientConnection {
     public void setTableCode(String tableCode) {
         this.tableCode = tableCode;
     }
+
+    public String getUsername() {
+        return username;
+    }
 }
 

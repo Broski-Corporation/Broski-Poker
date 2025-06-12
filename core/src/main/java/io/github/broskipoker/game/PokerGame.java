@@ -469,4 +469,92 @@ public class PokerGame {
     public static int getDealerPosition() {
         return dealerPosition;
     }
+
+    public int getSmallBlind() {
+        return smallBlind;
+    }
+
+    public int getBigBlind() {
+        return bigBlind;
+    }
+
+    public int getLastRaisePlayerIndex() {
+        return lastRaisePlayerIndex;
+    }
+
+    public boolean[] getHasActedInRound() {
+        return hasActedInRound;
+    }
+
+    public Deck getDeck() {
+        return deck;
+    }
+
+    public void setDeck(Deck deck) {
+        this.deck = deck;
+    }
+
+    public float getSHOWDOWN_DURATION() {
+        return SHOWDOWN_DURATION;
+    }
+
+    public float getShowdownTimer() {
+        return showdownTimer;
+    }
+
+    public void setShowdownTimer(float showdownTimer) {
+        this.showdownTimer = showdownTimer;
+    }
+
+    public void setHasActedInRound(boolean[] hasActedInRound) {
+        this.hasActedInRound = hasActedInRound;
+    }
+
+    public static void setGameState(GameState gameState) {
+        PokerGame.gameState = gameState;
+    }
+
+    public boolean isNeedsPlayerAction() {
+        return needsPlayerAction;
+    }
+
+    public void setNeedsPlayerAction(boolean needsPlayerAction) {
+        this.needsPlayerAction = needsPlayerAction;
+    }
+
+    public static void setDealerPosition(int dealerPosition) {
+        PokerGame.dealerPosition = dealerPosition;
+    }
+
+    public void setLastRaisePlayerIndex(int lastRaisePlayerIndex) {
+        this.lastRaisePlayerIndex = lastRaisePlayerIndex;
+    }
+
+    public void setCurrentPlayerIndex(int currentPlayerIndex) {
+        this.currentPlayerIndex = currentPlayerIndex;
+    }
+
+    public void setCurrentBet(int currentBet) {
+        this.currentBet = currentBet;
+    }
+
+    public void setBigBlind(int bigBlind) {
+        this.bigBlind = bigBlind;
+    }
+
+    public void setSmallBlind(int smallBlind) {
+        this.smallBlind = smallBlind;
+    }
+
+    public void setPot(int pot) {
+        this.pot = pot;
+    }
+
+    public void setCommunityCards(List<Card> communityCards) {
+        this.communityCards = communityCards;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
 }

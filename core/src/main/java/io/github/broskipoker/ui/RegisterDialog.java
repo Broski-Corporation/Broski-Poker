@@ -46,21 +46,24 @@ public class RegisterDialog extends Dialog {
         TextButton backToLoginButton = new TextButton("Back to Login", getSkin());
         TextButton cancelButton = new TextButton("Cancel", getSkin());
 
+        // add padding at the top
+        getContentTable().padTop(50);
+
         // Layout the dialog
         getContentTable().add(new Label("Username:", getSkin())).padRight(10);
-        getContentTable().add(usernameField).width(200).padBottom(10);
+        getContentTable().add(usernameField).width(300).padBottom(10);
         getContentTable().row();
 
         getContentTable().add(new Label("Email:", getSkin())).padRight(10);
-        getContentTable().add(emailField).width(200).padBottom(10);
+        getContentTable().add(emailField).width(300).padBottom(10);
         getContentTable().row();
 
         getContentTable().add(new Label("Password:", getSkin())).padRight(10);
-        getContentTable().add(passwordField).width(200).padBottom(10);
+        getContentTable().add(passwordField).width(300).padBottom(10);
         getContentTable().row();
 
         getContentTable().add(new Label("Confirm:", getSkin())).padRight(10);
-        getContentTable().add(confirmPasswordField).width(200).padBottom(10);
+        getContentTable().add(confirmPasswordField).width(300).padBottom(10);
         getContentTable().row();
 
         getContentTable().add(statusLabel).colspan(2).padBottom(10);
@@ -97,6 +100,9 @@ public class RegisterDialog extends Dialog {
         setModal(true);
         setMovable(true);
         setResizable(false);
+
+        // Center the title
+        getTitleLabel().setAlignment(com.badlogic.gdx.utils.Align.center);
     }
 
     private void handleRegister() {

@@ -13,6 +13,7 @@
 
 package io.github.broskipoker.ui;
 
+import io.github.broskipoker.Main;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
@@ -39,6 +40,12 @@ public class DealingAnimator {
     }
 
     public void update(float delta, List<Player> players, int maxPlayerPositions) {
+        // in mp mode, imeediately mark all cards as dealt
+        if (Main.getInstance().getRenderer().isMultiplayer()) {
+            forceAllCardsDealt();
+            return;
+        }
+
         if (dealingComplete){
             return;
         }
@@ -85,6 +92,16 @@ public class DealingAnimator {
             return false;
         }
         return dealtCards[playerIndex][cardIndex];
+    }
+
+    // used in multiplayer to skip the animation and force all cards to be dealt
+    public void forceAllCardsDealt() {
+        for (int i = 0; i < dealtCards.length; i++) {
+            for(int j = 0; j < dealtCards[i].length; j++) {
+                dealtCards[i][j] = true;
+            }
+        }
+        dealingComplete = true;
     }
 
     public boolean isComplete() {

@@ -36,6 +36,9 @@ public class LoginDialog extends Dialog {
         TextButton registerButton = new TextButton("Register", getSkin());
         TextButton cancelButton = new TextButton("Cancel", getSkin());
 
+        // add padding to the buttons
+        getContentTable().padTop(50);
+
         // Layout the dialog
         getContentTable().add(new Label("Username:", getSkin())).padRight(10);
         getContentTable().add(usernameField).width(200).padBottom(10);
@@ -49,8 +52,8 @@ public class LoginDialog extends Dialog {
         getContentTable().row();
 
         // Add buttons to button table
-        getButtonTable().add(loginButton).padRight(10);
         getButtonTable().add(registerButton).padRight(10);
+        getButtonTable().add(loginButton).padRight(10);
         getButtonTable().add(cancelButton);
 
         // Add listeners
@@ -79,6 +82,9 @@ public class LoginDialog extends Dialog {
         setModal(true);
         setMovable(true);
         setResizable(false);
+
+        // Center the title
+        getTitleLabel().setAlignment(com.badlogic.gdx.utils.Align.center);
     }
 
     private void handleLogin() {

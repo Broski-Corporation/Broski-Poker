@@ -579,7 +579,6 @@ public class GameRenderer {
         }
 
         boolean batchWasActive = batch.isDrawing();
-
         if (!batchWasActive) {
             batch.begin();
         }
@@ -711,7 +710,7 @@ public class GameRenderer {
         font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
 
         // DEBUG: Add buttons to force next state (for testing)
-        if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {
+        if (Gdx.input.justTouched() && Gdx.input.getY() < 150 && !isMultiplayer) {
             // Simple way to advance game state for testing
             if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
                 pokerGame.dealFlop();

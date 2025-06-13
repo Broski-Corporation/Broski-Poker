@@ -55,15 +55,18 @@ public class MultiplayerGameScreen implements Screen {
         System.out.println("MultiplayerGameScreen initialized with username: " + username + "and table code: " + tableCode);
     }
 
-    private void onGameStateUpdate(GameStateUpdate update) {
-        // Convert GameStateUpdate to local PokerGame state
-        updatePokerGameFromServerData(update);
+private void onGameStateUpdate(GameStateUpdate update) {
+    // Convert GameStateUpdate to local PokerGame state (data updates are thread-safe)
+    updatePokerGameFromServerData(update);
 
+    // Schedule UI updates to happen on the main render thread
+    Gdx.app.postRunnable(() -> {
         // Update UI to reflect current game state
         if (gameRenderer.getBettingUI() != null) {
             gameRenderer.getBettingUI().update();
         }
-    }
+    });
+}
 
     private void updatePokerGameFromServerData(GameStateUpdate update) {
         // Update game state

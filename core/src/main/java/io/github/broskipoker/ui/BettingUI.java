@@ -292,6 +292,7 @@ public class BettingUI {
                         PlayerAction action = new PlayerAction();
                         action.action = PokerGame.PlayerAction.FOLD;
                         action.amount = 0;
+                        action.tableCode = pokerGame.getTableCode();
                         clientConnection.sendAction(action);
                     } else {
                         pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
@@ -311,6 +312,7 @@ public class BettingUI {
                             PlayerAction action = new PlayerAction();
                             action.action = PokerGame.PlayerAction.CHECK;
                             action.amount = 0;
+                            action.tableCode = pokerGame.getTableCode();
                             clientConnection.sendAction(action);
                         } else {
                             pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
@@ -321,6 +323,7 @@ public class BettingUI {
                             action.action = PokerGame.PlayerAction.CALL;
                             int playerIndex = findHumanPlayerIndex();
                             action.amount = pokerGame.getCurrentBet() - pokerGame.getPlayers().get(playerIndex).getCurrentBet();
+                            action.tableCode = pokerGame.getTableCode();
                             clientConnection.sendAction(action);
                         } else {
                             pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
@@ -340,6 +343,7 @@ public class BettingUI {
                         PlayerAction action = new PlayerAction();
                         action.action = PokerGame.PlayerAction.RAISE;
                         action.amount = currentBetAmount;
+                        action.tableCode = pokerGame.getTableCode();
                         clientConnection.sendAction(action);
                     } else {
                         pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);

@@ -115,6 +115,11 @@ public class PokerServerMultipleTables {
                     PlayerAction action = (PlayerAction) object;
                     Table table = tableManager.getTableByConnection(connection);
                     if (table == null) {
+                        // If no table found, try to find by code
+                        table = tableManager.getTableByCode(action.tableCode);
+                    }
+                    // If still no table found, log and return
+                    if (table == null) {
                         System.out.println("Unknown player action from connection: " + connection.getID());
                         return;
                     }

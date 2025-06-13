@@ -37,6 +37,7 @@ public class MultiplayerGameScreen implements Screen {
 
         // Create a placeholder PokerGame for initial rendering
         this.pokerGame = new PokerGame();
+        this.pokerGame.setTableCode(tableCode); // Set the table code
         this.gameRenderer = new GameRenderer(pokerGame);
         this.gameRenderer.setMultiplayerMode(clientConnection, username);
         this.gameController = new GameController(pokerGame, gameRenderer);

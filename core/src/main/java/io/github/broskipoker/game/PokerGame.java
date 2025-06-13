@@ -41,6 +41,8 @@ public class PokerGame {
     private boolean[] hasActedInRound;
     private float showdownTimer = 0;
     private final float SHOWDOWN_DURATION = 10.0f;
+    // Table code for multiplayer mode
+    private String tableCode;
 
     public enum GameState {
         WAITING_FOR_PLAYERS, DEALING, BETTING_PRE_FLOP, FLOP, BETTING_FLOP, TURN, BETTING_TURN, RIVER,
@@ -556,5 +558,13 @@ public class PokerGame {
 
     public void setPlayers(List<Player> players) {
         this.players = players;
+    }
+
+    public String getTableCode() {
+        return tableCode;
+    }
+
+    public void setTableCode(String tableCode) {
+        this.tableCode = tableCode;
     }
 }

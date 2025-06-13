@@ -138,11 +138,6 @@ public class PokerGame {
 
     // Method called from libGDX game loop
     public void update(float delta) {
-        if (Main.getInstance().getRenderer().isMultiplayer()) {
-            // In multiplayer mode, we don't handle game logic here
-            return;
-        }
-
         if (!needsPlayerAction) {
             switch (gameState) {
                 case BETTING_PRE_FLOP:

@@ -149,6 +149,7 @@ public class PokerServerMultipleTables {
                     if (!pokerGame.needsPlayerAction()) {
                         // You may want to call pokerGame.update(0) here to move the game forward.
                         // For now, just broadcast state.
+                        pokerGame.update(0.1f);
                     }
 
                     // Broadcast updated game state to all players at this table

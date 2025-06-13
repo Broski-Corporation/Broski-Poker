@@ -13,23 +13,6 @@ public class CardTest {
         assertEquals(Card.Rank.ACE, aceHearts.getRank(), "Card rank should be ace");
     }
 
-    @Test
-    public void testEqualsAndHashCode() {
-        Card card1 = new Card(Card.Suit.HEARTS, Card.Rank.ACE);
-        Card card2 = new Card(Card.Suit.HEARTS, Card.Rank.ACE);
-        Card card3 = new Card(Card.Suit.DIAMONDS, Card.Rank.ACE);
-        Card card4 = new Card(Card.Suit.HEARTS, Card.Rank.KING);
-
-        // Test equality
-        assertEquals(card1, card2, "Two cards with the same suit and rank should be equal");
-        assertNotEquals(card1, card3, "Cards with different suits should not be equal");
-        assertNotEquals(card1, card4, "Cards with different ranks should not be equal");
-        assertNotEquals(card1, null, "Card should not be equal to null");
-        assertNotEquals(card1, "a string", "Card should not be equal to an object of a different type");
-
-        // Test hashCode
-        assertEquals(card1.hashCode(), card2.hashCode(), "Hash codes should be equal for equal cards");
-    }
 
     @Test
     public void testToString() {

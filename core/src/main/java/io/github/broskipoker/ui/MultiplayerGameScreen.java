@@ -41,6 +41,7 @@ public class MultiplayerGameScreen implements Screen {
         this.gameRenderer = new GameRenderer(pokerGame);
         this.gameRenderer.setMultiplayerMode(clientConnection, username);
         this.gameController = new GameController(pokerGame, gameRenderer);
+        this.gameController.setMultiplayerMode(clientConnection, username);
         this.gameRenderer.setGameController(gameController);
         // hide the menu
         this.gameRenderer.setMenuStarted(true);

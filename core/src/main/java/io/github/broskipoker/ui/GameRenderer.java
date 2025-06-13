@@ -710,17 +710,24 @@ public class GameRenderer {
         font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
 
         // DEBUG: Add buttons to force next state (for testing)
-        if (Gdx.input.justTouched() && Gdx.input.getY() < 150 && !isMultiplayer) {
+        if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {
             // Simple way to advance game state for testing
             if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
-                pokerGame.dealFlop();
-            } else if (state == PokerGame.GameState.BETTING_FLOP) {
+                if (isMultiplayer) {
+                    // In multiplayer, just force the animation to complete
+                    dealingAnimationComplete = true;
+                    dealingAnimationTimer = DEALING_ANIMATION_DURATION;
+                    System.out.println("Forcing dealing animation completion in multiplayer");
+                } else {
+                    pokerGame.dealFlop();
+                }
+            } else if (state == PokerGame.GameState.BETTING_FLOP && !isMultiplayer) {
                 pokerGame.dealTurn();
-            } else if (state == PokerGame.GameState.BETTING_TURN) {
+            } else if (state == PokerGame.GameState.BETTING_TURN && !isMultiplayer) {
                 pokerGame.dealRiver();
-            } else if (state == PokerGame.GameState.BETTING_RIVER) {
+            } else if (state == PokerGame.GameState.BETTING_RIVER && !isMultiplayer) {
                 pokerGame.goToShowdown();
-            } else if (state == PokerGame.GameState.SHOWDOWN) {
+            } else if (state == PokerGame.GameState.SHOWDOWN && !isMultiplayer) {
                 dealingAnimator.reset();
             }
         }

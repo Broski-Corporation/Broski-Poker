@@ -53,25 +53,15 @@ public class PokerServer {
             @Override
             public void received(Connection connection, Object object) {
                 try {
-                    // Check if object is a legitimate request type
-                    if (!(object instanceof CreateTableRequest ||
-                          object instanceof JoinTableRequest ||
-                          object instanceof LoginRequest ||
-                          object instanceof PlayerAction ||
-                          object instanceof GameStateRequest ||
-                          object instanceof StartGameRequest)) {
+                    // Print the object class for debugging
+//                    System.out.println("Received object of type: " + (object != null ? object.getClass().getName() : "null"));
 
-                        System.out.println("Received unknown object type from connection: " + connection.getID());
-
-                        // Get client IP for blacklisting
+                    // Check for extremely large payloads (likely malicious)
+                    if (object != null && object.toString().length() > 1000000) {
+                        System.out.println("Received suspiciously large payload from connection: " + connection.getID());
                         String clientIP = connection.getRemoteAddressTCP().getAddress().getHostAddress();
-                        System.out.println("Suspicious request from IP: " + clientIP);
-
-                        // Add to blacklist
+                        System.out.println("Blocking malicious large payload from IP: " + clientIP);
                         blacklistedIPs.add(clientIP);
-                        System.out.println("Added IP to blacklist: " + clientIP);
-
-                        // Disconnect suspicious client
                         connection.close();
                         return;
                     }

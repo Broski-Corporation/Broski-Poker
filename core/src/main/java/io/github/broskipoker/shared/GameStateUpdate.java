@@ -17,6 +17,7 @@ public class GameStateUpdate {
     public boolean needsPlayerAction;
     public PokerGame.GameState gameState;
     public boolean[] hasActedInRound;
+    public String tableCode;  // Added to ensure table code is synchronized
 
     // Added fields for winner information
     public List<CardInfo> winningCards;       // The best hand to display

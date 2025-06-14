@@ -74,7 +74,15 @@ private void onGameStateUpdate(GameStateUpdate update) {
         pokerGame.setPot(update.pot);
         pokerGame.setCurrentBet(update.currentBet);
         pokerGame.setCurrentPlayerIndex(update.currentPlayerIndex);
-        pokerGame.setNeedsPlayerAction(update.needsPlayerAction); // Add this line to sync the player action flag
+        pokerGame.setNeedsPlayerAction(update.needsPlayerAction);
+
+        // If the server sent a tableCode, update it in the local game
+        if (update.tableCode != null && !update.tableCode.isEmpty()) {
+            pokerGame.setTableCode(update.tableCode);
+        } else if (tableCode != null) {
+            // Ensure the tableCode is preserved even if not in the update
+            pokerGame.setTableCode(tableCode);
+        }
 
         // Update community cards
         List<Card> communityCards = new ArrayList<>();
@@ -113,7 +121,8 @@ private void onGameStateUpdate(GameStateUpdate update) {
 
         // Debug logging to help track state transitions
         System.out.println("Updated game state from server: " + update.gameState +
-                          ", needsPlayerAction: " + update.needsPlayerAction);
+                          ", needsPlayerAction: " + update.needsPlayerAction +
+                          ", tableCode: " + pokerGame.getTableCode());
     }
 
     public void sendPlayerAction(PokerGame.PlayerAction action, int amount) {

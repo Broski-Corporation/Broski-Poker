@@ -74,6 +74,7 @@ private void onGameStateUpdate(GameStateUpdate update) {
         pokerGame.setPot(update.pot);
         pokerGame.setCurrentBet(update.currentBet);
         pokerGame.setCurrentPlayerIndex(update.currentPlayerIndex);
+        pokerGame.setNeedsPlayerAction(update.needsPlayerAction); // Add this line to sync the player action flag
 
         // Update community cards
         List<Card> communityCards = new ArrayList<>();
@@ -109,6 +110,10 @@ private void onGameStateUpdate(GameStateUpdate update) {
         if (update.hasActedInRound != null) {
             pokerGame.setHasActedInRound(update.hasActedInRound);
         }
+
+        // Debug logging to help track state transitions
+        System.out.println("Updated game state from server: " + update.gameState +
+                          ", needsPlayerAction: " + update.needsPlayerAction);
     }
 
     public void sendPlayerAction(PokerGame.PlayerAction action, int amount) {

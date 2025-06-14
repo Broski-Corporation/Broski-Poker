@@ -4,7 +4,6 @@ import com.esotericsoftware.kryo.Kryo;
 import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.server.PokerServer;
-import io.github.broskipoker.server.PokerServerMultipleTables;
 import io.github.broskipoker.server.Table;
 import io.github.broskipoker.server.TableManager;
 
@@ -41,7 +40,7 @@ public class NetworkRegistration {
         kryo.register(TableManager.class);
 
         // Server registration
-        kryo.register(PokerServerMultipleTables.class);
+        kryo.register(PokerServer.class);
 
         // for refreshing lobby panel
         kryo.register(GameStateRequest.class);

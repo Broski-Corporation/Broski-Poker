@@ -112,7 +112,10 @@ public class LobbyPanel extends Dialog {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 if (onLeaveGame != null) onLeaveGame.run();
-                if (clientConnection != null) clientConnection.disconnect();
+                if (clientConnection != null) {
+                    // Use leaveTable instead of disconnect to keep the connection alive
+                    clientConnection.leaveTable();
+                }
                 hide();
             }
         });
@@ -201,4 +204,3 @@ public class LobbyPanel extends Dialog {
         this.gameStartedCallback = callback;
     }
 }
-

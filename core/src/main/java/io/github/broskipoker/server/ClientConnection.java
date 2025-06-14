@@ -301,6 +301,19 @@ public class ClientConnection {
         }
     }
 
+    public void leaveTable() {
+        // Reset table-related state but keep the connection alive
+        tableCode = null;
+        joinSuccessful = false;
+
+        // If we have a lobby panel, clear it
+        if (lobbyPanel != null) {
+            lobbyPanel = null;
+        }
+
+        System.out.println("✅ " + username + " left the table but remains connected");
+    }
+
     public String getTableCode() {
         return tableCode;
     }

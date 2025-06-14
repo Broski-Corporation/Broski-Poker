@@ -90,6 +90,7 @@ public class PokerConverters {
         update.needsPlayerAction = game.needsPlayerAction();
         update.gameState = PokerGame.getGameState();
         update.hasActedInRound = game.getHasActedInRound();
+        update.tableCode = game.getTableCode(); // Include table code in every update
 
         // Add winner information if we're in showdown
         if (isShowdown) {

@@ -144,7 +144,9 @@ public class PokerServerMultipleTables {
 
                     // Only allow action if this is the current player
                     if (pokerGame.getCurrentPlayerIndex() != playerIndex) {
-                        System.out.println("Player acted out of turn: " + player.getName());
+                        System.out.println("pokerGame.getCurrentPlayerIndex() != playerIndex == true");
+                        System.out.println("Current player index: " + pokerGame.getCurrentPlayerIndex() +
+                                           ", Player index: " + playerIndex);
                         return;
                     }
 

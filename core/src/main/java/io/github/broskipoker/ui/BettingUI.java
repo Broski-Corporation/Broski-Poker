@@ -716,9 +716,9 @@ public class BettingUI {
     }
 
     /**
-     * Maps server-side player indices to UI positions
+     * Maps server-side player indices to UI positions, accounting for dealer position rotation
      * @param serverPlayerIndex The player index from the server's perspective
-     * @return The UI position (0-4) where this player should be displayed
+     * @return The UI position where this player should be displayed
      */
     private int getUIPositionForPlayer(int serverPlayerIndex) {
         if (!isMultiplayer) {
@@ -727,13 +727,20 @@ public class BettingUI {
 
         int localPlayerIndex = findHumanPlayerIndex();
         int playerCount = pokerGame.getPlayers().size();
+        int dealerPosition = PokerGame.getDealerPosition();
 
-        // relative position (0 - current player, 1 - next player clockwise...)
-        int relativePosition = (serverPlayerIndex - localPlayerIndex + playerCount) % playerCount;
+        // Adjust player positions based on dealer position to maintain correct betting order
+        // In poker, the order of play rotates with the dealer button
+        // We need to calculate positions relative to dealer + current player to get proper order
+        int adjustedServerIndex = (serverPlayerIndex + playerCount - dealerPosition) % playerCount;
+        int adjustedLocalIndex = (localPlayerIndex + playerCount - dealerPosition) % playerCount;
+        
+        // Calculate relative position with the dealer position adjustment
+        int relativePosition = (adjustedServerIndex - adjustedLocalIndex + playerCount) % playerCount;
 
-        // map relative position to fixed UI positions
+        // Map relative position to fixed UI positions
         // 0 = top left, 1 = top right, 2 = middle right, 3 = bottom right, 4 = bottom left
-        // we want current player (relative position 0) to always be at position 3 (bottom right)
+        // We want current player (relative position 0) to always be at position 3 (bottom right)
         return switch (relativePosition) {
             case 0 -> 3; // current player bottom right
             case 1 -> 4; // next player clockwise bottom left

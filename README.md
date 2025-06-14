@@ -5,10 +5,10 @@
 - [diagrame](https://example.com/diagrame)
 
 - source control cu git (
-  [branch creation]([https://example.com/branch-creation](https://github.com/Broski-SRL/Broski-Poker/branches)), 
+  [branch creation](https://github.com/Broski-SRL/Broski-Poker/branches), 
   [merge/rebase](https://example.com/merge-rebase), 
   [pull requests](https://github.com/Broski-SRL/Broski-Poker/pulls?q=is%3Apr+is%3Aclosed), 
-  [minim 10 commits]([https://example.com/10-commits](https://github.com/Broski-SRL/Broski-Poker/commits/main/))
+  [minim 10 commits](https://github.com/Broski-SRL/Broski-Poker/commits/main/)
 )
 
 - [teste automate](https://example.com/teste-automate)

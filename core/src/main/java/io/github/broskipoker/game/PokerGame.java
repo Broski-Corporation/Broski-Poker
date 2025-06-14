@@ -84,6 +84,7 @@ public class PokerGame {
     }
 
     public void startNewHand() {
+        System.out.println("=============================== startNewHand() called");
         if (dealerPosition == -1) {
             dealerPosition = players.size() - 1;
         }

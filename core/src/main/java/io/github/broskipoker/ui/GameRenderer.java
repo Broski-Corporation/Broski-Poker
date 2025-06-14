@@ -253,6 +253,9 @@ public class GameRenderer {
             // Initialize player avatar indices with random avatars
             playerAvatarIndices = new int[5]; // One index for each player
             for (int i = 0; i < playerAvatarIndices.length; i++) {
+                if (isMultiplayer) {
+                    playerAvatarIndices[i] = i;
+                }
                 playerAvatarIndices[i] = MathUtils.random(249); // 250 total avatars (10×25)
             }
         } catch (Exception e) {

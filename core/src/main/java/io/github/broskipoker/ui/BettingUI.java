@@ -515,8 +515,8 @@ public class BettingUI {
 
         // Update turn info label and button states based on whose turn it is
         if (pokerGame.needsPlayerAction()) {
-            System.out.println("pokerGame.getCurrentPlayerIndex() " + pokerGame.getCurrentPlayerIndex());
-            System.out.println("playerIndex " + playerIndex); // 0
+//            System.out.println("pokerGame.getCurrentPlayerIndex() " + pokerGame.getCurrentPlayerIndex());
+//            System.out.println("playerIndex " + playerIndex); // 0
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
 
             if (currentPlayerIndex == playerIndex) {

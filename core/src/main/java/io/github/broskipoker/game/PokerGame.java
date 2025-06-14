@@ -137,7 +137,7 @@ public class PokerGame {
         needsPlayerAction = true;
 
         // for multiplayer shift the players list
-        if (Main.getInstance().getRenderer().isMultiplayer()) {
+        if (Main.getInstance().getRenderer() != null && Main.getInstance().getRenderer().isMultiplayer()) {
             Player firstPlayer = players.remove(0);
             players.add(firstPlayer);
         }

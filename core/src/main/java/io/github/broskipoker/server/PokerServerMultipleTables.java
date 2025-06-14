@@ -115,6 +115,11 @@ public class PokerServerMultipleTables {
                     PlayerAction action = (PlayerAction) object;
                     Table table = tableManager.getTableByConnection(connection);
                     if (table == null) {
+                        // If no table found, try to find by code
+                        table = tableManager.getTableByCode(action.tableCode);
+                    }
+                    // If still no table found, log and return
+                    if (table == null) {
                         System.out.println("Unknown player action from connection: " + connection.getID());
                         return;
                     }
@@ -139,7 +144,9 @@ public class PokerServerMultipleTables {
 
                     // Only allow action if this is the current player
                     if (pokerGame.getCurrentPlayerIndex() != playerIndex) {
-                        System.out.println("Player acted out of turn: " + player.getName());
+                        System.out.println("pokerGame.getCurrentPlayerIndex() != playerIndex == true");
+                        System.out.println("Current player index: " + pokerGame.getCurrentPlayerIndex() +
+                                           ", Player index: " + playerIndex);
                         return;
                     }
 
@@ -147,8 +154,14 @@ public class PokerServerMultipleTables {
 
                     // If round/game needs progressing, do so
                     if (!pokerGame.needsPlayerAction()) {
-                        // You may want to call pokerGame.update(0) here to move the game forward.
-                        // For now, just broadcast state.
+                        // Progress the game state
+                        pokerGame.update(0.1f);
+
+                        // Continue updating until player action is needed or showdown is reached
+                        while (!pokerGame.needsPlayerAction() &&
+                               pokerGame.getGameState() != PokerGame.GameState.SHOWDOWN) {
+                            pokerGame.update(0.1f);
+                        }
                     }
 
                     // Broadcast updated game state to all players at this table

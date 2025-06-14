@@ -292,6 +292,7 @@ public class BettingUI {
                         PlayerAction action = new PlayerAction();
                         action.action = PokerGame.PlayerAction.FOLD;
                         action.amount = 0;
+                        action.tableCode = pokerGame.getTableCode();
                         clientConnection.sendAction(action);
                     } else {
                         pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
@@ -311,6 +312,7 @@ public class BettingUI {
                             PlayerAction action = new PlayerAction();
                             action.action = PokerGame.PlayerAction.CHECK;
                             action.amount = 0;
+                            action.tableCode = pokerGame.getTableCode();
                             clientConnection.sendAction(action);
                         } else {
                             pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
@@ -321,6 +323,7 @@ public class BettingUI {
                             action.action = PokerGame.PlayerAction.CALL;
                             int playerIndex = findHumanPlayerIndex();
                             action.amount = pokerGame.getCurrentBet() - pokerGame.getPlayers().get(playerIndex).getCurrentBet();
+                            action.tableCode = pokerGame.getTableCode();
                             clientConnection.sendAction(action);
                         } else {
                             pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
@@ -340,6 +343,7 @@ public class BettingUI {
                         PlayerAction action = new PlayerAction();
                         action.action = PokerGame.PlayerAction.RAISE;
                         action.amount = currentBetAmount;
+                        action.tableCode = pokerGame.getTableCode();
                         clientConnection.sendAction(action);
                     } else {
                         pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
@@ -511,6 +515,8 @@ public class BettingUI {
 
         // Update turn info label and button states based on whose turn it is
         if (pokerGame.needsPlayerAction()) {
+//            System.out.println("pokerGame.getCurrentPlayerIndex() " + pokerGame.getCurrentPlayerIndex());
+//            System.out.println("playerIndex " + playerIndex); // 0
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
 
             if (currentPlayerIndex == playerIndex) {
@@ -712,9 +718,9 @@ public class BettingUI {
     }
 
     /**
-     * Maps server-side player indices to UI positions
+     * Maps server-side player indices to UI positions, accounting for dealer position rotation
      * @param serverPlayerIndex The player index from the server's perspective
-     * @return The UI position (0-4) where this player should be displayed
+     * @return The UI position where this player should be displayed
      */
     private int getUIPositionForPlayer(int serverPlayerIndex) {
         if (!isMultiplayer) {
@@ -723,13 +729,20 @@ public class BettingUI {
 
         int localPlayerIndex = findHumanPlayerIndex();
         int playerCount = pokerGame.getPlayers().size();
+        int dealerPosition = PokerGame.getDealerPosition();
 
-        // relative position (0 - current player, 1 - next player clockwise...)
-        int relativePosition = (serverPlayerIndex - localPlayerIndex + playerCount) % playerCount;
+        // Adjust player positions based on dealer position to maintain correct betting order
+        // In poker, the order of play rotates with the dealer button
+        // We need to calculate positions relative to dealer + current player to get proper order
+        int adjustedServerIndex = (serverPlayerIndex + playerCount - dealerPosition) % playerCount;
+        int adjustedLocalIndex = (localPlayerIndex + playerCount - dealerPosition) % playerCount;
 
-        // map relative position to fixed UI positions
+        // Calculate relative position with the dealer position adjustment
+        int relativePosition = (adjustedServerIndex - adjustedLocalIndex + playerCount) % playerCount;
+
+        // Map relative position to fixed UI positions
         // 0 = top left, 1 = top right, 2 = middle right, 3 = bottom right, 4 = bottom left
-        // we want current player (relative position 0) to always be at position 3 (bottom right)
+        // We want current player (relative position 0) to always be at position 3 (bottom right)
         return switch (relativePosition) {
             case 0 -> 3; // current player bottom right
             case 1 -> 4; // next player clockwise bottom left

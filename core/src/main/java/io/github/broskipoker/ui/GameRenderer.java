@@ -253,6 +253,9 @@ public class GameRenderer {
             // Initialize player avatar indices with random avatars
             playerAvatarIndices = new int[5]; // One index for each player
             for (int i = 0; i < playerAvatarIndices.length; i++) {
+                if (isMultiplayer) {
+                    playerAvatarIndices[i] = i;
+                }
                 playerAvatarIndices[i] = MathUtils.random(249); // 250 total avatars (10×25)
             }
         } catch (Exception e) {
@@ -554,19 +557,49 @@ public class GameRenderer {
 
             float x = chairPositions[uiPosition][0];
             float y = chairPositions[uiPosition][1];
+
+            // Get player's cards
             Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
 
-            for (int j = 0; j < playerCards.length && j < 2; j++) {
-                if (dealingAnimator.isCardDealt(i, j) && players.get(i).isActive()) {
+            // For active opponents in multiplayer mode, ensure we have something to render
+            boolean shouldCreatePlaceholders = isMultiplayer &&
+                                              players.get(i).isActive() &&
+                                              i != humanPlayerIndex &&
+                                              playerCards.length == 0;
+
+            // Create placeholder cards for opponents in multiplayer if needed
+            Card[] cardsToRender;
+            if (shouldCreatePlaceholders) {
+                // Create two placeholder cards that will be rendered face down
+                cardsToRender = new Card[2];
+                cardsToRender[0] = new Card(Card.Suit.CLUBS, Card.Rank.ACE);
+                cardsToRender[1] = new Card(Card.Suit.CLUBS, Card.Rank.ACE);
+            } else {
+                cardsToRender = playerCards;
+            }
+
+            // Render up to 2 cards for each player
+            for (int j = 0; j < 2; j++) {
+                // Skip if no card to render
+                if (j >= cardsToRender.length || cardsToRender[j] == null) {
+                    continue;
+                }
+
+                // Determine if we should render this card
+                boolean shouldRender = players.get(i).isActive() &&
+                                      (isMultiplayer || dealingAnimator.isCardDealt(i, j));
+
+                if (shouldRender) {
                     if (uiPosition == 2) {
                         // Player at UI position 2 has rotated cards
-                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90, isShowdown && players.get(i).isActive());
+                        boolean showFaceUp = isShowdown || i == humanPlayerIndex;
+                        renderRotatedCards(new Card[]{cardsToRender[j]}, x, y - j * 70, 90, showFaceUp);
                     } else if (i == humanPlayerIndex || isShowdown) {
                         // Human player or showdown state - show face up
-                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, players.get(i).isActive());
+                        renderCards(new Card[]{cardsToRender[j]}, x + j * 70, y, true);
                     } else {
                         // Other players during regular gameplay - show face down
-                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, false);
+                        renderCards(new Card[]{cardsToRender[j]}, x + j * 70, y, false);
                     }
                 }
             }
@@ -579,7 +612,6 @@ public class GameRenderer {
         }
 
         boolean batchWasActive = batch.isDrawing();
-
         if (!batchWasActive) {
             batch.begin();
         }
@@ -714,14 +746,21 @@ public class GameRenderer {
         if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {
             // Simple way to advance game state for testing
             if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
-                pokerGame.dealFlop();
-            } else if (state == PokerGame.GameState.BETTING_FLOP) {
+                if (isMultiplayer) {
+                    // In multiplayer, just force the animation to complete
+                    dealingAnimationComplete = true;
+                    dealingAnimationTimer = DEALING_ANIMATION_DURATION;
+                    System.out.println("Forcing dealing animation completion in multiplayer");
+                } else {
+                    pokerGame.dealFlop();
+                }
+            } else if (state == PokerGame.GameState.BETTING_FLOP && !isMultiplayer) {
                 pokerGame.dealTurn();
-            } else if (state == PokerGame.GameState.BETTING_TURN) {
+            } else if (state == PokerGame.GameState.BETTING_TURN && !isMultiplayer) {
                 pokerGame.dealRiver();
-            } else if (state == PokerGame.GameState.BETTING_RIVER) {
+            } else if (state == PokerGame.GameState.BETTING_RIVER && !isMultiplayer) {
                 pokerGame.goToShowdown();
-            } else if (state == PokerGame.GameState.SHOWDOWN) {
+            } else if (state == PokerGame.GameState.SHOWDOWN && !isMultiplayer) {
                 dealingAnimator.reset();
             }
         }

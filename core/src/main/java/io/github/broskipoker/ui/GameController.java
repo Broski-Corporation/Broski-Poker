@@ -22,6 +22,9 @@ import com.badlogic.gdx.InputMultiplexer;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerBot;
 import io.github.broskipoker.game.PokerGame;
+import io.github.broskipoker.server.ClientConnection;
+
+import java.util.List;
 
 public class GameController extends InputAdapter {
     private final PokerGame pokerGame;
@@ -38,6 +41,11 @@ public class GameController extends InputAdapter {
     // Previous game state for transition handling
     private PokerGame.GameState previousGameState = PokerGame.GameState.BETTING_PRE_FLOP;
     private PokerGame.GameState currentState = PokerGame.GameState.BETTING_PRE_FLOP;
+
+    // multiplayer
+    private boolean isMultiplayer = false;
+    private String currentUsername = null;
+    private ClientConnection clientConnection = null;
 
     public GameController(PokerGame pokerGame, GameRenderer renderer) {
         this.pokerGame = pokerGame;
@@ -88,6 +96,11 @@ public class GameController extends InputAdapter {
 
     // Method to update bot thinking status and execute decisions
     private void updateBotThinking(float delta) {
+        // In multiplayer mode, don't handle bot thinking - server handles this
+        if (isMultiplayer) {
+            return;
+        }
+
         // Check if game needs player action
         if (pokerGame.needsPlayerAction()) {
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
@@ -119,6 +132,11 @@ public class GameController extends InputAdapter {
     }
 
     public void startBotThinking(int playerIndex) {
+        // Don't start bot thinking in multiplayer mode
+        if (isMultiplayer) {
+            return;
+        }
+
         // Only start bot thinking if dealing animation is complete
         if (GameRenderer.isDealingAnimationComplete() ||
             pokerGame.getGameState() != PokerGame.GameState.BETTING_PRE_FLOP) {
@@ -228,6 +246,38 @@ public class GameController extends InputAdapter {
 //            dealingAnimator.reset();
         }
     }
+
+    public void setMultiplayerMode(ClientConnection clientConnection, String username) {
+        this.isMultiplayer = true;
+        this.currentUsername = username;
+        this.clientConnection = clientConnection;
+    }
+
+    private int findHumanPlayerIndex() {
+        if (!isMultiplayer) {
+            return HUMAN_PLAYER_INDEX; // Default for singleplayer
+        }
+
+        // In multiplayer, find player by username
+        List<Player> players = pokerGame.getPlayers();
+        if (players.isEmpty()) {
+            return 0; // No players yet, return the first index
+        }
+
+        // Search current player by the username
+        if (currentUsername != null) {
+            for (int i = 0; i < players.size(); i++) {
+                if (players.get(i).getName().equals(currentUsername)) {
+                    return i;
+                }
+            }
+        }
+
+        // Default to first player if not found
+        return 0;
+    }
+
+
 
     public void dispose() {
         // Nothing to dispose

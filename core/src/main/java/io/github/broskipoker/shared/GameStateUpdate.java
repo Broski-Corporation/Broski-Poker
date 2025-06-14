@@ -17,4 +17,10 @@ public class GameStateUpdate {
     public boolean needsPlayerAction;
     public PokerGame.GameState gameState;
     public boolean[] hasActedInRound;
+    public String tableCode;  // Added to ensure table code is synchronized
+
+    // Added fields for winner information
+    public List<CardInfo> winningCards;       // The best hand to display
+    public List<Integer> winnerIndices;       // Indices of winning players
+    public boolean showAllCards;              // Flag to indicate all cards should be visible (for showdown)
 }

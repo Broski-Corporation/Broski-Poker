@@ -37,9 +37,11 @@ public class MultiplayerGameScreen implements Screen {
 
         // Create a placeholder PokerGame for initial rendering
         this.pokerGame = new PokerGame();
+        this.pokerGame.setTableCode(tableCode); // Set the table code
         this.gameRenderer = new GameRenderer(pokerGame);
         this.gameRenderer.setMultiplayerMode(clientConnection, username);
         this.gameController = new GameController(pokerGame, gameRenderer);
+        this.gameController.setMultiplayerMode(clientConnection, username);
         this.gameRenderer.setGameController(gameController);
         // hide the menu
         this.gameRenderer.setMenuStarted(true);
@@ -53,15 +55,18 @@ public class MultiplayerGameScreen implements Screen {
         System.out.println("MultiplayerGameScreen initialized with username: " + username + "and table code: " + tableCode);
     }
 
-    private void onGameStateUpdate(GameStateUpdate update) {
-        // Convert GameStateUpdate to local PokerGame state
-        updatePokerGameFromServerData(update);
+private void onGameStateUpdate(GameStateUpdate update) {
+    // Convert GameStateUpdate to local PokerGame state (data updates are thread-safe)
+    updatePokerGameFromServerData(update);
 
+    // Schedule UI updates to happen on the main render thread
+    Gdx.app.postRunnable(() -> {
         // Update UI to reflect current game state
         if (gameRenderer.getBettingUI() != null) {
             gameRenderer.getBettingUI().update();
         }
-    }
+    });
+}
 
     private void updatePokerGameFromServerData(GameStateUpdate update) {
         // Update game state
@@ -69,6 +74,15 @@ public class MultiplayerGameScreen implements Screen {
         pokerGame.setPot(update.pot);
         pokerGame.setCurrentBet(update.currentBet);
         pokerGame.setCurrentPlayerIndex(update.currentPlayerIndex);
+        pokerGame.setNeedsPlayerAction(update.needsPlayerAction);
+
+        // If the server sent a tableCode, update it in the local game
+        if (update.tableCode != null && !update.tableCode.isEmpty()) {
+            pokerGame.setTableCode(update.tableCode);
+        } else if (tableCode != null) {
+            // Ensure the tableCode is preserved even if not in the update
+            pokerGame.setTableCode(tableCode);
+        }
 
         // Update community cards
         List<Card> communityCards = new ArrayList<>();
@@ -104,6 +118,11 @@ public class MultiplayerGameScreen implements Screen {
         if (update.hasActedInRound != null) {
             pokerGame.setHasActedInRound(update.hasActedInRound);
         }
+
+        // Debug logging to help track state transitions
+        System.out.println("Updated game state from server: " + update.gameState +
+                          ", needsPlayerAction: " + update.needsPlayerAction +
+                          ", tableCode: " + pokerGame.getTableCode());
     }
 
     public void sendPlayerAction(PokerGame.PlayerAction action, int amount) {

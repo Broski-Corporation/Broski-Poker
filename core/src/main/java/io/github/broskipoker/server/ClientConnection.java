@@ -23,6 +23,7 @@ public class ClientConnection {
     private volatile boolean connected = false;
     private volatile boolean shouldUpdate = true;
     private Thread updateThread;
+    private volatile boolean joinSuccessful = false;
 
     // Turn-based gameplay fields
     private volatile boolean isMyTurn = false;
@@ -189,8 +190,10 @@ public class ClientConnection {
             JoinTableResponse resp = (JoinTableResponse) object;
             if (resp.success) {
                 System.out.println("✅ " + username + " successfully joined table: " + resp.code);
+                joinSuccessful = true;
             } else {
                 System.out.println("❌ " + username + " failed to join table: " + resp.failReason);
+                joinSuccessful = false;
             }
         }
 //        else if (object instanceof GameStateUpdate) {
@@ -313,5 +316,12 @@ public class ClientConnection {
     public String getUsername() {
         return username;
     }
-}
 
+    public boolean isJoinSuccessful() {
+        return joinSuccessful;
+    }
+
+    public void resetJoinStatus() {
+        joinSuccessful = false;
+    }
+}

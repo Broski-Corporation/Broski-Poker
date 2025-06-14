@@ -388,12 +388,9 @@ public class MultiplayerDialog extends Dialog {
     }
 
     // Helper method to check if join was successful
-    // You'll need to implement this based on your ClientConnection class
     private boolean isJoinSuccessful(ClientConnection client, String tableCode) {
-        // This is a placeholder - implement based on your ClientConnection's response
-        // For example, you might check if client.getTableCode() equals the requested code
-        // or if client has received a successful join response
-        return client.isConnected() && client.getTableCode() != null;
+        // Check if client received a successful join response from the server
+        return client.isConnected() && client.isJoinSuccessful() && client.getTableCode() != null;
     }
 
     // TODO: Replace with actual validation logic

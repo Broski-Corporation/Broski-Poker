@@ -515,6 +515,8 @@ public class BettingUI {
 
         // Update turn info label and button states based on whose turn it is
         if (pokerGame.needsPlayerAction()) {
+            System.out.println("pokerGame.getCurrentPlayerIndex() " + pokerGame.getCurrentPlayerIndex());
+            System.out.println("playerIndex " + playerIndex); // 0
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
 
             if (currentPlayerIndex == playerIndex) {
@@ -734,7 +736,7 @@ public class BettingUI {
         // We need to calculate positions relative to dealer + current player to get proper order
         int adjustedServerIndex = (serverPlayerIndex + playerCount - dealerPosition) % playerCount;
         int adjustedLocalIndex = (localPlayerIndex + playerCount - dealerPosition) % playerCount;
-        
+
         // Calculate relative position with the dealer position adjustment
         int relativePosition = (adjustedServerIndex - adjustedLocalIndex + playerCount) % playerCount;
 

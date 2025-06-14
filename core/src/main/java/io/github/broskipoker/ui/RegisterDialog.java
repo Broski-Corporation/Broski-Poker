@@ -50,29 +50,29 @@ public class RegisterDialog extends Dialog {
         getContentTable().padTop(50);
 
         // Layout the dialog
-        getContentTable().add(new Label("Username:", getSkin())).padRight(10);
-        getContentTable().add(usernameField).width(300).padBottom(10);
+        getContentTable().add(new Label("Username:", getSkin())).pad(10);
+        getContentTable().add(usernameField).width(300).pad(10).padLeft(-10);
         getContentTable().row();
 
-        getContentTable().add(new Label("Email:", getSkin())).padRight(10);
-        getContentTable().add(emailField).width(300).padBottom(10);
+        getContentTable().add(new Label("Email:", getSkin())).pad(10);
+        getContentTable().add(emailField).width(300).pad(10).padLeft(-10);
         getContentTable().row();
 
-        getContentTable().add(new Label("Password:", getSkin())).padRight(10);
-        getContentTable().add(passwordField).width(300).padBottom(10);
+        getContentTable().add(new Label("Password:", getSkin())).pad(10);
+        getContentTable().add(passwordField).width(300).pad(10).padLeft(-10);
         getContentTable().row();
 
-        getContentTable().add(new Label("Confirm:", getSkin())).padRight(10);
-        getContentTable().add(confirmPasswordField).width(300).padBottom(10);
+        getContentTable().add(new Label("Confirm:", getSkin())).pad(10);
+        getContentTable().add(confirmPasswordField).width(300).pad(10).padLeft(-10);
         getContentTable().row();
 
-        getContentTable().add(statusLabel).colspan(2).padBottom(10);
+        getContentTable().add(statusLabel).colspan(2).pad(10);
         getContentTable().row();
 
         // Add buttons to button table
-        getButtonTable().add(registerButton).padRight(10);
-        getButtonTable().add(backToLoginButton).padRight(10);
-        getButtonTable().add(cancelButton);
+        getButtonTable().add(registerButton).pad(20);
+        getButtonTable().add(backToLoginButton).pad(20);
+        getButtonTable().add(cancelButton).pad(20);
 
         // Add listeners
         registerButton.addListener(new ChangeListener() {

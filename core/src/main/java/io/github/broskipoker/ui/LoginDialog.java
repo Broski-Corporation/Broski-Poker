@@ -37,7 +37,7 @@ public class LoginDialog extends Dialog {
         TextButton cancelButton = new TextButton("Cancel", getSkin());
 
         // add padding to the buttons
-        getContentTable().padTop(50);
+        getContentTable().pad(20);
 
         // Layout the dialog
         getContentTable().add(new Label("Username:", getSkin())).padRight(10);
@@ -48,13 +48,13 @@ public class LoginDialog extends Dialog {
         getContentTable().add(passwordField).width(200).padBottom(10);
         getContentTable().row();
 
-        getContentTable().add(statusLabel).colspan(2).padBottom(10);
+        getContentTable().add(statusLabel).colspan(2);
         getContentTable().row();
 
         // Add buttons to button table
-        getButtonTable().add(registerButton).padRight(10);
-        getButtonTable().add(loginButton).padRight(10);
-        getButtonTable().add(cancelButton);
+        getButtonTable().add(registerButton).pad(20);
+        getButtonTable().add(loginButton).pad(20);
+        getButtonTable().add(cancelButton).pad(20);
 
         // Add listeners
         loginButton.addListener(new ChangeListener() {

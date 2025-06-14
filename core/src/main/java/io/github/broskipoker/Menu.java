@@ -51,7 +51,7 @@ public class Menu {
         menuMusic.setVolume(menuVolume);
 //        menuMusic.play();
 
-        skin = new Skin(Gdx.files.internal("skin/star-soldier-ui.json"));
+        skin = new Skin(Gdx.files.internal("skin/skin-composer-ui.json"));
         setBackground("menu_background.png");
 
         table = new Table();
@@ -66,19 +66,19 @@ public class Menu {
         loginButton = new TextButton("Login", skin);
         userInfoLabel = new Label("", skin);
 
-        float buttonWidth = Math.min(300, Gdx.graphics.getWidth() * 0.3f);
+        float buttonWidth = Math.min(350, Gdx.graphics.getWidth() * 0.3f);
 
-        table.add(userInfoLabel).padBottom(10);
+        table.add(userInfoLabel).padBottom(20);
         table.row();
-        table.add(singleplayerButton).width(buttonWidth).padBottom(20);
+        table.add(singleplayerButton).width(buttonWidth).padBottom(40);
         table.row();
-        table.add(multiplayerButton).width(buttonWidth).padBottom(20);
+        table.add(multiplayerButton).width(buttonWidth).padBottom(40);
         table.row();
-        table.add(loginButton).width(buttonWidth).padBottom(20);
+        table.add(loginButton).width(buttonWidth).padBottom(40);
         table.row();
-        table.add(friendsButton).width(buttonWidth).padBottom(20);
+        table.add(friendsButton).width(buttonWidth).padBottom(40);
         table.row();
-        table.add(settingsButton).width(buttonWidth).padBottom(20);
+        table.add(settingsButton).width(buttonWidth).padBottom(40);
         table.row();
         table.add(exitButton).width(buttonWidth);
 

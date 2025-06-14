@@ -39,7 +39,7 @@ public class LobbyPanel extends Dialog {
         setModal(false);
         setMovable(true);
         setResizable(false);
-        setSize(400, 450);
+        setSize(350, 450);
         getTitleLabel().setAlignment(Align.center);
     }
 
@@ -87,8 +87,8 @@ public class LobbyPanel extends Dialog {
         startButton.setVisible(false); // Initially hidden
 
         Table buttonTable = new Table();
-        buttonTable.add(startButton).padRight(-40);
-        buttonTable.add(refreshButton).padRight(-40);
+        buttonTable.add(startButton).padRight(10);
+        buttonTable.add(refreshButton).padRight(10);
         buttonTable.add(leaveButton);
 
         content.add(buttonTable).center();

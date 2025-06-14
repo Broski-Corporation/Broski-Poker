@@ -274,7 +274,7 @@ public class GameRenderer {
 
         emojiButton.setPosition(700, 100); // screen position
         emojiButton.setSize(40, 40);
-        stage.addActor(emojiButton);
+//        stage.addActor(emojiButton);
 
         //click dropdwon listener
         emojiButton.addListener(new ClickListener() {
@@ -294,7 +294,7 @@ public class GameRenderer {
         emojiDropdown = new Group();
         emojiDropdown.setVisible(false);
         emojiDropdown.setPosition(700, 150); // poziția absolută pe ecran
-        stage.addActor(emojiDropdown);
+//        stage.addActor(emojiDropdown);
 
 
         float baseX = 700;
@@ -323,10 +323,10 @@ public class GameRenderer {
             });
 
 //
-            emojiDropdown.addActor(emojiChoice);
+//            emojiDropdown.addActor(emojiChoice);
         }
 
-        stage.addActor(emojiDropdown);
+//        stage.addActor(emojiDropdown);
     }
 
     public void setGameController(GameController controller) {

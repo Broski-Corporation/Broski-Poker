@@ -84,7 +84,6 @@ public class PokerGame {
     }
 
     public void startNewHand() {
-        System.out.println("=============================== startNewHand() called");
         if (dealerPosition == -1) {
             dealerPosition = players.size() - 1;
         }
@@ -137,11 +136,11 @@ public class PokerGame {
         dealHoleCards();
         needsPlayerAction = true;
 
-        // for multiplayer shift the players list
-        if (Main.getInstance().getRenderer() != null && Main.getInstance().getRenderer().isMultiplayer()) {
-            Player firstPlayer = players.remove(0);
-            players.add(firstPlayer);
-        }
+//        // for multiplayer shift the players list
+//        if (Main.getInstance().getRenderer() != null && Main.getInstance().getRenderer().isMultiplayer()) {
+//            Player firstPlayer = players.remove(0);
+//            players.add(firstPlayer);
+//        }
     }
 
     // Method called from libGDX game loop

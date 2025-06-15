@@ -136,7 +136,7 @@ The game uses a custom protocol with serialized objects:
 - [Automated Tests](https://example.com/teste-automate) - Unit and integration testing
 - [Bug Resolution](https://github.com/Broski-SRL/Broski-Poker/pull/33) - Issue tracking and fixes via PR
 
-### Code Standards & Design Patterns
+### Design Patterns
 - **MVC**: Model (PokerGame.java), View (GameRenderer.java), Controller (GameController.java)
 - **State**: PokerGame.GameState transitions between game phases (BETTING_PRE_FLOP, FLOP, TURN, etc.)
 - **Observer**: BettingUI.java updates UI based on PokerGame state changes

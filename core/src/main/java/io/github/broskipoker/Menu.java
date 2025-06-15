@@ -3,7 +3,9 @@ package io.github.broskipoker;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -64,7 +66,12 @@ public class Menu {
         settingsButton = new TextButton("Settings", skin);
         exitButton = new TextButton("Exit", skin);
         loginButton = new TextButton("Login", skin);
-        userInfoLabel = new Label("", skin);
+
+        BitmapFont largeFont = new BitmapFont(); // or your custom font
+        largeFont.getData().setScale(2.0f); // 2x bigger
+
+        Label.LabelStyle largeLabelStyle = new Label.LabelStyle(largeFont, Color.WHITE);
+        userInfoLabel = new Label("", largeLabelStyle);
 
         float buttonWidth = Math.min(350, Gdx.graphics.getWidth() * 0.3f);
 
@@ -188,7 +195,7 @@ public class Menu {
         if (userService.isLoggedIn()) {
             User user = userService.getCurrentUser().get();
 //            userInfoLabel.setText("Welcome, " + user.getUsername() + " | Chips: " + user.getChips());
-            userInfoLabel.setText("Welcome, " + user.getUsername()); // user chips reset after every game
+            userInfoLabel.setText("Welcome, " + user.getUsername() + "!"); // user chips reset after every game
             loginButton.setText("Logout");
         } else {
             userInfoLabel.setText("");

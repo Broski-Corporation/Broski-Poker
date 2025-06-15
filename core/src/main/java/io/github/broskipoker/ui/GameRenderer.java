@@ -739,8 +739,8 @@ public class GameRenderer {
         }
 
         // Debug info
-        font.draw(batch, "Game State: " + state.toString(), 50, 100);
-        font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
+//        font.draw(batch, "Game State: " + state.toString(), 50, 100);
+//        font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
 
         // DEBUG: Add buttons to force next state (for testing)
         if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {

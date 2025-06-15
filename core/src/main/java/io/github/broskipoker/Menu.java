@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
 import io.github.broskipoker.game.User;
+import io.github.broskipoker.ui.FontManager;
 import io.github.broskipoker.ui.LoginDialog;
 import io.github.broskipoker.ui.MultiplayerDialog;
 import io.github.broskipoker.utils.UserService;
@@ -67,12 +68,11 @@ public class Menu {
         exitButton = new TextButton("Exit", skin);
         loginButton = new TextButton("Login", skin);
 
-        BitmapFont largeFont = new BitmapFont(); // or your custom font
-        largeFont.getData().setScale(2.0f); // 2x bigger
-
+        BitmapFont largeFont = FontManager.getInstance().getFont(32, Color.WHITE);
         Label.LabelStyle largeLabelStyle = new Label.LabelStyle(largeFont, Color.WHITE);
-        userInfoLabel = new Label("", largeLabelStyle);
+        skin.add("large-label", largeLabelStyle, Label.LabelStyle.class);
 
+        userInfoLabel = new Label("", skin, "large-label");
         float buttonWidth = Math.min(350, Gdx.graphics.getWidth() * 0.3f);
 
         table.add(userInfoLabel).padBottom(20);

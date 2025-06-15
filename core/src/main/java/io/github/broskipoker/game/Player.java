@@ -73,4 +73,15 @@ public class Player {
         currentBet = 0;
     }
 
+    public void setCurrentBet(int bet) {
+        this.currentBet = bet;
+    }
+
+    public void clearHoleCards() {
+        holeCards.clear();
+    }
+
+    public void addCard(Card card) {
+        holeCards.add(card);
+    }
 }

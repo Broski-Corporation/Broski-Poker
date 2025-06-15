@@ -41,6 +41,8 @@ public class PokerGame {
     private boolean[] hasActedInRound;
     private float showdownTimer = 0;
     private final float SHOWDOWN_DURATION = 10.0f;
+    // Table code for multiplayer mode
+    private String tableCode;
 
     public enum GameState {
         WAITING_FOR_PLAYERS, DEALING, BETTING_PRE_FLOP, FLOP, BETTING_FLOP, TURN, BETTING_TURN, RIVER,
@@ -134,6 +136,11 @@ public class PokerGame {
         dealHoleCards();
         needsPlayerAction = true;
 
+//        // for multiplayer shift the players list
+//        if (Main.getInstance().getRenderer() != null && Main.getInstance().getRenderer().isMultiplayer()) {
+//            Player firstPlayer = players.remove(0);
+//            players.add(firstPlayer);
+//        }
     }
 
     // Method called from libGDX game loop
@@ -468,5 +475,101 @@ public class PokerGame {
 
     public static int getDealerPosition() {
         return dealerPosition;
+    }
+
+    public int getSmallBlind() {
+        return smallBlind;
+    }
+
+    public int getBigBlind() {
+        return bigBlind;
+    }
+
+    public int getLastRaisePlayerIndex() {
+        return lastRaisePlayerIndex;
+    }
+
+    public boolean[] getHasActedInRound() {
+        return hasActedInRound;
+    }
+
+    public Deck getDeck() {
+        return deck;
+    }
+
+    public void setDeck(Deck deck) {
+        this.deck = deck;
+    }
+
+    public float getSHOWDOWN_DURATION() {
+        return SHOWDOWN_DURATION;
+    }
+
+    public float getShowdownTimer() {
+        return showdownTimer;
+    }
+
+    public void setShowdownTimer(float showdownTimer) {
+        this.showdownTimer = showdownTimer;
+    }
+
+    public void setHasActedInRound(boolean[] hasActedInRound) {
+        this.hasActedInRound = hasActedInRound;
+    }
+
+    public static void setGameState(GameState gameState) {
+        PokerGame.gameState = gameState;
+    }
+
+    public boolean isNeedsPlayerAction() {
+        return needsPlayerAction;
+    }
+
+    public void setNeedsPlayerAction(boolean needsPlayerAction) {
+        this.needsPlayerAction = needsPlayerAction;
+    }
+
+    public static void setDealerPosition(int dealerPosition) {
+        PokerGame.dealerPosition = dealerPosition;
+    }
+
+    public void setLastRaisePlayerIndex(int lastRaisePlayerIndex) {
+        this.lastRaisePlayerIndex = lastRaisePlayerIndex;
+    }
+
+    public void setCurrentPlayerIndex(int currentPlayerIndex) {
+        this.currentPlayerIndex = currentPlayerIndex;
+    }
+
+    public void setCurrentBet(int currentBet) {
+        this.currentBet = currentBet;
+    }
+
+    public void setBigBlind(int bigBlind) {
+        this.bigBlind = bigBlind;
+    }
+
+    public void setSmallBlind(int smallBlind) {
+        this.smallBlind = smallBlind;
+    }
+
+    public void setPot(int pot) {
+        this.pot = pot;
+    }
+
+    public void setCommunityCards(List<Card> communityCards) {
+        this.communityCards = communityCards;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
+
+    public String getTableCode() {
+        return tableCode;
+    }
+
+    public void setTableCode(String tableCode) {
+        this.tableCode = tableCode;
     }
 }

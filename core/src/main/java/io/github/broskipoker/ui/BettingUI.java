@@ -33,6 +33,8 @@ import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import io.github.broskipoker.game.PokerHand;
+import io.github.broskipoker.server.ClientConnection;
+import io.github.broskipoker.shared.PlayerAction;
 import java.util.List;
 
 import java.util.Objects;
@@ -88,7 +90,7 @@ public class BettingUI {
     private Texture lineCursorTexture;
 
     // Player index for the human player
-    private static final int HUMAN_PLAYER_INDEX = 3;
+    private int humanPlayerIndex = 3;
 
     // Constants for UI layout
     private static final int BUTTON_WIDTH = 120;
@@ -97,6 +99,11 @@ public class BettingUI {
 
     // Sound manager
     private final SoundManager soundManager = SoundManager.getInstance();
+
+    // Multiplayer
+    private ClientConnection clientConnection;
+    private boolean isMultiplayer = false;
+    private String currentUsername;
 
     public BettingUI(PokerGame pokerGame, Stage stage, GameRenderer gameRenderer) {
         this(pokerGame, stage, null, gameRenderer);
@@ -149,6 +156,16 @@ public class BettingUI {
 
         // Initially disable betting controls
         setButtonsEnabled(false);
+    }
+
+    public void setMultiplayerMode(ClientConnection clientConnection) {
+        this.clientConnection = clientConnection;
+        this.isMultiplayer = true;
+
+        // Update the betting UI to reflect multiplayer mode
+//        if (clientConnection != null) {
+//            clientConnection.addGameStateListener(this::updateFromServer); // TODO
+//        }
     }
 
     private Skin createSimpleSkin() {
@@ -271,7 +288,15 @@ public class BettingUI {
             public void clicked(InputEvent event, float x, float y) {
                 if (!foldButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
-                    pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
+                    if (isMultiplayer) {
+                        PlayerAction action = new PlayerAction();
+                        action.action = PokerGame.PlayerAction.FOLD;
+                        action.amount = 0;
+                        action.tableCode = pokerGame.getTableCode();
+                        clientConnection.sendAction(action);
+                    } else {
+                        pokerGame.performAction(PokerGame.PlayerAction.FOLD, 0);
+                    }
                     setButtonsEnabled(false);
                 }
             }
@@ -283,9 +308,26 @@ public class BettingUI {
                 if (!checkCallButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
                     if (checkCallButton.getText().toString().equals("Check")) {
-                        pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+                        if (isMultiplayer) {
+                            PlayerAction action = new PlayerAction();
+                            action.action = PokerGame.PlayerAction.CHECK;
+                            action.amount = 0;
+                            action.tableCode = pokerGame.getTableCode();
+                            clientConnection.sendAction(action);
+                        } else {
+                            pokerGame.performAction(PokerGame.PlayerAction.CHECK, 0);
+                        }
                     } else {
-                        pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
+                        if (isMultiplayer) {
+                            PlayerAction action = new PlayerAction();
+                            action.action = PokerGame.PlayerAction.CALL;
+                            int playerIndex = findHumanPlayerIndex();
+                            action.amount = pokerGame.getCurrentBet() - pokerGame.getPlayers().get(playerIndex).getCurrentBet();
+                            action.tableCode = pokerGame.getTableCode();
+                            clientConnection.sendAction(action);
+                        } else {
+                            pokerGame.performAction(PokerGame.PlayerAction.CALL, 0);
+                        }
                     }
                     setButtonsEnabled(false);
                 }
@@ -297,7 +339,15 @@ public class BettingUI {
             public void clicked(InputEvent event, float x, float y) {
                 if (!raiseButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
-                    pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
+                    if (isMultiplayer) {
+                        PlayerAction action = new PlayerAction();
+                        action.action = PokerGame.PlayerAction.RAISE;
+                        action.amount = currentBetAmount;
+                        action.tableCode = pokerGame.getTableCode();
+                        clientConnection.sendAction(action);
+                    } else {
+                        pokerGame.performAction(PokerGame.PlayerAction.RAISE, currentBetAmount);
+                    }
                     setButtonsEnabled(false);
                 }
             }
@@ -348,7 +398,8 @@ public class BettingUI {
             public void clicked(InputEvent event, float x, float y) {
                 if (!allInButton.isDisabled()) {
                     SoundManager.getInstance().playButtonSound();
-                    Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
+                    int playerIndex = findHumanPlayerIndex();
+                    Player humanPlayer = pokerGame.getPlayers().get(playerIndex);
                     setBetAmount(humanPlayer.getChips());
                 }
             }
@@ -458,14 +509,17 @@ public class BettingUI {
         // Update labels with current game state
         currentBetLabel.setText("Current Bet: $" + pokerGame.getCurrentBet());
 
-        Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
+        int playerIndex = findHumanPlayerIndex();
+        Player humanPlayer = pokerGame.getPlayers().get(playerIndex);
         playerChipsLabel.setText("Your Chips: $" + humanPlayer.getChips());
 
         // Update turn info label and button states based on whose turn it is
         if (pokerGame.needsPlayerAction()) {
+//            System.out.println("pokerGame.getCurrentPlayerIndex() " + pokerGame.getCurrentPlayerIndex());
+//            System.out.println("playerIndex " + playerIndex); // 0
             int currentPlayerIndex = pokerGame.getCurrentPlayerIndex();
 
-            if (currentPlayerIndex == HUMAN_PLAYER_INDEX) {
+            if (currentPlayerIndex == playerIndex) {
                 // It's human player's turn
                 turnInfoLabel.setText("It's your turn!");
                 setButtonsEnabled(true);
@@ -498,9 +552,10 @@ public class BettingUI {
         // If player doesn't have enough chips to make a minimum raise, disable raise button
         // A minimum raise is doubling the current bet level, or going all-in if less
         int minRaiseAmount = pokerGame.getCurrentBet() * 2;
+        // int playerIndex = findHumanPlayerIndex(); // to see what is @playerIndex
         if (humanPlayer.getChips() + humanPlayer.getCurrentBet() <= pokerGame.getCurrentBet() || humanPlayer.getChips() <= 0) {
              raiseButton.setDisabled(true);
-        } else if (raiseButton.isDisabled() && pokerGame.getCurrentPlayerIndex() == HUMAN_PLAYER_INDEX && pokerGame.needsPlayerAction()) {
+        } else if (raiseButton.isDisabled() && pokerGame.getCurrentPlayerIndex() == playerIndex && pokerGame.needsPlayerAction()) {
              // Re-enable if conditions allow (and it's human's turn)
              raiseButton.setDisabled(false);
         }
@@ -572,7 +627,8 @@ public class BettingUI {
      * @param amount The bet amount to set
      */
     private void setBetAmount(int amount) {
-        Player humanPlayer = pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX);
+        int playerIndex = findHumanPlayerIndex();
+        Player humanPlayer = pokerGame.getPlayers().get(playerIndex);
 
         // Ensure bet amount is not greater than player's chips
         int maxBet = humanPlayer.getChips();
@@ -597,7 +653,8 @@ public class BettingUI {
     public void setButtonsEnabled(boolean enabled) {
         foldButton.setDisabled(!enabled);
         checkCallButton.setDisabled(!enabled);
-        raiseButton.setDisabled(!enabled || pokerGame.getPlayers().get(HUMAN_PLAYER_INDEX).getChips() <= pokerGame.getCurrentBet());
+        int playerIndex = findHumanPlayerIndex();
+        raiseButton.setDisabled(!enabled || pokerGame.getPlayers().get(playerIndex).getChips() <= pokerGame.getCurrentBet());
 
         // Enable/disable bet preset buttons
         minBetButton.setDisabled(!enabled);
@@ -628,6 +685,72 @@ public class BettingUI {
 
     public boolean isVisible() {
         return backgroundTable.isVisible();
+    }
+
+    public void setMultiplayerMode(ClientConnection clientConnection, String username) {
+        this.clientConnection = clientConnection;
+        this.isMultiplayer = true;
+        this.currentUsername = username;
+    }
+
+    private int findHumanPlayerIndex() {
+        if (!isMultiplayer) {
+            return 3; // default for singleplayer
+        }
+
+        // in multiplayer, find player by username
+        List<Player> players = pokerGame.getPlayers();
+        if (players.isEmpty()) {
+            return 0; // no players yet, return the first index
+        }
+
+        // search current player by the username
+        if (currentUsername != null) {
+            for (int i = 0; i < players.size(); i++) {
+                if (players.get(i).getName().equals(currentUsername)) {
+                    return i;
+                }
+            }
+        }
+
+        // default to first player if not found
+        return 0;
+    }
+
+    /**
+     * Maps server-side player indices to UI positions, accounting for dealer position rotation
+     * @param serverPlayerIndex The player index from the server's perspective
+     * @return The UI position where this player should be displayed
+     */
+    private int getUIPositionForPlayer(int serverPlayerIndex) {
+        if (!isMultiplayer) {
+            return serverPlayerIndex; // keep original index for singleplayer
+        }
+
+        int localPlayerIndex = findHumanPlayerIndex();
+        int playerCount = pokerGame.getPlayers().size();
+        int dealerPosition = PokerGame.getDealerPosition();
+
+        // Adjust player positions based on dealer position to maintain correct betting order
+        // In poker, the order of play rotates with the dealer button
+        // We need to calculate positions relative to dealer + current player to get proper order
+        int adjustedServerIndex = (serverPlayerIndex + playerCount - dealerPosition) % playerCount;
+        int adjustedLocalIndex = (localPlayerIndex + playerCount - dealerPosition) % playerCount;
+
+        // Calculate relative position with the dealer position adjustment
+        int relativePosition = (adjustedServerIndex - adjustedLocalIndex + playerCount) % playerCount;
+
+        // Map relative position to fixed UI positions
+        // 0 = top left, 1 = top right, 2 = middle right, 3 = bottom right, 4 = bottom left
+        // We want current player (relative position 0) to always be at position 3 (bottom right)
+        return switch (relativePosition) {
+            case 0 -> 3; // current player bottom right
+            case 1 -> 4; // next player clockwise bottom left
+            case 2 -> 0; // next player clockwise top left
+            case 3 -> 1; // next player clockwise top right
+            case 4 -> 2; // next player clockwise middle right
+            default -> 3; // fallback to current player position
+        };
     }
 
     public void dispose() {

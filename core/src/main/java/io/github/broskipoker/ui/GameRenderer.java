@@ -14,8 +14,10 @@
  */
 
 package io.github.broskipoker.ui;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -24,6 +26,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -32,6 +35,15 @@ import io.github.broskipoker.game.Card;
 import io.github.broskipoker.game.Player;
 import io.github.broskipoker.game.PokerGame;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import io.github.broskipoker.server.ClientConnection;
+
+import java.util.HashMap;
+import java.util.Map;
+
 
 import java.util.List;
 
@@ -63,6 +75,10 @@ public class GameRenderer {
     private final TextureRegion dealerRegion;
     private final TextureRegion smallBlindRegion;
     private final TextureRegion bigBlindRegion;
+    private TextureRegion[] emojiRegions;
+    private ImageButton emojiButton;
+    private Group emojiDropdown;
+
 
     // Card dimensions
     private static final int CARDS_PER_ROW = 13;
@@ -115,6 +131,22 @@ public class GameRenderer {
     private TextureRegion[][] avatarRegions;
     private int[] playerAvatarIndices; // Store which avatar each player uses
 
+    // Emoji rendering
+    private int selectedEmojiIndex = -1;
+    private long emojiDisplayStartTime = 0;
+    public static final long EMOJI_DISPLAY_DURATION = 3000;
+    // 3 sec
+    private Map<Integer, EmojiDisplayData> activeEmojis = new HashMap<>();
+
+    //boti
+    private float botEmojiTimer = 0f;
+    private static final float BOT_EMOJI_INTERVAL = 5f; // o reactie la ~5 secunde
+
+    // for multiplayer
+    private boolean isMultiplayer = false;
+    private String currentUsername;
+    private ClientConnection clientConnection;
+
     static
     {
         // Initialize dealing animator
@@ -146,7 +178,7 @@ public class GameRenderer {
         backgroundTexture = new Texture("textures/2x/pokerTable.png");
         cardSheet = new Texture(Gdx.files.internal("textures/2x/8BitDeck.png"));
         enhancersSheet = new Texture(Gdx.files.internal("textures/2x/Enhancers.png"));
-        chipTexture = new Texture(Gdx.files.internal("textures/2x/Chips.png"));
+        chipTexture = new Texture(Gdx.files.internal("textures/2x/chips.png"));
 
         // Load buttons sheet
         buttonsSheet = new Texture(Gdx.files.internal("textures/2x/SmallBigDealer.png"));
@@ -158,6 +190,8 @@ public class GameRenderer {
         cardBackground = new TextureRegion(enhancersSheet, ENHANCER_WIDTH, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
         cardBack = new TextureRegion(enhancersSheet, 0, 0, ENHANCER_WIDTH, ENHANCER_HEIGHT);
         cardRegions = new TextureRegion[SUITS][CARDS_PER_ROW];
+
+
 
         for (int suit = 0; suit < SUITS; suit++) {
             for (int rank = 0; rank < CARDS_PER_ROW; rank++) {
@@ -219,6 +253,9 @@ public class GameRenderer {
             // Initialize player avatar indices with random avatars
             playerAvatarIndices = new int[5]; // One index for each player
             for (int i = 0; i < playerAvatarIndices.length; i++) {
+                if (isMultiplayer) {
+                    playerAvatarIndices[i] = i;
+                }
                 playerAvatarIndices[i] = MathUtils.random(249); // 250 total avatars (10×25)
             }
         } catch (Exception e) {
@@ -227,12 +264,80 @@ public class GameRenderer {
             avatarRegions = null;
             playerAvatarIndices = null;
         }
+
+        //Load emoji textures
+        loadEmojiTextures();
+
+        //Load emoji button
+        TextureRegionDrawable emojiButtonDrawable = new TextureRegionDrawable(emojiRegions[0]); // first emoji as icon
+        emojiButton = new ImageButton(emojiButtonDrawable);
+
+        emojiButton.setPosition(700, 100); // screen position
+        emojiButton.setSize(40, 40);
+//        stage.addActor(emojiButton);
+
+        //click dropdwon listener
+        emojiButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean showDropdown = !emojiDropdown.isVisible();
+                emojiDropdown.setVisible(showDropdown);
+                emojiButton.setSize(0,0);
+                // Folosim direct setVisible pentru efect instant
+                emojiButton.setVisible(!showDropdown);
+            }
+        });
+
+
+
+        //adding emoji dropdown
+        emojiDropdown = new Group();
+        emojiDropdown.setVisible(false);
+        emojiDropdown.setPosition(700, 150); // poziția absolută pe ecran
+//        stage.addActor(emojiDropdown);
+
+
+        float baseX = 700;
+        float baseY = 150;
+        float size = 40;
+        float spacing = 5;
+
+
+
+        for (int i = 0; i < emojiRegions.length; i++) {
+            final int emojiIndex = i;
+
+            ImageButton emojiChoice = new ImageButton(new TextureRegionDrawable(emojiRegions[i]));
+            emojiChoice.setSize(size, size);
+            emojiChoice.setPosition(i * (size + spacing), 0); // poziție relativă în grup
+
+            emojiChoice.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    int humanPlayerIndex = findHumanPlayerIndex();
+                    activeEmojis.put(humanPlayerIndex, new EmojiDisplayData(emojiIndex, System.currentTimeMillis()));
+                    emojiDropdown.setVisible(false);
+                    emojiButton.setSize(40, 40);
+                    // reapare butonul după alegere
+                }
+            });
+
+//
+//            emojiDropdown.addActor(emojiChoice);
+        }
+
+//        stage.addActor(emojiDropdown);
     }
 
     public void setGameController(GameController controller) {
         this.gameController = controller;
         // Now initialize the BettingUI with the GameController
         this.bettingUI = new BettingUI(pokerGame, stage, this);
+
+        // pass multiplayer info to betting UI if in multiplayer mode
+        if (isMultiplayer && clientConnection != null) {
+            bettingUI.setMultiplayerMode(clientConnection, currentUsername);
+        }
     }
 
     public void render(float delta) {
@@ -255,12 +360,23 @@ public class GameRenderer {
             // Draw game elements
             renderGameElements(delta);
 
+            // Render random emojis for bots
+            botEmojiTimer += delta;
+            if (botEmojiTimer >= BOT_EMOJI_INTERVAL) {
+//                triggerRandomBotEmoji();
+                botEmojiTimer = 0f;
+            }
+
+
             // Handle player turns
             handlePlayerTurns();
 
             // Update stage
             stage.act(delta);
             stage.draw();
+
+            //emoji button
+            emojiButton.setVisible(true);
 
         } else {
             // Hide betting UI when in menu
@@ -269,7 +385,18 @@ public class GameRenderer {
             // Draw menu
             stage.act(delta);
             stage.draw();
+
+            //hide emoji button when in menu
+            emojiButton.setVisible(false);
+
         }
+
+        // Handle emoji display TEST
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            selectedEmojiIndex = 0;
+            emojiDisplayStartTime = System.currentTimeMillis();
+        }
+
     }
 
     // Modify renderBlindPositions()
@@ -282,8 +409,15 @@ public class GameRenderer {
         int buttonHeight = 80;
 
         // Calculate small blind and big blind positions
-        int smallBlindPosition = (dealerPosition) % chairPositions.length;
-        int bigBlindPosition = (dealerPosition + 1) % chairPositions.length;
+        int smallBlindPosition;
+        int bigBlindPosition;
+        if (isMultiplayer) {
+            smallBlindPosition = getUIPositionForPlayer(dealerPosition % chairPositions.length);
+            bigBlindPosition = getUIPositionForPlayer((dealerPosition + 1) % chairPositions.length);
+        } else {
+            smallBlindPosition = (dealerPosition) % chairPositions.length;
+            bigBlindPosition = (dealerPosition + 1) % chairPositions.length;
+        }
 
         // Render Dealer Texture
         float dpX = 120;
@@ -361,6 +495,18 @@ public class GameRenderer {
         }
     }
 
+    private void loadEmojiTextures(){
+        // Load emoji textures
+        emojiRegions = new TextureRegion[5];
+
+        emojiRegions[0] = new TextureRegion(new Texture(Gdx.files.internal("emojis/laugh.png")));
+        emojiRegions[1] = new TextureRegion(new Texture(Gdx.files.internal("emojis/cry.png")));
+        emojiRegions[2] = new TextureRegion(new Texture(Gdx.files.internal("emojis/angry.png")));
+        emojiRegions[3] = new TextureRegion(new Texture(Gdx.files.internal("emojis/like.png")));
+        emojiRegions[4] = new TextureRegion(new Texture(Gdx.files.internal("emojis/boss.png")));
+
+    }
+
     /**
      * Renders cards with the specified rotation
      * @param communityCards - array with cards to be displayed
@@ -403,23 +549,57 @@ public class GameRenderer {
     private void renderPlayerCards(List<Player> players) {
         // Check if we're in showdown state
         boolean isShowdown = pokerGame.getGameState() == PokerGame.GameState.SHOWDOWN;
+        int humanPlayerIndex = findHumanPlayerIndex();
 
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
-            float x = chairPositions[i][0];
-            float y = chairPositions[i][1];
+            // map server-side player indexes to UI positions
+            int uiPosition = getUIPositionForPlayer(i);
+
+            float x = chairPositions[uiPosition][0];
+            float y = chairPositions[uiPosition][1];
+
+            // Get player's cards
             Card[] playerCards = players.get(i).getHoleCards().toArray(new Card[0]);
 
-            for (int j = 0; j < playerCards.length && j < 2; j++) {
-                if (dealingAnimator.isCardDealt(i, j) && players.get(i).isActive()) {
-                    if (i == 2) {
-                        // Player at position 2 has rotated cards
-                        renderRotatedCards(new Card[]{playerCards[j]}, x, y - j * 70, 90, isShowdown && players.get(i).isActive());
-                    } else if (i == 3 || isShowdown) {
+            // For active opponents in multiplayer mode, ensure we have something to render
+            boolean shouldCreatePlaceholders = isMultiplayer &&
+                                              players.get(i).isActive() &&
+                                              i != humanPlayerIndex &&
+                                              playerCards.length == 0;
+
+            // Create placeholder cards for opponents in multiplayer if needed
+            Card[] cardsToRender;
+            if (shouldCreatePlaceholders) {
+                // Create two placeholder cards that will be rendered face down
+                cardsToRender = new Card[2];
+                cardsToRender[0] = new Card(Card.Suit.CLUBS, Card.Rank.ACE);
+                cardsToRender[1] = new Card(Card.Suit.CLUBS, Card.Rank.ACE);
+            } else {
+                cardsToRender = playerCards;
+            }
+
+            // Render up to 2 cards for each player
+            for (int j = 0; j < 2; j++) {
+                // Skip if no card to render
+                if (j >= cardsToRender.length || cardsToRender[j] == null) {
+                    continue;
+                }
+
+                // Determine if we should render this card
+                boolean shouldRender = players.get(i).isActive() &&
+                                      (isMultiplayer || dealingAnimator.isCardDealt(i, j));
+
+                if (shouldRender) {
+                    if (uiPosition == 2) {
+                        // Player at UI position 2 has rotated cards
+                        boolean showFaceUp = isShowdown || i == humanPlayerIndex;
+                        renderRotatedCards(new Card[]{cardsToRender[j]}, x, y - j * 70, 90, showFaceUp);
+                    } else if (i == humanPlayerIndex || isShowdown) {
                         // Human player or showdown state - show face up
-                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, players.get(i).isActive());
+                        renderCards(new Card[]{cardsToRender[j]}, x + j * 70, y, true);
                     } else {
                         // Other players during regular gameplay - show face down
-                        renderCards(new Card[]{playerCards[j]}, x + j * 70, y, false);
+                        renderCards(new Card[]{cardsToRender[j]}, x + j * 70, y, false);
                     }
                 }
             }
@@ -432,7 +612,6 @@ public class GameRenderer {
         }
 
         boolean batchWasActive = batch.isDrawing();
-
         if (!batchWasActive) {
             batch.begin();
         }
@@ -541,10 +720,11 @@ public class GameRenderer {
         if (state == PokerGame.GameState.SHOWDOWN && !soundManager.isShowdownSoundPlayed()) {
             List<Player> winners = pokerGame.determineWinners();
             boolean humanPlayerWon = false;
+            int humanPlayerIndex = findHumanPlayerIndex();
 
             // Check if human player is among winners
             for (Player winner : winners) {
-                if (players.indexOf(winner) == HUMAN_PLAYER_INDEX) {
+                if (players.indexOf(winner) == humanPlayerIndex) {
                     humanPlayerWon = true;
                     break;
                 }
@@ -559,21 +739,28 @@ public class GameRenderer {
         }
 
         // Debug info
-        font.draw(batch, "Game State: " + state.toString(), 50, 100);
-        font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
+//        font.draw(batch, "Game State: " + state.toString(), 50, 100);
+//        font.draw(batch, "Community Cards: " + communityCards.size(), 50, 50);
 
         // DEBUG: Add buttons to force next state (for testing)
         if (Gdx.input.justTouched() && Gdx.input.getY() < 150) {
             // Simple way to advance game state for testing
             if (state == PokerGame.GameState.BETTING_PRE_FLOP) {
-                pokerGame.dealFlop();
-            } else if (state == PokerGame.GameState.BETTING_FLOP) {
+                if (isMultiplayer) {
+                    // In multiplayer, just force the animation to complete
+                    dealingAnimationComplete = true;
+                    dealingAnimationTimer = DEALING_ANIMATION_DURATION;
+                    System.out.println("Forcing dealing animation completion in multiplayer");
+                } else {
+                    pokerGame.dealFlop();
+                }
+            } else if (state == PokerGame.GameState.BETTING_FLOP && !isMultiplayer) {
                 pokerGame.dealTurn();
-            } else if (state == PokerGame.GameState.BETTING_TURN) {
+            } else if (state == PokerGame.GameState.BETTING_TURN && !isMultiplayer) {
                 pokerGame.dealRiver();
-            } else if (state == PokerGame.GameState.BETTING_RIVER) {
+            } else if (state == PokerGame.GameState.BETTING_RIVER && !isMultiplayer) {
                 pokerGame.goToShowdown();
-            } else if (state == PokerGame.GameState.SHOWDOWN) {
+            } else if (state == PokerGame.GameState.SHOWDOWN && !isMultiplayer) {
                 dealingAnimator.reset();
             }
         }
@@ -684,13 +871,18 @@ public class GameRenderer {
         final float AVATAR_PADDING = 0;
         final float BORDER_THICKNESS = 3; // Added border thickness variable
 
+        int humanPlayerIndex = findHumanPlayerIndex();
+
         for (int i = 0; i < players.size() && i < chairPositions.length; i++) {
-            float x = chairPositions[i][0];
-            float y = chairPositions[i][1] - 40;
+            // map server side player index to UI position
+            int uiPosition = getUIPositionForPlayer(i);
+
+            float x = chairPositions[uiPosition][0];
+            float y = chairPositions[uiPosition][1] - 40;
 
             // Apply offset for each player
-            float textOffsetX = textOffsets[i][0];
-            float textOffsetY = textOffsets[i][1];
+            float textOffsetX = textOffsets[uiPosition][0];
+            float textOffsetY = textOffsets[uiPosition][1];
 
             // Draw player avatar (if available)
             if (avatarRegions != null) {
@@ -702,10 +894,10 @@ public class GameRenderer {
                 // Position avatar based on player position
                 float avatarX, avatarY;
 
-                if (i == 0 || i == 1) { // Top players
+                if (uiPosition == 0 || uiPosition == 1) { // Top players
                     avatarX = x + textOffsetX - AVATAR_SIZE - 10;
                     avatarY = y + textOffsetY - AVATAR_SIZE/2;
-                } else if (i == 2) { // Right player
+                } else if (uiPosition == 2) { // Right player
                     avatarX = x + textOffsetX - AVATAR_SIZE - 10;
                     avatarY = y + textOffsetY - AVATAR_SIZE/2;
                 } else { // Bottom players
@@ -737,13 +929,26 @@ public class GameRenderer {
                 if (row < avatarRegions.length && col < avatarRegions[0].length) {
                     batch.draw(avatarRegions[row][col], avatarX, avatarY, AVATAR_SIZE, AVATAR_SIZE);
                 }
+
+                //Emoji test
+                EmojiDisplayData data = activeEmojis.get(i);
+                if (data != null && System.currentTimeMillis() - data.displayStartTime < EMOJI_DISPLAY_DURATION) {
+                    float emojiX = x + textOffsetX + 10;
+                    float emojiY = y + textOffsetY + 70;
+
+                    batch.setColor(1f, 1f, 1f, data.getAlpha()); // fade-out
+                    batch.draw(emojiRegions[data.emojiIndex], emojiX, emojiY, 40, 40);
+                    batch.setColor(Color.WHITE); // reset
+                }
+
+
             }
 
             // Get player name font based on player type
             BitmapFont playerFont;
             String playerInfo = players.get(i).getName() + ": $" + players.get(i).getChips();
 
-            if (i == HUMAN_PLAYER_INDEX) {
+            if (i == humanPlayerIndex) {
                 playerFont = fontManager.getFont(24, new Color(0.2f, 0.6f, 1.0f, 1.0f)); // Blue for human player
                 playerInfo += " (You)";
             } else {
@@ -854,9 +1059,11 @@ public class GameRenderer {
                 bettingUI.update();
             }
 
+            int humanPlayerIndex = findHumanPlayerIndex();
+
             // Check if it's a bot's turn and we need to start it thinking
             if (pokerGame.needsPlayerAction() &&
-                pokerGame.getCurrentPlayerIndex() != HUMAN_PLAYER_INDEX &&
+                pokerGame.getCurrentPlayerIndex() != humanPlayerIndex &&
                 gameController != null && !gameController.isBotThinking()) {
 
                 // Trigger the bot thinking process in the controller
@@ -869,6 +1076,85 @@ public class GameRenderer {
         stage.getViewport().update(width, height, true);
         camera.setToOrtho(false, width, height);
         camera.update();
+    }
+
+    // TODO: add it back later
+//    private void triggerRandomBotEmoji() {
+//        List<Player> players = pokerGame.getPlayers();
+//
+//        // Alege un bot random (index diferit de HUMAN_PLAYER_INDEX)
+//        int randomIndex;
+//        do {
+//            randomIndex = MathUtils.random(players.size() - 1);
+//        } while (randomIndex == HUMAN_PLAYER_INDEX || !players.get(randomIndex).isActive());
+//
+//        int emojiIndex = MathUtils.random(emojiRegions.length - 1);
+//        activeEmojis.put(randomIndex, new EmojiDisplayData(emojiIndex, System.currentTimeMillis()));
+//    }
+
+    public void setMultiplayerMode(ClientConnection clientConnection, String username) {
+        isMultiplayer = true;
+        this.clientConnection = clientConnection;
+        this.currentUsername = username;
+    }
+
+    private int findHumanPlayerIndex() {
+        if (!isMultiplayer) {
+            return 3; // default for singleplayer
+        }
+
+        // in multiplayer, find player by username
+        List<Player> players = pokerGame.getPlayers();
+        if (players.isEmpty()) {
+            return 0; // no players yet, return the first index
+        }
+
+        // search current player by the username
+        if (currentUsername != null) {
+            for (int i = 0; i < players.size(); i++) {
+                if (players.get(i).getName().equals(currentUsername)) {
+                    return i;
+                }
+            }
+        }
+
+        // default to first player if not found
+        return 0;
+    }
+
+    /**
+     * Maps server-side player indices to UI positions
+     * @param serverPlayerIndex The player index from the server's perspective
+     * @return The UI position (0-4) where this player should be displayed
+     */
+    private int getUIPositionForPlayer(int serverPlayerIndex) {
+        if (!isMultiplayer) {
+            return serverPlayerIndex; // keep original index for singleplayer
+        }
+
+        int localPlayerIndex = findHumanPlayerIndex();
+        int playerCount = pokerGame.getPlayers().size();
+
+        // relative position (0 - current player, 1 - next player clockwise...)
+        int relativePosition = (serverPlayerIndex - localPlayerIndex + playerCount) % playerCount;
+
+        // map relative position to fixed UI positions
+        // 0 = top left, 1 = top right, 2 = middle right, 3 = bottom right, 4 = bottom left
+        // we want current player (relative position 0) to always be at position 3 (bottom right)
+        return switch (relativePosition) {
+            case 0 -> 3; // current player bottom right
+            case 1 -> 4; // next player clockwise bottom left
+            case 2 -> 0; // next player clockwise top left
+            case 3 -> 1; // next player clockwise top right
+            case 4 -> 2; // next player clockwise middle right
+            default -> 3; // fallback to current player position
+        };
+    }
+
+    public void setMenuStarted(boolean started) {
+        if (menu != null) {
+            menu.setGameStarted(started);
+        }
     }
 
     public Stage getStage() {
@@ -891,6 +1177,10 @@ public class GameRenderer {
         return bettingUI;
     }
 
+    public boolean isMultiplayer() {
+        return isMultiplayer;
+    }
+
     public void dispose() {
         batch.dispose();
         stage.dispose();
@@ -905,4 +1195,5 @@ public class GameRenderer {
         soundManager.dispose();
         avatarsTexture.dispose();
     }
+
 }

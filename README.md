@@ -145,7 +145,6 @@ The game uses a custom protocol with serialized objects:
 - **Factory Method**: FontManager.java creates font instances on demand
 - **Callback**: onLoginSuccess Runnable for post-authentication logic
 - **Facade**: Menu.java simplifies UI component interactions
-- [Code Documentation](https://example.com/code-standards) - Javadoc and inline comments
 
 ## Project Structure
 
@@ -170,7 +169,7 @@ Broski-Poker/
 
 - **Card Graphics**: High-quality playing card sprites
 - **Table Design**: Realistic poker table interface
-- **Animations**: Smooth card dealing and chip movements
+- **Animations**: Smooth card dealing and chip rendering
 - **Sound Effects**: Authentic casino atmosphere
 - **Fonts**: Custom typography for professional appearance
 

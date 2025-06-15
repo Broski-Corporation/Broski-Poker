@@ -4,16 +4,14 @@
 
 - [diagrame](https://example.com/diagrame)
 
-- source control cu git (
-  [branch creation](https://github.com/Broski-SRL/Broski-Poker/branches), 
+- source control cu git ([branch creation](https://github.com/Broski-SRL/Broski-Poker/branches), 
   [merge/rebase](https://example.com/merge-rebase), 
   [pull requests](https://github.com/Broski-SRL/Broski-Poker/pulls?q=is%3Apr+is%3Aclosed), 
-  [minim 10 commits](https://github.com/Broski-SRL/Broski-Poker/commits/main/)
-)
+  [minim 10 commits](https://github.com/Broski-SRL/Broski-Poker/commits/main/))
 
 - [teste automate](https://example.com/teste-automate)
 
-- [raportare bug si rezolvare cu pull request](https://example.com/bug-reporting)
+- [raportare bug si rezolvare cu pull request](https://github.com/Broski-SRL/Broski-Poker/pull/33)
 
 - [comentarii cod si respectarea code standards](https://example.com/code-standards)
 

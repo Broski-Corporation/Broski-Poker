@@ -113,8 +113,7 @@ public class LobbyPanel extends Dialog {
             public void changed(ChangeEvent event, Actor actor) {
                 if (onLeaveGame != null) onLeaveGame.run();
                 if (clientConnection != null) {
-                    // Use leaveTable instead of disconnect to keep the connection alive
-                    clientConnection.leaveTable();
+                    clientConnection.disconnect();
                 }
                 hide();
             }

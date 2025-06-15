@@ -1,50 +1,22 @@
 # Broski Poker
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+- [user stories](https://github.com/orgs/Broski-SRL/projects/3)
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+- [diagrame](https://example.com/diagrame)
 
-## Platforms
+- source control cu git (
+  [branch creation](https://github.com/Broski-SRL/Broski-Poker/branches), 
+  [merge/rebase](https://example.com/merge-rebase), 
+  [pull requests](https://github.com/Broski-SRL/Broski-Poker/pulls?q=is%3Apr+is%3Aclosed), 
+  [minim 10 commits](https://github.com/Broski-SRL/Broski-Poker/commits/main/)
+)
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+- [teste automate](https://example.com/teste-automate)
 
-## Gradle
+- [raportare bug si rezolvare cu pull request](https://example.com/bug-reporting)
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+- [comentarii cod si respectarea code standards](https://example.com/code-standards)
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+- [design patterns](https://example.com/design-patterns)
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
-
-## Updates
-- Added zoom on table function
-- Added splitting cards with 0.3s delay
-- Round reset logic
-- Window mode resizing
-
-## Bugs
-
-
-## Tasks before first presentation
-
-- auto-exit when 0 balance
-- better bot mechanics
-- override showdown by simple click
-- entering '12a' in custom bet field leads to all in bet
-- after ending betting round wait 5 seconds to see the pot/bet/players
+- [prompt engineering: documentarea folosirii toolurilor de AI in timpul dezvoltarii software (d. ex. GitHub Copilot, chatGPT, Microsoft Copilot)](https://example.com/prompt-engineering)

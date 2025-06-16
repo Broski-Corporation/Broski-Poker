@@ -173,6 +173,25 @@ The game uses a custom protocol with serialized objects:
 - **Callback**: onLoginSuccess Runnable for post-authentication logic
 - **Facade**: Menu.java simplifies UI component interactions
 
+### AI-Assisted Development
+
+During development, we relied on several AI tools to streamline coding, debugging, and learning complex frameworks:
+
+**GitHub Copilot** (in IntelliJ) was used for code autocompletion and rapid boilerplate generation, especially for Java and LibGDX integration. It helped speed up routine tasks and reduced manual coding effort.
+
+**GitHub Copilot Agent Mode** proved invaluable for complex debugging sessions, particularly when troubleshooting backend-frontend integration issues. It helped resolve problems with:
+- Server-client communication synchronization between `PokerServer.java` and UI components
+- Network message handling and state updates in multiplayer gameplay
+- Threading issues in real-time game state propagation
+
+**Claude Sonnet** delivered the best overall performance. It was particularly effective for:
+- Debugging complex poker game logic and state management
+- Explaining how specific LibGDX components work (rendering, input handling, asset management)
+- Refactoring and improving existing code architecture
+- **Server deployment guidance** - helping us successfully deploy the multiplayer server to our VPS infrastructure
+- **AI bot development** - providing strategic insights and implementation guidance for the `PokerBot.java` decision-making algorithms and behavioral patterns
+
+
 ## Project Structure
 
 ```

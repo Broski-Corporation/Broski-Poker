@@ -123,18 +123,46 @@ The game uses a custom protocol with serialized objects:
 ## Software Development Tasks
 
 ### Project Management
-- [User Stories](https://github.com/orgs/Broski-SRL/projects/3) - Agile development tracking
+- [User Stories](https://github.com/orgs/Broski-Corporation/projects/3) - Agile development tracking
 - [Diagrams](https://example.com/diagrame) - System architecture documentation
 
 ### Source Control
 - [Branch Creation](https://github.com/Broski-SRL/Broski-Poker/branches) - Feature branch workflow
-- [Merge/Rebase](https://example.com/merge-rebase) - Git workflow documentation  
+- [Merge/Rebase](https://github.com/Broski-Corporation/Broski-Poker/network) - Git workflow documentation  
 - [Pull Requests](https://github.com/Broski-SRL/Broski-Poker/pulls?q=is%3Apr+is%3Aclosed) - Code review process
 - [Commit History](https://github.com/Broski-SRL/Broski-Poker/commits/main/) - Development progression (160+ commits)
 
 ### Quality Assurance
 - [Automated Tests](https://example.com/teste-automate) - Unit and integration testing
 - [Bug Resolution](https://github.com/Broski-SRL/Broski-Poker/pull/33) - Issue tracking and fixes via PR
+
+### Coding Standards
+
+#### Java Code Conventions
+- **Package Naming**: Reverse domain notation (`io.github.broskipoker.*`)
+- **Class Naming**: PascalCase for all class names (`PokerGame`, `TableManager`, `GameController`)
+- **Method Naming**: camelCase for all method names (`generateUniqueTableCode`, `addPlayer`, `getCurrentBet`)
+- **Variable Naming**: camelCase for instance variables and local variables (`currentBet`, `smallBlind`, `connectionToCode`)
+- **Constant Naming**: UPPER_SNAKE_CASE for static final constants (`HUMAN_PLAYER_INDEX`, `BOT_THINKING_TIME`, `CARD_WIDTH`)
+
+#### Field and Access Modifiers
+- **Encapsulation**: Consistent use of `private final` for immutable fields (`private final String name`, `private final Random random`)
+- **Static Fields**: Proper use of `static final` for shared constants and utilities
+- **Access Control**: Appropriate use of `public`, `private`, and `synchronized` modifiers
+- **Immutability**: Defensive copying in getter methods (e.g., `new ArrayList<>(connections)`)
+
+#### Method Organization
+- **Getter/Setter Pattern**: Consistent implementation across model classes
+- **Synchronization**: Thread-safe operations using `synchronized` keyword for concurrent access
+
+#### Code Structure
+- **Enum Usage**: Well-structured enums with appropriate values (`BotStrategy`, `GameState`, `PlayerAction`)
+- **Resource Management**: Proper disposal patterns implementing `Disposable` interface
+
+#### Documentation Standards
+- **Javadoc Comments**: Comprehensive method documentation with parameter and return value descriptions
+- **Inline Comments**: Strategic use of comments to explain complex game logic and business rules
+- **Code Organization**: Logical grouping of related methods and clear class responsibilities
 
 ### Design Patterns
 - **MVC**: Model (PokerGame.java), View (GameRenderer.java), Controller (GameController.java)

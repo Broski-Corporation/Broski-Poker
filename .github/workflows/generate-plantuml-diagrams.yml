@@ -1,0 +1,38 @@
+name: Generate PlantUML Diagrams
+
+on:
+  push:
+    paths:
+      - 'docs/**/*.puml'
+      - '.github/workflows/generate-plantuml-diagrams.yml'
+  pull_request:
+    paths:
+      - 'docs/**/*.puml'
+
+jobs:
+  generate-diagrams:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Download PlantUML
+        run: curl -L -o plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2024.6/plantuml-1.2024.6.jar
+
+      - name: Generate PNG diagrams from .puml files
+        run: |
+          mkdir -p docs/generated_diagrams
+          find docs -name '*.puml' -exec java -jar plantuml.jar -tpng -o generated_diagrams {} \;
+
+      - name: Upload diagrams as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plantuml-diagrams
+          path: docs/generated_diagrams/

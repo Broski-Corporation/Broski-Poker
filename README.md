@@ -124,7 +124,7 @@ The game uses a custom protocol with serialized objects:
 
 ### Project Management
 - [User Stories](https://github.com/orgs/Broski-Corporation/projects/3) - Agile development tracking
-- [Diagrams](https://example.com/diagrame) - System architecture documentation
+- [Diagrams](https://github.com/Broski-Corporation/Broski-Poker/tree/main/docs) - System architecture documentation
 
 ### Source Control
 - [Branch Creation](https://github.com/Broski-SRL/Broski-Poker/branches) - Feature branch workflow
@@ -133,7 +133,7 @@ The game uses a custom protocol with serialized objects:
 - [Commit History](https://github.com/Broski-SRL/Broski-Poker/commits/main/) - Development progression (160+ commits)
 
 ### Quality Assurance
-- [Automated Tests](https://example.com/teste-automate) - Unit and integration testing
+- [Automated Tests](https://github.com/Broski-Corporation/Broski-Poker/actions) - Unit and integration testing using GitHub Actions
 - [Bug Resolution](https://github.com/Broski-SRL/Broski-Poker/pull/33) - Issue tracking and fixes via PR
 
 ### Coding Standards

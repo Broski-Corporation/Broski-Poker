@@ -160,8 +160,7 @@ The game uses a custom protocol with serialized objects:
 - **Resource Management**: Proper disposal patterns implementing `Disposable` interface
 
 #### Documentation Standards
-- **Javadoc Comments**: Comprehensive method documentation with parameter and return value descriptions
-- **Inline Comments**: Strategic use of comments to explain complex game logic and business rules
+- **Inline Comments**: Strategic use of comments to explain complex game logic
 - **Code Organization**: Logical grouping of related methods and clear class responsibilities
 
 ### Design Patterns

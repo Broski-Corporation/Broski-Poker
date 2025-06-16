@@ -31,10 +31,8 @@ jobs:
           mkdir -p docs/generated_diagrams
           find docs -name '*.puml' -exec java -jar plantuml.jar -tpng -o generated_diagrams {} \;
 
-      - name: Commit and push generated diagrams
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/generated_diagrams/
-          git commit -m "Auto-generate PlantUML diagrams [skip ci]" || echo "No changes to commit"
-          git push
+      - name: Upload diagrams as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plantuml-diagrams
+          path: docs/generated_diagrams/

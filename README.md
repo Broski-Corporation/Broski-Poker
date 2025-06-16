@@ -124,7 +124,7 @@ The game uses a custom protocol with serialized objects:
 
 ### Project Management
 - [User Stories](https://github.com/orgs/Broski-Corporation/projects/3) - Agile development tracking
-- [Diagrams](https://github.com/Broski-Corporation/Broski-Poker/tree/main/docs) - System architecture documentation
+- [Diagrams](https://github.com/Broski-Corporation/Broski-Poker/actions/runs/15681976011) - System architecture documentation
 
 ### Source Control
 - [Branch Creation](https://github.com/Broski-SRL/Broski-Poker/branches) - Feature branch workflow

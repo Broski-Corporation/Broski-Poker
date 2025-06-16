@@ -130,7 +130,7 @@ The game uses a custom protocol with serialized objects:
 - [Branch Creation](https://github.com/Broski-SRL/Broski-Poker/branches) - Feature branch workflow
 - [Merge/Rebase](https://github.com/Broski-Corporation/Broski-Poker/network) - Git workflow documentation  
 - [Pull Requests](https://github.com/Broski-SRL/Broski-Poker/pulls?q=is%3Apr+is%3Aclosed) - Code review process
-- [Commit History](https://github.com/Broski-SRL/Broski-Poker/commits/main/) - Development progression (160+ commits)
+- [Commit History](https://github.com/Broski-SRL/Broski-Poker/commits/main/) - Development progression (180+ commits)
 
 ### Quality Assurance
 - [Automated Tests](https://github.com/Broski-Corporation/Broski-Poker/actions) - Unit and integration testing using GitHub Actions

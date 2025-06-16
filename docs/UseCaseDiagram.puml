@@ -1,27 +1,27 @@
 @startuml
 left to right direction
 
-actor "Jucator" as Player
+actor "Player" as Player
 
-rectangle "Sistem Poker Game" {
-    (Autentificare)
-    (Vizualizare lobby)
-    (Alaturare joc)
-    (Incepe joc)
-    (Plaseaza pariu)
-    (Vede carțile)
-    (Vede rezultatul mainii)
-    (Ieșire joc)
+rectangle "Poker Game System" {
+    (Authentification)
+    (Lobby visualisation)
+    (Join game)
+    (Start game)
+    (Place bet)
+    (See cards)
+    (See hand result)
+    (Exit game)
 }
 
-Player --> (Autentificare)
-Player --> (Vizualizare lobby)
-Player --> (Alaturare joc)
-Player --> (Incepe joc)
-Player --> (Plaseaza pariu)
-Player --> (Vede carțile)
-Player --> (Vede rezultatul mainii)
-Player --> (Ieșire joc)
+Player --> (Authentification)
+Player --> (Lobby visualisation)
+Player --> (Join game)
+Player --> (Start game)
+Player --> (Place bet)
+Player --> (See cards)
+Player --> (See hand result)
+Player --> (Exit game)
 
 
 

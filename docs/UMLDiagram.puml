@@ -1,0 +1,85 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam rectangle {
+    BorderColor black
+    BackgroundColor white
+}
+top to bottom direction
+
+' UI Layer (sus)
+package "UI" {
+    class GameRenderer
+    class GameController
+    class BettingUI
+    class Menu
+}
+
+' Core Logic (mijloc)
+package "Core Game" {
+    class PokerGame
+    class Player
+    class Card
+    class PokerHand
+}
+
+' Utils & DB (jos)
+package "Utils & DB" {
+    class DatabaseConnection
+    class DealingAnimator
+}
+
+' Enum-uri (jos, corect formatate)
+enum Suit {
+    HEARTS
+    DIAMONDS
+    CLUBS
+    SPADES
+}
+enum Rank {
+    TWO
+    THREE
+    FOUR
+    FIVE
+    SIX
+    SEVEN
+    EIGHT
+    NINE
+    TEN
+    JACK
+    QUEEN
+    KING
+    ACE
+}
+enum HandRank {
+    HIGH_CARD
+    PAIR
+    TWO_PAIR
+    THREE_OF_A_KIND
+    STRAIGHT
+    FLUSH
+    FULL_HOUSE
+    FOUR_OF_A_KIND
+    STRAIGHT_FLUSH
+    ROYAL_FLUSH
+}
+
+' Relații principale (fără săgeți diagonale lungi)
+PokerGame "1" o-- "*" Player : players
+PokerGame "1" o-- "*" Card : communityCards
+Player "1" o-- "*" Card : hand
+PokerHand "1" o-- "*" Card
+
+GameRenderer --> PokerGame
+GameController --> PokerGame
+BettingUI --> PokerGame
+BettingUI --> GameController
+GameRenderer --> GameController
+Menu --> GameRenderer
+
+Card o-- Suit
+Card o-- Rank
+PokerHand o-- HandRank
+
+DatabaseConnection <.. PokerGame
+
+@enduml

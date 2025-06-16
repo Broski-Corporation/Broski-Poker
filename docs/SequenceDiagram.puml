@@ -1,0 +1,14 @@
+@startuml
+actor Jucator
+participant "GameController" as GC
+participant "PokerGame" as Game
+participant "BettingUI" as UI
+
+Jucator -> UI : Plasează pariu
+UI -> GC : Trimite acțiune pariu(jucător, sumă)
+GC -> Game : proceseazăPariu(jucător, sumă)
+Game -> GC : răspuns pariu valid/invalid
+GC -> UI : actualizează interfața pariu
+UI -> Jucator : Afișează rezultat pariu
+
+@enduml

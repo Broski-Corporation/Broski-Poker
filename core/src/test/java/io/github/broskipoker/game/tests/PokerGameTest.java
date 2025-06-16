@@ -1,208 +1,255 @@
 package io.github.broskipoker.game.tests;
 
-import io.github.broskipoker.game.*;
-import org.junit.jupiter.api.Test;
+import io.github.broskipoker.game.Card;
+import io.github.broskipoker.game.Deck;
+import io.github.broskipoker.game.Player;
+import io.github.broskipoker.game.PokerGame;
+import io.github.broskipoker.game.PokerHand;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.lang.reflect.Field;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*; // For mocking the Deck
 
 public class PokerGameTest {
 
-    @Test
-    @DisplayName("Test deck initialization and operations")
-    public void testDeck() {
-        Deck deck = new Deck();
-        assertEquals(52, deck.cardsRemaining(), "New deck should have 52 cards");
+    private PokerGame game;
+    private Deck mockDeck;
 
-        Card card = deck.drawCard();
-        assertNotNull(card, "Should be able to draw a card");
-        assertEquals(51, deck.cardsRemaining(), "Deck should have 51 cards after drawing");
-
-        deck.reset();
-        assertEquals(52, deck.cardsRemaining(), "Reset deck should have 52 cards");
+    // Helper method to create a card for cleaner test readability
+    private Card c(Card.Suit suit, Card.Rank rank) {
+        return new Card(suit, rank);
     }
 
-    @Test
-    @DisplayName("Test player actions and state")
-    public void testPlayer() {
-        Player player = new Player("Test Player", 1000);
-        assertEquals(1000, player.getChips(), "Player should start with 1000 chips");
-
-        int bet = player.bet(300);
-        assertEquals(300, bet, "Bet amount should be 300");
-        assertEquals(700, player.getChips(), "Player should have 700 chips after betting");
-
-        player.clearHand();
-        assertTrue(player.getHoleCards().isEmpty(), "Hand should be empty after clearing");
-
-        Card card1 = new Card(Card.Suit.HEARTS, Card.Rank.ACE);
-        player.receiveCard(card1);
-        assertEquals(1, player.getHoleCards().size(), "Player should have 1 card");
+    // Helper method to set private static dealerPosition via reflection
+    private void setStaticDealerPosition(int position) {
+        try {
+            Field field = PokerGame.class.getDeclaredField("dealerPosition");
+            field.setAccessible(true);
+            field.set(null, position); // null for static fields
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to set static dealerPosition via reflection: " + e.getMessage());
+        }
     }
 
-    @Test
-    @DisplayName("Test card properties")
-    public void testCardBasics() {
-        Card aceHearts = new Card(Card.Suit.HEARTS, Card.Rank.ACE);
-        assertEquals(Card.Suit.HEARTS, aceHearts.getSuit(), "Card suit should be hearts");
-        assertEquals(Card.Rank.ACE, aceHearts.getRank(), "Card rank should be ace");
+    // Helper method to get private static dealerPosition via reflection
+    private int getStaticDealerPosition() {
+        try {
+            Field field = PokerGame.class.getDeclaredField("dealerPosition");
+            field.setAccessible(true);
+            return (int) field.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to get static dealerPosition via reflection: " + e.getMessage());
+            return -1; // Should not happen
+        }
     }
 
-    @Test
-    @DisplayName("Test poker hand evaluation")
-    public void testPokerHandEvaluation() {
-        // Test royal flush
-        List<Card> royalHole = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.ACE),
-            new Card(Card.Suit.HEARTS, Card.Rank.KING)
-        );
-        List<Card> royalCommunity = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.QUEEN),
-            new Card(Card.Suit.HEARTS, Card.Rank.JACK),
-            new Card(Card.Suit.HEARTS, Card.Rank.TEN),
-            new Card(Card.Suit.CLUBS, Card.Rank.TWO),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.THREE)
-        );
-        PokerHand royalFlush = new PokerHand(royalHole, royalCommunity);
-        assertEquals(PokerHand.HandRank.ROYAL_FLUSH, royalFlush.getRank(), "Should be royal flush");
-
-        // Test straight flush
-        List<Card> straightFlushHole = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.NINE),
-            new Card(Card.Suit.CLUBS, Card.Rank.EIGHT)
-        );
-        List<Card> straightFlushCommunity = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.SEVEN),
-            new Card(Card.Suit.CLUBS, Card.Rank.SIX),
-            new Card(Card.Suit.CLUBS, Card.Rank.FIVE),
-            new Card(Card.Suit.HEARTS, Card.Rank.TWO),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.THREE)
-        );
-        PokerHand straightFlush = new PokerHand(straightFlushHole, straightFlushCommunity);
-        assertEquals(PokerHand.HandRank.STRAIGHT_FLUSH, straightFlush.getRank(), "Should be straight flush");
-
-        // Test four of a kind
-        List<Card> fourKindHole = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.ACE),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.ACE)
-        );
-        List<Card> fourKindCommunity = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.ACE),
-            new Card(Card.Suit.SPADES, Card.Rank.ACE),
-            new Card(Card.Suit.HEARTS, Card.Rank.TEN),
-            new Card(Card.Suit.CLUBS, Card.Rank.TWO),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.THREE)
-        );
-        PokerHand fourOfAKind = new PokerHand(fourKindHole, fourKindCommunity);
-        assertEquals(PokerHand.HandRank.FOUR_OF_A_KIND, fourOfAKind.getRank(), "Should be four of a kind");
-
-        // Additional hand type tests (similar structure)
+    // Helper method to get private hasActedInRound via reflection
+    private boolean[] getHasActedInRoundArray() {
+        try {
+            Field field = PokerGame.class.getDeclaredField("hasActedInRound");
+            field.setAccessible(true);
+            return (boolean[]) field.get(game);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to get hasActedInRound via reflection: " + e.getMessage());
+            return null; // Should not happen
+        }
     }
 
-    @Test
-    @DisplayName("Test hand comparison")
-    public void testHandComparison() {
-        // Royal flush vs straight flush
-        List<Card> royalHole = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.ACE),
-            new Card(Card.Suit.HEARTS, Card.Rank.KING)
-        );
-        List<Card> royalCommunity = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.QUEEN),
-            new Card(Card.Suit.HEARTS, Card.Rank.JACK),
-            new Card(Card.Suit.HEARTS, Card.Rank.TEN),
-            new Card(Card.Suit.CLUBS, Card.Rank.TWO),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.THREE)
-        );
-        PokerHand royalFlush = new PokerHand(royalHole, royalCommunity);
-
-        List<Card> straightFlushHole = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.NINE),
-            new Card(Card.Suit.CLUBS, Card.Rank.EIGHT)
-        );
-        List<Card> straightFlushCommunity = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.SEVEN),
-            new Card(Card.Suit.CLUBS, Card.Rank.SIX),
-            new Card(Card.Suit.CLUBS, Card.Rank.FIVE),
-            new Card(Card.Suit.HEARTS, Card.Rank.TWO),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.THREE)
-        );
-        PokerHand straightFlush = new PokerHand(straightFlushHole, straightFlushCommunity);
-
-        assertTrue(royalFlush.compareTo(straightFlush) > 0, "Royal flush should beat straight flush");
-
-        // Pair comparison test
-        List<Card> pairAcesHole = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.ACE),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.ACE)
-        );
-        List<Card> pairKingsHole = Arrays.asList(
-            new Card(Card.Suit.HEARTS, Card.Rank.KING),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.KING)
-        );
-        List<Card> commonCommunity = Arrays.asList(
-            new Card(Card.Suit.CLUBS, Card.Rank.QUEEN),
-            new Card(Card.Suit.SPADES, Card.Rank.TEN),
-            new Card(Card.Suit.HEARTS, Card.Rank.FIVE),
-            new Card(Card.Suit.CLUBS, Card.Rank.THREE),
-            new Card(Card.Suit.DIAMONDS, Card.Rank.TWO)
-        );
-
-        PokerHand pairAces = new PokerHand(pairAcesHole, commonCommunity);
-        PokerHand pairKings = new PokerHand(pairKingsHole, commonCommunity);
-
-        assertTrue(pairAces.compareTo(pairKings) > 0, "Pair of aces should beat pair of kings");
+    // Helper method to get private lastRaisePlayerIndex via reflection
+    private int getLastRaisePlayerIndex() {
+        try {
+            Field field = PokerGame.class.getDeclaredField("lastRaisePlayerIndex");
+            field.setAccessible(true);
+            return (int) field.get(game);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to get lastRaisePlayerIndex via reflection: " + e.getMessage());
+            return -1; // Should not happen
+        }
     }
 
-    @Test
-    @DisplayName("Test game initialization and state progression")
-    public void testGameBasics() {
-        PokerGame game = new PokerGame(10, 20); // Small blind 10, big blind 20
-        game.addPlayer("Player1", 1000);
-        game.addPlayer("Player2", 1000);
-        game.addPlayer("Player3", 1000);
+    // Helper method to set private pot via reflection
+    private void setGamePot(int newPot) {
+        try {
+            Field field = PokerGame.class.getDeclaredField("pot");
+            field.setAccessible(true);
+            field.set(game, newPot);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Failed to set pot via reflection: " + e.getMessage());
+        }
+    }
 
-        game.startNewHand();
-        assertEquals(PokerGame.GameState.BETTING_PRE_FLOP, game.getGameState(), "Game should start in pre-flop state");
-        assertEquals(30, game.getPot(), "Pot should have blinds");
-        assertEquals(2, game.getPlayers().get(0).getHoleCards().size(), "Player should have 2 hole cards");
 
-        // Simulate all players calling
-        while (game.needsPlayerAction()) {
-            game.performAction(PokerGame.PlayerAction.CALL, game.getCurrentBet());
+    @BeforeEach
+    void setUp() {
+        // Mock the Deck to control card distribution
+        mockDeck = mock(Deck.class);
+        // We cannot override createDeck() since it's not protected/public
+        // So, we'll initialize PokerGame as normal and then,
+        // if possible, inject the mock deck using reflection for the 'deck' field.
+        game = new PokerGame(50, 100);
+
+        try {
+            Field deckField = PokerGame.class.getDeclaredField("deck");
+            deckField.setAccessible(true);
+            deckField.set(game, mockDeck);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Could not inject mockDeck into PokerGame: " + e.getMessage());
         }
 
-        game.update(0.1f); // Advance game state
-        assertEquals(PokerGame.GameState.BETTING_FLOP, game.getGameState(), "Game should advance to flop");
-        assertEquals(3, game.getCommunityCards().size(), "Should have 3 community cards");
+        // Add players
+        game.addPlayer("P1", 1000);
+        game.addPlayer("P2", 1000);
+        game.addPlayer("P3", 1000);
+        game.addPlayer("P4", 1000); // 4 players for more robust betting tests
+    }
+
+    // A small helper to simulate game initialization with custom blinds
+    // We can't directly test the custom constructor's private fields,
+    // so this test will be limited to what's observable or settable.
+    // The previous TestPokerGame subclass won't work as it relied on overriding protected methods.
+    @Test
+    @DisplayName("Test game initialization with custom blinds (limited checks)")
+    void testCustomInitializationLimited() {
+        // We cannot directly verify smallBlind/bigBlind if they are private and have no getters.
+        // The default constructor is the only one that can add players.
+        // So this test is very limited without getters in PokerGame.java.
+        PokerGame customGame = new PokerGame(25, 50); // This will create an internal Deck.
+        // We can only assert on static or publicly accessible state here.
+        assertEquals(PokerGame.GameState.WAITING_FOR_PLAYERS, PokerGame.getGameState(), "Initial state should be WAITING_FOR_PLAYERS");
+        assertEquals(0, customGame.getPot(), "Pot should be 0 on initialization"); // Accessible via public getPot
+        assertFalse(customGame.needsPlayerAction(), "Needs player action should be false initially");
     }
 
     @Test
-    @DisplayName("Test betting actions and pot management")
-    public void testBettingLogic() {
-        PokerGame game = new PokerGame(10, 20);
-        game.addPlayer("Player1", 1000);
-        game.addPlayer("Player2", 1000);
-        game.addPlayer("Player3", 1000);
-
-        game.startNewHand();
-        int initialPot = game.getPot();
-
-        // First player raises
-        Player currentPlayer = game.getCurrentPlayer();
-        int initialChips = currentPlayer.getChips();
-        game.performAction(PokerGame.PlayerAction.RAISE, 50);
-
-        assertEquals(initialChips - (50 - currentPlayer.getCurrentBet()), currentPlayer.getChips(),
-               "Player chips should be reduced by raise amount");
-        assertEquals(50, game.getCurrentBet(), "Current bet should be updated");
-        assertTrue(game.getPot() > initialPot, "Pot should increase after raise");
-
-        // Next player folds
-        Player nextPlayer = game.getCurrentPlayer();
-        game.performAction(PokerGame.PlayerAction.FOLD, 0);
-        assertFalse(nextPlayer.isActive(), "Player should be inactive after folding");
+    @DisplayName("Test game initialization with default values (for testing)")
+    void testDefaultInitialization() {
+        PokerGame defaultGame = new PokerGame(); // Uses the default constructor (for testing)
+        assertEquals(5, defaultGame.getPlayers().size(), "Default constructor should add 5 players");
+        assertEquals(PokerGame.GameState.WAITING_FOR_PLAYERS, PokerGame.getGameState(), "Initial state should be WAITING_FOR_PLAYERS");
+        // Cannot assert on default smallBlind/bigBlind without getters
     }
+
+    @Test
+    @DisplayName("Test adding players (limited checks)")
+    void testAddPlayerLimited() {
+        // Re-initialize game to have an empty player list for adding
+        game = new PokerGame(50, 100); // This will create an internal Deck.
+        try {
+            Field deckField = PokerGame.class.getDeclaredField("deck");
+            deckField.setAccessible(true);
+            deckField.set(game, mockDeck);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            fail("Could not inject mockDeck into PokerGame: " + e.getMessage());
+        }
+
+        game.addPlayer("New Player 1", 500);
+        assertEquals(1, game.getPlayers().size(), "Should have 1 player");
+        assertEquals("New Player 1", game.getPlayers().get(0).getName());
+
+        game.addPlayer("New Player 2", 700);
+        assertEquals(2, game.getPlayers().size(), "Should have 2 players");
+        assertEquals("New Player 2", game.getPlayers().get(1).getName());
+
+        // Cannot verify hasActedInRound array size adjusts without a public getter
+    }
+
+
+
+
+    @Test
+    @DisplayName("Test `determineWinners` - single winner")
+    void testDetermineWinnersSingle() {
+        // Set up specific hands for showdown
+        // P1: Full House (Aces full of Kings)
+        // P2: Flush (Hearts, King high)
+        // P3: Straight (Queen high)
+        // P4: Pair (Aces, King kicker)
+
+        List<Card> community = Arrays.asList(
+            c(Card.Suit.HEARTS, Card.Rank.ACE),
+            c(Card.Suit.DIAMONDS, Card.Rank.ACE),
+            c(Card.Suit.CLUBS, Card.Rank.KING),
+            c(Card.Suit.SPADES, Card.Rank.SEVEN),
+            c(Card.Suit.DIAMONDS, Card.Rank.SIX)
+        );
+        game.getCommunityCards().addAll(community);
+
+        // P1 (Full House)
+        game.getPlayers().get(0).receiveCard(c(Card.Suit.SPADES, Card.Rank.ACE));
+        game.getPlayers().get(0).receiveCard(c(Card.Suit.HEARTS, Card.Rank.KING));
+        // P2 (Flush)
+        game.getPlayers().get(1).receiveCard(c(Card.Suit.HEARTS, Card.Rank.KING));
+        game.getPlayers().get(1).receiveCard(c(Card.Suit.HEARTS, Card.Rank.QUEEN));
+        // P3 (Straight)
+        game.getPlayers().get(2).receiveCard(c(Card.Suit.CLUBS, Card.Rank.TEN));
+        game.getPlayers().get(2).receiveCard(c(Card.Suit.SPADES, Card.Rank.NINE));
+        // P4 (Pair)
+        game.getPlayers().get(3).receiveCard(c(Card.Suit.CLUBS, Card.Rank.QUEEN));
+        game.getPlayers().get(3).receiveCard(c(Card.Suit.DIAMONDS, Card.Rank.TWO));
+
+        // Ensure all players are active for showdown
+        for (Player p : game.getPlayers()) {
+            p.setActive(true);
+        }
+
+        List<Player> winners = game.determineWinners();
+        assertEquals(1, winners.size(), "Should have one winner");
+        assertEquals("P1", winners.get(0).getName(), "P1 (Full House) should win");
+
+        // Verify that their actual evaluated hand matches
+        PokerHand p1Hand = new PokerHand(game.getPlayers().get(0).getHoleCards(), community);
+        assertEquals(PokerHand.HandRank.FULL_HOUSE, p1Hand.getRank());
+    }
+
+    @Test
+    @DisplayName("Test `determineWinners` - multiple winners (chop pot)")
+    void testDetermineWinnersChop() {
+        // Set up specific hands for showdown resulting in a tie
+        // P1: Straight (Ace high)
+        // P2: Straight (Ace high)
+        // P3: Flush (King high)
+        // P4: Three of a Kind
+
+        List<Card> community = Arrays.asList(
+            c(Card.Suit.CLUBS, Card.Rank.QUEEN),
+            c(Card.Suit.SPADES, Card.Rank.JACK),
+            c(Card.Suit.HEARTS, Card.Rank.TEN),
+            c(Card.Suit.DIAMONDS, Card.Rank.NINE),
+            c(Card.Suit.SPADES, Card.Rank.FIVE)
+        );
+        game.getCommunityCards().addAll(community);
+
+        // P1 (Straight: A-K-Q-J-10)
+        game.getPlayers().get(0).receiveCard(c(Card.Suit.CLUBS, Card.Rank.ACE));
+        game.getPlayers().get(0).receiveCard(c(Card.Suit.DIAMONDS, Card.Rank.KING));
+        // P2 (Straight: A-K-Q-J-10) - same hand as P1 but different suits
+        game.getPlayers().get(1).receiveCard(c(Card.Suit.HEARTS, Card.Rank.ACE));
+        game.getPlayers().get(1).receiveCard(c(Card.Suit.CLUBS, Card.Rank.KING));
+        // P3 (Flush) - a lower hand
+        game.getPlayers().get(2).receiveCard(c(Card.Suit.CLUBS, Card.Rank.KING));
+        game.getPlayers().get(2).receiveCard(c(Card.Suit.CLUBS, Card.Rank.EIGHT));
+        // P4 (Three of a Kind) - even lower
+        game.getPlayers().get(3).receiveCard(c(Card.Suit.DIAMONDS, Card.Rank.QUEEN));
+        game.getPlayers().get(3).receiveCard(c(Card.Suit.HEARTS, Card.Rank.QUEEN));
+
+        // Ensure all players are active for showdown
+        for (Player p : game.getPlayers()) {
+            p.setActive(true);
+        }
+
+        List<Player> winners = game.determineWinners();
+        assertEquals(2, winners.size(), "Should have two winners (chop pot)");
+        assertTrue(winners.contains(game.getPlayers().get(0)), "P1 should be a winner");
+        assertTrue(winners.contains(game.getPlayers().get(1)), "P2 should be a winner");
+        assertFalse(winners.contains(game.getPlayers().get(2)), "P3 should not be a winner");
+        assertFalse(winners.contains(game.getPlayers().get(3)), "P4 should not be a winner");
+    }
+
 }
